@@ -7,6 +7,7 @@ discrepancy log to ./logs/.
 Usage:
     python agent.py --company AAPL --claims examples/sample_claims.json
     python agent.py --cik 0000320193 --claim "We expect 50% YoY revenue growth in 2026"
+    python agent.py --deck deck_contexts/pitch.json
 """
 from __future__ import annotations
 
@@ -20,12 +21,15 @@ import anthropic
 from dotenv import load_dotenv
 
 from analyzer import analyze_claim
+from deck_context import DeckContext
 from retriever import DenseRetriever
 from sec import Filing, chunk_text, fetch_text, list_filings, lookup_cik
 
 
 LOG_DIR = Path(__file__).parent / "logs"
 
+
+# ---------------------------------------------------------------- helpers
 
 def load_claims(args: argparse.Namespace) -> list[str]:
     if args.claim:
@@ -37,29 +41,33 @@ def load_claims(args: argparse.Namespace) -> list[str]:
         if isinstance(data, dict) and "claims" in data:
             return [str(x) for x in data["claims"]]
         raise ValueError("--claims file must be a JSON list or object with 'claims' key")
-    raise SystemExit("Provide --claim or --claims")
+    return []
 
 
-def resolve_cik(args: argparse.Namespace) -> str:
+def resolve_cik(args: argparse.Namespace, deck: DeckContext | None) -> str | None:
+    """Resolve a 10-digit CIK from (in order): --cik, --company, deck company name/ticker."""
     if args.cik:
         return str(int(args.cik)).zfill(10)
     if args.company:
-        cik = lookup_cik(args.company)
-        if cik is None:
-            raise SystemExit(f"Could not resolve '{args.company}' to a CIK")
-        return cik
-    raise SystemExit("Provide --company or --cik")
+        return lookup_cik(args.company)
+    if deck:
+        key = deck.company_lookup_key()
+        if key:
+            if key.isdigit() and len(key) <= 10:
+                return key.zfill(10)
+            return lookup_cik(key)
+    return None
 
+
+# ---------------------------------------------------------- orchestration
 
 def build_index(
     cik: str, forms: list[str], limit: int, verbose: bool = True
-) -> DenseRetriever:
+) -> tuple[DenseRetriever | None, list[Filing]]:
+    """Index recent filings. Returns (retriever, filings). retriever is None if no filings."""
     filings: list[Filing] = list_filings(cik, forms=forms, limit=limit)
     if not filings:
-        raise SystemExit(
-            f"No filings found for CIK {cik} among forms {forms}. "
-            "Private startups often have no filings; try forms like ['D']."
-        )
+        return None, []
     if verbose:
         print(f"[+] Found {len(filings)} filings; indexing...")
     retriever = DenseRetriever()
@@ -71,41 +79,109 @@ def build_index(
         except Exception as e:
             print(f"      ! fetch failed: {e}", file=sys.stderr)
             continue
-        chunks = chunk_text(text)
-        retriever.add(f, chunks)
+        retriever.add(f, chunk_text(text))
+    if retriever.size == 0:
+        return None, filings
     retriever.build()
     if verbose:
         print(f"[+] Indexed {retriever.size} passages")
-    return retriever
+    return retriever, filings
 
 
-def run(args: argparse.Namespace) -> int:
+def run_compliance_report(
+    *,
+    claims: list[str],
+    cik: str | None = None,
+    deck: DeckContext | None = None,
+    forms: list[str] | None = None,
+    filings_limit: int = 3,
+    top_k: int = 5,
+    verbose: bool = True,
+) -> dict:
+    """Importable entry point. Returns a report dict — never raises on missing data."""
     load_dotenv()
-    cik = resolve_cik(args)
-    claims = load_claims(args)
-    forms = [f.strip() for f in args.forms.split(",") if f.strip()]
-
-    print(f"[+] Target CIK: {cik}")
-    print(f"[+] {len(claims)} claim(s) to verify against forms {forms}")
-
-    retriever = build_index(cik, forms=forms, limit=args.filings)
-    client = anthropic.Anthropic()
+    forms = forms or ["10-K", "10-Q", "S-1", "8-K"]
 
     LOG_DIR.mkdir(exist_ok=True)
     ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    log_path = LOG_DIR / f"discrepancies_{cik}_{ts}.json"
+    cik_label = cik or "unknown"
 
-    results = []
+    report: dict = {
+        "generated_at": ts,
+        "cik": cik,
+        "forms": forms,
+        "deck_context_used": deck is not None,
+        "claims_analyzed": 0,
+        "flagged_forward_looking_contradictions": 0,
+        "results": [],
+        "warnings": [],
+    }
+
+    if not claims:
+        report["warnings"].append(
+            "No claims provided. Extract claims from a pitch deck or supply them via --claim / --claims."
+        )
+        return report
+
+    if cik is None:
+        report["warnings"].append(
+            "Could not resolve company to an SEC CIK. "
+            "Compliance verification against SEC filings is not possible without one. "
+            "Claims are logged but unverified."
+        )
+        # Still record the claims so the user sees what was being checked
+        for claim in claims:
+            report["results"].append({
+                "claim": claim,
+                "verdict": "INSUFFICIENT_EVIDENCE",
+                "forward_looking": None,
+                "severity": "NONE",
+                "explanation": "Company could not be resolved to an SEC CIK; no filings available to verify against.",
+                "missing_information": "SEC CIK or ticker for the target company.",
+                "cited_passages": [],
+            })
+        report["claims_analyzed"] = len(claims)
+        _write_log(report, cik_label, ts)
+        return report
+
+    retriever, filings = build_index(cik, forms=forms, limit=filings_limit, verbose=verbose)
+    if retriever is None:
+        msg = (
+            f"No SEC filings of types {forms} found for CIK {cik}. "
+            "This is common for private / early-stage startups. "
+            "Consider rerunning with --forms D,S-1 or treat claims as unverified."
+        )
+        report["warnings"].append(msg)
+        for claim in claims:
+            report["results"].append({
+                "claim": claim,
+                "verdict": "INSUFFICIENT_EVIDENCE",
+                "forward_looking": None,
+                "severity": "NONE",
+                "explanation": msg,
+                "missing_information": "Applicable SEC filings for this company.",
+                "cited_passages": [],
+            })
+        report["claims_analyzed"] = len(claims)
+        _write_log(report, cik_label, ts)
+        return report
+
+    client = anthropic.Anthropic()
+    deck_ctx_str = deck.clarifying_context() if deck else None
+
+    flagged = 0
     for i, claim in enumerate(claims, start=1):
-        print(f"\n[{i}/{len(claims)}] Analyzing: {claim[:100]}...")
-        hits = retriever.search(claim, top_k=args.top_k)
-        assessment = analyze_claim(client, claim, hits)
+        if verbose:
+            print(f"\n[{i}/{len(claims)}] Analyzing: {claim[:100]}...")
+        hits = retriever.search(claim, top_k=top_k)
+        assessment = analyze_claim(client, claim, hits, deck_context=deck_ctx_str)
         entry = {
             "claim": claim,
             "verdict": assessment.verdict,
             "forward_looking": assessment.forward_looking,
             "severity": assessment.severity,
             "explanation": assessment.explanation,
+            "missing_information": assessment.missing_information,
             "cited_passages": [
                 {
                     "passage_num": p,
@@ -120,46 +196,84 @@ def run(args: argparse.Namespace) -> int:
                 if 1 <= p <= len(hits)
             ],
         }
-        results.append(entry)
-        flag = "⚠️  FLAG" if (
-            assessment.verdict == "CONTRADICTS" and assessment.forward_looking
-        ) else f"    {assessment.verdict}"
-        print(f"    {flag} [{assessment.severity}] forward_looking={assessment.forward_looking}")
-        print(f"    {assessment.explanation}")
+        report["results"].append(entry)
+        if assessment.verdict == "CONTRADICTS" and assessment.forward_looking:
+            flagged += 1
+        if verbose:
+            flag = "⚠️  FLAG" if (
+                assessment.verdict == "CONTRADICTS" and assessment.forward_looking
+            ) else f"    {assessment.verdict}"
+            print(f"    {flag} [{assessment.severity}] forward_looking={assessment.forward_looking}")
+            print(f"    {assessment.explanation}")
 
-    log_path.write_text(
-        json.dumps(
-            {"cik": cik, "generated_at": ts, "forms": forms, "results": results},
-            indent=2,
-        )
-    )
-    print(f"\n[+] Discrepancy log written to {log_path}")
+    report["claims_analyzed"] = len(claims)
+    report["flagged_forward_looking_contradictions"] = flagged
+    _write_log(report, cik_label, ts)
+    return report
 
-    flagged = sum(
-        1 for r in results if r["verdict"] == "CONTRADICTS" and r["forward_looking"]
-    )
-    print(f"[+] Flagged contradictory forward-looking statements: {flagged}")
-    return 1 if flagged else 0
 
+def _write_log(report: dict, cik_label: str, ts: str) -> None:
+    LOG_DIR.mkdir(exist_ok=True)
+    log_path = LOG_DIR / f"discrepancies_{cik_label}_{ts}.json"
+    log_path.write_text(json.dumps(report, indent=2))
+    report["log_path"] = str(log_path)
+
+
+# ------------------------------------------------------------------- CLI
 
 def main() -> int:
-    p = argparse.ArgumentParser(description="VC compliance agent: verify startup claims against SEC filings.")
-    src = p.add_mutually_exclusive_group(required=True)
-    src.add_argument("--company", help="Ticker or company name (e.g., AAPL, 'Apple Inc.')")
-    src.add_argument("--cik", help="10-digit SEC CIK (e.g., 0000320193)")
-
-    claim_src = p.add_mutually_exclusive_group(required=True)
-    claim_src.add_argument("--claim", help="A single claim to verify (string)")
-    claim_src.add_argument("--claims", help="Path to JSON file with a list of claims")
-
+    p = argparse.ArgumentParser(
+        description="VC compliance agent: verify startup claims against SEC filings."
+    )
+    p.add_argument("--company", help="Ticker or company name (e.g., AAPL, 'Apple Inc.')")
+    p.add_argument("--cik", help="10-digit SEC CIK (e.g., 0000320193)")
+    p.add_argument("--claim", help="A single claim to verify")
+    p.add_argument("--claims", help="Path to JSON file with a list of claims")
+    p.add_argument(
+        "--deck",
+        help="Path to deck context JSON (produced by the extractor). "
+        "Supplies claims + company identity if not provided via other flags.",
+    )
     p.add_argument(
         "--forms", default="10-K,10-Q,S-1,8-K",
-        help="Comma-separated SEC form types to index (default: 10-K,10-Q,S-1,8-K)",
+        help="Comma-separated SEC form types to index",
     )
-    p.add_argument("--filings", type=int, default=3, help="Max number of filings to index")
+    p.add_argument("--filings", type=int, default=3, help="Max filings to index")
     p.add_argument("--top-k", type=int, default=5, help="Top-k passages per claim")
+    args = p.parse_args()
 
-    return run(p.parse_args())
+    deck: DeckContext | None = None
+    if args.deck:
+        deck = DeckContext.load(args.deck)
+
+    claims = load_claims(args)
+    if not claims and deck:
+        claims = deck.claims_for_verification()
+
+    if not claims:
+        print("error: provide claims via --claim, --claims, or --deck", file=sys.stderr)
+        return 2
+
+    cik = resolve_cik(args, deck)
+    forms = [f.strip() for f in args.forms.split(",") if f.strip()]
+
+    report = run_compliance_report(
+        claims=claims,
+        cik=cik,
+        deck=deck,
+        forms=forms,
+        filings_limit=args.filings,
+        top_k=args.top_k,
+    )
+
+    print(f"\n[+] Discrepancy log written to {report.get('log_path')}")
+    print(f"[+] Flagged contradictory forward-looking statements: "
+          f"{report['flagged_forward_looking_contradictions']}")
+    if report["warnings"]:
+        print("[!] Warnings:")
+        for w in report["warnings"]:
+            print(f"    - {w}")
+    return 1 if report["flagged_forward_looking_contradictions"] else 0
 
 
 if __name__ == "__main__":

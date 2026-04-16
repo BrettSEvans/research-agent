@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VC Compliance Pipeline</title>
+  <style>
+    :root {
+      --bg: #0b0d10;
+      --panel: #14171c;
+      --border: #262a31;
+      --text: #e6e8eb;
+      --muted: #8b94a3;
+      --accent: #6cb7ff;
+      --ok: #70d491;
+      --warn: #f0c674;
+      --err: #f07a7a;
+      --flag: #ff5b5b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 2rem;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg); color: var(--text);
+      max-width: 1100px; margin: 0 auto; padding: 2rem;
+    }
+    h1 { font-size: 1.5rem; margin: 0 0 0.2rem; }
+    h2 { font-size: 1.1rem; margin: 1.5rem 0 0.75rem; color: var(--accent); }
+    h3 { font-size: 0.95rem; margin: 1rem 0 0.5rem; color: var(--muted); font-weight: 500; }
+    .subtitle { color: var(--muted); margin: 0 0 2rem; font-size: 0.9rem; }
+    .panel {
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 8px; padding: 1.25rem; margin-bottom: 1rem;
+    }
+    .dropzone {
+      border: 2px dashed var(--border); border-radius: 8px;
+      padding: 2.5rem; text-align: center; cursor: pointer;
+      transition: all 0.15s;
+    }
+    .dropzone:hover, .dropzone.drag { border-color: var(--accent); background: #0f1216; }
+    .dropzone input { display: none; }
+    button {
+      background: var(--accent); color: #0b0d10; border: none;
+      padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer;
+      font-weight: 600; font-size: 0.9rem;
+    }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    button.secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
+    .muted { color: var(--muted); font-size: 0.85rem; }
+    .pill {
+      display: inline-block; padding: 0.15rem 0.6rem;
+      border-radius: 999px; font-size: 0.75rem; font-weight: 600;
+      border: 1px solid var(--border);
+    }
+    .pill-contradicts { background: rgba(255, 91, 91, 0.15); color: var(--flag); border-color: var(--flag); }
+    .pill-consistent { background: rgba(112, 212, 145, 0.15); color: var(--ok); border-color: var(--ok); }
+    .pill-unsupported { background: rgba(240, 198, 116, 0.15); color: var(--warn); border-color: var(--warn); }
+    .pill-insufficient { background: rgba(139, 148, 163, 0.15); color: var(--muted); }
+    .pill-fl { background: rgba(108, 183, 255, 0.15); color: var(--accent); border-color: var(--accent); }
+    .claim {
+      background: #0f1216; border: 1px solid var(--border);
+      border-radius: 6px; padding: 0.75rem 1rem; margin-bottom: 0.5rem;
+    }
+    .claim .text { margin-bottom: 0.25rem; }
+    .claim .verbatim {
+      color: var(--muted); font-style: italic; font-size: 0.85rem;
+      border-left: 2px solid var(--border); padding-left: 0.75rem; margin-top: 0.5rem;
+    }
+    .claim .meta { font-size: 0.75rem; color: var(--muted); margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .result {
+      border-left: 3px solid var(--border);
+      padding: 0.75rem 1rem; margin-bottom: 0.75rem;
+      background: #0f1216; border-radius: 0 6px 6px 0;
+    }
+    .result.flag { border-left-color: var(--flag); }
+    .result.consistent { border-left-color: var(--ok); }
+    .result.unsupported { border-left-color: var(--warn); }
+    .result .explanation { color: var(--muted); font-size: 0.85rem; margin-top: 0.4rem; }
+    .result .missing { color: var(--warn); font-size: 0.8rem; margin-top: 0.4rem; }
+    .cite {
+      background: #0b0d10; border: 1px solid var(--border);
+      border-radius: 4px; padding: 0.5rem 0.75rem; margin-top: 0.5rem;
+      font-size: 0.8rem;
+    }
+    .cite a { color: var(--accent); text-decoration: none; }
+    .warning { background: rgba(240, 198, 116, 0.08); border: 1px solid var(--warn); color: var(--warn); padding: 0.75rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.85rem; }
+    pre.notes { white-space: pre-wrap; color: var(--muted); font-size: 0.85rem; margin: 0; }
+    .hidden { display: none; }
+    .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 0.5rem; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .kv { display: grid; grid-template-columns: 140px 1fr; gap: 0.4rem 1rem; font-size: 0.9rem; }
+    .kv dt { color: var(--muted); }
+    .kv dd { margin: 0; }
+  </style>
+</head>
+<body>
+  <h1>VC Compliance Pipeline</h1>
+  <p class="subtitle">Upload a pitch deck → extract structured claims → cross-reference against SEC filings.</p>
+
+  <!-- Step 1: Upload -->
+  <div class="panel" id="upload-panel">
+    <h2>1. Upload pitch deck (PDF)</h2>
+    <label class="dropzone" id="dropzone">
+      <input type="file" id="file" accept="application/pdf" />
+      <div id="dz-text">
+        <strong>Click or drop a PDF here</strong>
+        <div class="muted">The extractor will not analyze the deck — only extract verbatim claims.</div>
+      </div>
+    </label>
+  </div>
+
+  <!-- Step 2: Extraction results -->
+  <div class="panel hidden" id="extraction-panel">
+    <h2>2. Extracted information</h2>
+    <div id="extraction-body"></div>
+    <div style="margin-top: 1rem;">
+      <button id="verify-btn">Run compliance check against SEC filings →</button>
+    </div>
+  </div>
+
+  <!-- Step 3: Report -->
+  <div class="panel hidden" id="report-panel">
+    <h2>3. Compliance report</h2>
+    <div id="report-body"></div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('file');
+    const dropzone = document.getElementById('dropzone');
+    const extractionPanel = document.getElementById('extraction-panel');
+    const extractionBody = document.getElementById('extraction-body');
+    const reportPanel = document.getElementById('report-panel');
+    const reportBody = document.getElementById('report-body');
+    const verifyBtn = document.getElementById('verify-btn');
+
+    let currentContextId = null;
+
+    fileInput.addEventListener('change', () => uploadFile(fileInput.files[0]));
+    dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag'); });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
+    dropzone.addEventListener('drop', e => {
+      e.preventDefault(); dropzone.classList.remove('drag');
+      if (e.dataTransfer.files.length) uploadFile(e.dataTransfer.files[0]);
+    });
+
+    function escape(s) {
+      return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    async function uploadFile(file) {
+      if (!file) return;
+      dropzone.innerHTML = '<div><span class="spinner"></span>Extracting claims from ' + escape(file.name) + '...</div>';
+      const fd = new FormData();
+      fd.append('file', file);
+      try {
+        const r = await fetch('/extract', { method: 'POST', body: fd });
+        if (!r.ok) throw new Error((await r.json()).detail || 'Extract failed');
+        const data = await r.json();
+        currentContextId = data.context_id;
+        renderExtraction(data.extraction);
+      } catch (e) {
+        dropzone.innerHTML = '<div style="color: var(--err)">Error: ' + escape(e.message) + '</div>';
+      }
+    }
+
+    function renderExtraction(ex) {
+      const c = ex.company;
+      let html = '<h3>Company identity</h3><dl class="kv">';
+      html += `<dt>Name</dt><dd>${escape(c.name)}</dd>`;
+      html += `<dt>Ticker</dt><dd>${c.ticker ? escape(c.ticker) : '<span class="muted">not stated in deck</span>'}</dd>`;
+      html += `<dt>CIK</dt><dd>${c.cik ? escape(c.cik) : '<span class="muted">not stated in deck</span>'}</dd>`;
+      html += `<dt>Website</dt><dd>${c.website ? escape(c.website) : '<span class="muted">—</span>'}</dd>`;
+      html += `<dt>Fiscal year end</dt><dd>${ex.fiscal_year_end ? escape(ex.fiscal_year_end) : '<span class="muted">—</span>'}</dd>`;
+      html += `<dt>Currency</dt><dd>${ex.currency ? escape(ex.currency) : '<span class="muted">—</span>'}</dd>`;
+      html += '</dl>';
+
+      html += `<h3>Claims (${ex.claims.length})</h3>`;
+      for (const cl of ex.claims) {
+        html += '<div class="claim">';
+        html += `<div class="text">${escape(cl.text)}</div>`;
+        html += `<div class="verbatim">"${escape(cl.verbatim)}"</div>`;
+        html += '<div class="meta">';
+        html += `<span class="pill">slide ${cl.slide}</span>`;
+        html += `<span class="pill">${escape(cl.category)}</span>`;
+        if (cl.likely_forward_looking) html += '<span class="pill pill-fl">forward-looking</span>';
+        html += '</div></div>';
+      }
+
+      html += '<h3>Extractor transparency notes</h3>';
+      html += `<pre class="notes">${escape(ex.extraction_notes)}</pre>`;
+
+      extractionBody.innerHTML = html;
+      extractionPanel.classList.remove('hidden');
+      // reset any prior report
+      reportPanel.classList.add('hidden');
+      reportBody.innerHTML = '';
+    }
+
+    verifyBtn.addEventListener('click', async () => {
+      if (!currentContextId) return;
+      reportPanel.classList.remove('hidden');
+      reportBody.innerHTML = '<div><span class="spinner"></span>Querying SEC EDGAR, indexing filings, and analyzing claims...</div>';
+      verifyBtn.disabled = true;
+      try {
+        const fd = new FormData();
+        fd.append('context_id', currentContextId);
+        const r = await fetch('/verify', { method: 'POST', body: fd });
+        if (!r.ok) throw new Error((await r.json()).detail || 'Verify failed');
+        renderReport(await r.json());
+      } catch (e) {
+        reportBody.innerHTML = '<div style="color: var(--err)">Error: ' + escape(e.message) + '</div>';
+      } finally {
+        verifyBtn.disabled = false;
+      }
+    });
+
+    function renderReport(rep) {
+      let html = '';
+      html += `<div class="muted" style="margin-bottom: 0.75rem">Generated ${escape(rep.generated_at)} · CIK ${escape(rep.cik || 'unresolved')} · ${rep.claims_analyzed} claim(s) analyzed · <strong>${rep.flagged_forward_looking_contradictions}</strong> flagged</div>`;
+
+      for (const w of (rep.warnings || [])) {
+        html += `<div class="warning">⚠ ${escape(w)}</div>`;
+      }
+
+      for (const r of rep.results) {
+        const verdict = r.verdict || 'INSUFFICIENT_EVIDENCE';
+        const isFlag = verdict === 'CONTRADICTS' && r.forward_looking;
+        let cls = 'result';
+        if (isFlag) cls += ' flag';
+        else if (verdict === 'CONSISTENT') cls += ' consistent';
+        else if (verdict === 'UNSUPPORTED' || verdict === 'INSUFFICIENT_EVIDENCE') cls += ' unsupported';
+
+        const pillCls = {
+          'CONTRADICTS': 'pill-contradicts',
+          'CONSISTENT': 'pill-consistent',
+          'UNSUPPORTED': 'pill-unsupported',
+          'INSUFFICIENT_EVIDENCE': 'pill-insufficient'
+        }[verdict] || 'pill-insufficient';
+
+        html += `<div class="${cls}">`;
+        html += `<div><strong>${escape(r.claim)}</strong></div>`;
+        html += `<div class="meta" style="margin-top: 0.4rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">`;
+        html += `<span class="pill ${pillCls}">${escape(verdict)}</span>`;
+        if (r.forward_looking) html += '<span class="pill pill-fl">forward-looking</span>';
+        if (r.severity && r.severity !== 'NONE') html += `<span class="pill">severity: ${escape(r.severity)}</span>`;
+        html += '</div>';
+        html += `<div class="explanation">${escape(r.explanation)}</div>`;
+        if (r.missing_information) {
+          html += `<div class="missing">Missing information: ${escape(r.missing_information)}</div>`;
+        }
+        for (const c of (r.cited_passages || [])) {
+          html += '<div class="cite">';
+          html += `<div><strong>P${c.passage_num}</strong> — ${escape(c.form)} filed ${escape(c.filing_date)} · <a href="${escape(c.url)}" target="_blank" rel="noopener">${escape(c.accession)}</a></div>`;
+          html += `<div class="muted" style="margin-top: 0.25rem;">${escape(c.excerpt)}...</div>`;
+          html += '</div>';
+        }
+        html += '</div>';
+      }
+
+      reportBody.innerHTML = html;
+    }
+  </script>
+</body>
+</html>

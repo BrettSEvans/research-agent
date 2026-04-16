@@ -7,3 +7,5 @@ venv/
 .DS_Store
 logs/*.json
 !logs/.gitkeep
+uploads/
+deck_contexts/

@@ -1,39 +1,72 @@
-# Compliance Agent
+# VC Compliance Pipeline
 
-A venture-capital diligence tool that cross-references claims about a startup
-against its SEC filings using **dense vector retrieval**, then uses Claude to
-flag contradictory **forward-looking statements** (projections, expectations,
-plans) and logs discrepancies with citations back to the source regulatory
-filing.
+Two cooperating agents for venture-capital diligence:
+
+1. **Pitch Deck Extractor** — parses an uploaded PDF deck and returns
+   structured, *verbatim* claims + company identity. Extracts only; never
+   analyzes or fabricates. If a field is absent from the deck it is null, and
+   the extractor records the gap in its transparency notes.
+2. **Compliance Agent** — cross-references those claims against the
+   company's SEC filings using **dense vector retrieval** and flags
+   contradictory **forward-looking statements**. When evidence is missing, it
+   returns `INSUFFICIENT_EVIDENCE` with an explicit `missing_information`
+   field rather than guessing. The deck context is used only as *clarifying*
+   metadata — SEC filings are the sole source of truth for verification.
+
+A FastAPI web UI wires both agents together: upload deck → review extraction
+→ run compliance check → read report.
 
 ## How it works
 
 ```
-claims ──► [Dense Retriever: sentence-transformers + cosine]
-                         │
-                         ▼
-              top-k SEC filing passages
-                         │
-                         ▼
-         [Claude Opus 4.6: forward-looking detection
-           + contradiction analysis, structured output]
-                         │
-                         ▼
-           logs/discrepancies_<CIK>_<timestamp>.json
+ PDF pitch deck
+       │
+       ▼
+ [extractor.py]  verbatim extraction only; null when absent; no fabrication
+       │
+       ▼
+ DeckExtraction JSON  ──► claims + company identity + transparency notes
+       │
+       ▼
+ [agent.py]  company → SEC CIK → fetch 10-K/10-Q/S-1/8-K
+       │
+       ▼
+ [retriever.py]  sentence-transformers + cosine over filing chunks
+       │
+       ▼
+ [analyzer.py]  Claude Opus 4.6 w/ adaptive thinking
+       │           verdict ∈ {CONTRADICTS, UNSUPPORTED, CONSISTENT, INSUFFICIENT_EVIDENCE}
+       ▼
+ logs/discrepancies_<CIK>_<timestamp>.json   +   web UI report
 ```
 
-- **SEC ingestion** — `sec.py` pulls filings from EDGAR (10-K, 10-Q, S-1, 8-K
-  by default; configurable for Form D, S-3, etc.), strips HTML, and chunks
-  with overlap.
-- **Dense retrieval** — `retriever.py` embeds every chunk with
-  `all-MiniLM-L6-v2` and runs cosine similarity in NumPy. Each passage keeps a
-  pointer back to its source filing (accession number, form, date, URL).
-- **Claim analysis** — `analyzer.py` sends the claim + top-k retrieved
-  passages to Claude Opus 4.6 with adaptive thinking. Returns a structured
-  `ClaimAssessment` (Pydantic) with verdict, forward-looking flag, severity,
-  explanation, and cited passage numbers.
+- **Pitch deck extraction** — `extractor.py` sends the PDF to Claude Opus 4.6
+  via native PDF support, extracts a Pydantic `DeckExtraction` with verbatim
+  claims, company identity, and explicit transparency notes about anything
+  it could not extract. No analysis, no guessing.
+- **SEC ingestion** — `sec.py` resolves tickers/names to CIK via EDGAR,
+  pulls recent filings, strips HTML, and chunks with overlap.
+- **Dense retrieval** — `retriever.py` embeds chunks with
+  `all-MiniLM-L6-v2` and runs cosine similarity in NumPy. Each passage keeps
+  a pointer back to its source filing (accession, form, date, URL).
+- **Claim analysis** — `analyzer.py` sends the claim + deck context (clarifying
+  only) + top-k retrieved passages to Claude Opus 4.6 with adaptive thinking.
+  Returns a structured `ClaimAssessment` including `missing_information` when
+  it cannot complete the assessment.
 - **Discrepancy log** — contradictory forward-looking claims are flagged and
-  written to `logs/` alongside the evidence trail (filing URL + excerpt).
+  written to `logs/` alongside the evidence trail. The report is always
+  transparent about what it could and could not verify.
+
+### Transparency & no-fabrication guarantees
+
+- Extractor leaves unknown fields null; `extraction_notes` records every gap.
+- Analyzer returns `INSUFFICIENT_EVIDENCE` when retrieved passages don't
+  support a decision, with a `missing_information` field naming what was
+  needed.
+- Compliance agent returns `INSUFFICIENT_EVIDENCE` for every claim when no
+  SEC CIK can be resolved, rather than silently producing an empty report.
+- Deck context is labeled "clarifying metadata only, NOT a source of truth"
+  in the analyzer prompt — the deck can't be used to verify itself.
 
 ## Setup
 
@@ -47,6 +80,18 @@ First run downloads the embedding model (~90 MB) to your HuggingFace cache.
 
 ## Usage
 
+### Web UI (recommended — runs both agents)
+
+```bash
+uvicorn web:app --reload
+# open http://localhost:8000
+```
+
+Upload a pitch deck → review the extracted claims and transparency notes →
+click "Run compliance check" → read the report with citations to SEC filings.
+
+### CLI
+
 ```bash
 # Single claim against a public company
 python agent.py --company AAPL \
@@ -54,6 +99,9 @@ python agent.py --company AAPL \
 
 # Batch of claims from a JSON file
 python agent.py --company AAPL --claims examples/sample_claims.json
+
+# From a previously extracted deck context (auto-derives company + claims)
+python agent.py --deck deck_contexts/deck_abc123.json
 
 # Using a CIK directly (private companies with Form D filings)
 python agent.py --cik 0001318605 --forms D,S-1 --claims my_claims.json
