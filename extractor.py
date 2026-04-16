@@ -15,13 +15,27 @@ Design constraints (explicit, not optional):
 from __future__ import annotations
 
 import base64
+import os
 from pathlib import Path
 from typing import Literal
 
 import anthropic
 from pydantic import BaseModel, Field
 
-MODEL = "claude-opus-4-6"
+# Default: Haiku 4.5. Extraction is a structured, mechanical task — cheap model
+# is the right fit. Override with EXTRACTOR_MODEL env var if needed.
+DEFAULT_MODEL = "claude-haiku-4-5"
+
+
+def _resolve_model() -> str:
+    return os.environ.get("EXTRACTOR_MODEL", DEFAULT_MODEL)
+
+
+def _thinking_kwargs(model: str) -> dict:
+    """Adaptive thinking is supported on Opus 4.6 and Sonnet 4.6, not Haiku 4.5."""
+    if "haiku" in model:
+        return {}
+    return {"thinking": {"type": "adaptive"}}
 
 
 class CompanyIdentity(BaseModel):
@@ -107,17 +121,19 @@ Prioritize these claim categories because the compliance agent cross-references 
 def extract_from_pdf(
     pdf_path: str | Path,
     client: anthropic.Anthropic | None = None,
+    model: str | None = None,
 ) -> DeckExtraction:
     """Extract structured deck information from a PDF file."""
     client = client or anthropic.Anthropic()
+    model = model or _resolve_model()
     pdf_bytes = Path(pdf_path).read_bytes()
     b64 = base64.standard_b64encode(pdf_bytes).decode("utf-8")
 
     response = client.messages.parse(
-        model=MODEL,
+        model=model,
         max_tokens=16000,
-        thinking={"type": "adaptive"},
         system=SYSTEM_PROMPT,
+        **_thinking_kwargs(model),
         messages=[
             {
                 "role": "user",

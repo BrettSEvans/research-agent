@@ -11,12 +11,26 @@ filings remain the sole source of truth for verification.
 """
 from __future__ import annotations
 
+import os
+
 from pydantic import BaseModel, Field
 import anthropic
 
 from retriever import Hit
 
-MODEL = "claude-opus-4-6"
+# Default: Sonnet 4.6. Analysis is a reasoning task and benefits from adaptive
+# thinking. Override with ANALYZER_MODEL env var.
+DEFAULT_MODEL = "claude-sonnet-4-6"
+
+
+def _resolve_model() -> str:
+    return os.environ.get("ANALYZER_MODEL", DEFAULT_MODEL)
+
+
+def _thinking_kwargs(model: str) -> dict:
+    if "haiku" in model:
+        return {}
+    return {"thinking": {"type": "adaptive"}}
 
 SYSTEM_PROMPT = """You are a securities-compliance analyst assisting a venture capital firm.
 
@@ -82,7 +96,9 @@ def analyze_claim(
     claim: str,
     hits: list[Hit],
     deck_context: str | None = None,
+    model: str | None = None,
 ) -> ClaimAssessment:
+    model = model or _resolve_model()
     sections = [f"CLAIM:\n{claim}"]
     if deck_context:
         sections.append(f"DECK CONTEXT (clarifying metadata only):\n{deck_context}")
@@ -94,10 +110,10 @@ def analyze_claim(
     user_content = "\n\n".join(sections)
 
     response = client.messages.parse(
-        model=MODEL,
+        model=model,
         max_tokens=16000,
-        thinking={"type": "adaptive"},
         system=SYSTEM_PROMPT,
+        **_thinking_kwargs(model),
         messages=[{"role": "user", "content": user_content}],
         output_format=ClaimAssessment,
     )
