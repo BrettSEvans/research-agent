@@ -721,93 +721,199 @@
       extractionPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
+    // ── Streaming compliance check ────────────────────────────────────────
     verifyBtn.addEventListener('click', async () => {
       if (!currentContextId) return;
-      reportPanel.classList.remove('hidden');
-      reportBody.innerHTML = progressHTML(`Querying SEC EDGAR · indexing filings · analyzing with ${analyzerSelect.value}...`);
       verifyBtn.disabled = true;
+      reportPanel.classList.remove('hidden');
+      reportBody.innerHTML = progressHTML(`Connecting to compliance engine · ${analyzerSelect.value}…`);
+      reportPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      // State accumulated while streaming
+      let summaryEl = null;
+      let claimsCount = 0;
+      let flaggedCount = 0;
+      let statusEl = null;
+
+      const fd = new FormData();
+      fd.append('context_id', currentContextId);
+      fd.append('analyzer_model', analyzerSelect.value);
+
       try {
-        const fd = new FormData();
-        fd.append('context_id', currentContextId);
-        fd.append('analyzer_model', analyzerSelect.value);
-        const r = await fetch('/verify', { method: 'POST', body: fd });
-        if (!r.ok) throw new Error((await r.json()).detail || 'Verify failed');
-        renderReport(await r.json());
+        const resp = await fetch('/verify/stream', { method: 'POST', body: fd });
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => ({ detail: resp.statusText }));
+          throw new Error(err.detail || 'Stream failed');
+        }
+
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder();
+        let buf = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += decoder.decode(value, { stream: true });
+
+          // SSE lines: "data: {...}\n\n"
+          const parts = buf.split('\n\n');
+          buf = parts.pop(); // keep any incomplete chunk
+          for (const part of parts) {
+            const line = part.trim();
+            if (!line.startsWith('data:')) continue;
+            let evt;
+            try { evt = JSON.parse(line.slice(5).trim()); } catch { continue; }
+            handleStreamEvent(evt);
+          }
+        }
       } catch (e) {
         reportBody.innerHTML = `<div class="banner banner-error"><span class="material-symbols-rounded">error</span><div>${escape(e.message)}</div></div>`;
       } finally {
         verifyBtn.disabled = false;
+        // Remove any lingering status/progress indicator
+        document.getElementById('stream-status')?.remove();
       }
-      reportPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      function handleStreamEvent(evt) {
+        const { event, data } = evt;
+
+        if (event === 'start') {
+          // Replace progress bar with summary stats skeleton + status line
+          const cikLabel = data.cik || 'unresolved';
+          reportBody.innerHTML = `
+            <div id="report-summary" class="report-summary">
+              <div class="stat"><div class="stat-value" id="stat-analyzed">0</div><div class="stat-label">Analyzed</div></div>
+              <div class="stat"><div class="stat-value" id="stat-flagged">0</div><div class="stat-label">Flagged FLS</div></div>
+              <div class="stat"><div class="stat-value" style="font-size:1rem;padding-top:8px">${escape(String(data.total_claims))}</div><div class="stat-label">Total claims</div></div>
+              <div class="stat"><div class="stat-value" style="font-size:1rem;padding-top:8px">${escape(cikLabel)}</div><div class="stat-label">SEC CIK</div></div>
+              ${data.assumed_industry ? `<div class="stat"><div class="stat-value" style="font-size:1rem;padding-top:8px">${escape(data.assumed_industry)}</div><div class="stat-label">Industry</div></div>` : ''}
+            </div>
+            <div id="stream-status" class="progress"><div class="progress-bar"></div><span id="stream-status-text">Initialising…</span></div>
+            <div id="results-list"></div>`;
+          summaryEl = reportBody;
+        }
+
+        if (event === 'warning') {
+          const el = document.createElement('div');
+          el.className = 'banner';
+          el.innerHTML = `<span class="material-symbols-rounded">warning</span><div>${escape(data.message)}</div>`;
+          document.getElementById('results-list')?.prepend(el);
+        }
+
+        if (event === 'status') {
+          const t = document.getElementById('stream-status-text');
+          if (t) t.textContent = data.message;
+        }
+
+        if (event === 'claim_result') {
+          claimsCount++;
+          const el = document.getElementById('stat-analyzed');
+          if (el) el.textContent = claimsCount;
+
+          const entry = data.entry;
+          if (entry.verdict === 'CONTRADICTS' && entry.forward_looking) {
+            flaggedCount++;
+            const fel = document.getElementById('stat-flagged');
+            if (fel) { fel.textContent = flaggedCount; fel.classList.add('flag'); }
+          }
+
+          const node = document.createElement('div');
+          node.innerHTML = renderResultEntry(entry);
+          // Animate in
+          node.firstElementChild.style.opacity = '0';
+          node.firstElementChild.style.transform = 'translateY(8px)';
+          node.firstElementChild.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+          document.getElementById('results-list')?.appendChild(node.firstElementChild);
+          requestAnimationFrame(() => {
+            node.firstElementChild?.remove(); // already moved above, nothing to do
+          });
+          // Animate the last appended child
+          const list = document.getElementById('results-list');
+          const last = list?.lastElementChild;
+          if (last) {
+            requestAnimationFrame(() => { last.style.opacity = '1'; last.style.transform = 'translateY(0)'; });
+          }
+
+          // Update status line
+          const t = document.getElementById('stream-status-text');
+          if (t) t.textContent = `[${data.index}/${data.total}] done — ${entry.verdict}`;
+        }
+
+        if (event === 'done') {
+          document.getElementById('stream-status')?.remove();
+          const rep = data.report;
+          // Update final counts from authoritative report
+          const ae = document.getElementById('stat-analyzed');
+          if (ae) ae.textContent = rep.claims_analyzed;
+          const fe = document.getElementById('stat-flagged');
+          if (fe) {
+            fe.textContent = rep.flagged_forward_looking_contradictions;
+            if (rep.flagged_forward_looking_contradictions > 0) fe.classList.add('flag');
+          }
+          // Footer
+          const footer = document.createElement('div');
+          footer.style.cssText = 'margin-top:16px;color:var(--md-on-surface-variant);font-size:0.75rem;';
+          footer.textContent = `Generated ${rep.generated_at}${rep.log_path ? ' · log: ' + rep.log_path : ''}`;
+          document.getElementById('results-list')?.appendChild(footer);
+        }
+
+        if (event === 'error') {
+          reportBody.innerHTML += `<div class="banner banner-error"><span class="material-symbols-rounded">error</span><div>${escape(data.message)}</div></div>`;
+        }
+      }
     });
 
+    // ── Shared rendering helpers ──────────────────────────────────────────
     function verdictChipClass(verdict) {
-      return {
-        'CONTRADICTS': 'chip-contradicts',
-        'CONSISTENT': 'chip-consistent',
-        'UNSUPPORTED': 'chip-unsupported',
-        'INSUFFICIENT_EVIDENCE': 'chip-insufficient'
-      }[verdict] || 'chip-insufficient';
+      return { 'CONTRADICTS':'chip-contradicts','CONSISTENT':'chip-consistent',
+               'UNSUPPORTED':'chip-unsupported','INSUFFICIENT_EVIDENCE':'chip-insufficient' }[verdict] || 'chip-insufficient';
     }
-
     function verdictIcon(verdict) {
-      return {
-        'CONTRADICTS': 'error',
-        'CONSISTENT': 'check_circle',
-        'UNSUPPORTED': 'help',
-        'INSUFFICIENT_EVIDENCE': 'help_outline'
-      }[verdict] || 'help_outline';
+      return { 'CONTRADICTS':'error','CONSISTENT':'check_circle',
+               'UNSUPPORTED':'help','INSUFFICIENT_EVIDENCE':'help_outline' }[verdict] || 'help_outline';
     }
 
-    function renderReport(rep) {
-      let html = '';
+    function renderResultEntry(r) {
+      const verdict = r.verdict || 'INSUFFICIENT_EVIDENCE';
+      const isFlag = verdict === 'CONTRADICTS' && r.forward_looking;
+      let cls = 'result';
+      if (isFlag) cls += ' flag';
+      else if (verdict === 'CONSISTENT') cls += ' consistent';
+      else if (verdict === 'UNSUPPORTED' || verdict === 'INSUFFICIENT_EVIDENCE') cls += ' unsupported';
 
-      // Summary stats
-      const cikLabel = rep.cik || 'unresolved';
-      html += '<div class="report-summary">';
-      html += `<div class="stat"><div class="stat-value">${rep.claims_analyzed}</div><div class="stat-label">Claims analyzed</div></div>`;
-      html += `<div class="stat"><div class="stat-value ${rep.flagged_forward_looking_contradictions > 0 ? 'flag' : ''}">${rep.flagged_forward_looking_contradictions}</div><div class="stat-label">Flagged FLS contradictions</div></div>`;
-      html += `<div class="stat"><div class="stat-value" style="font-size: 1rem; padding-top: 8px">${escape(cikLabel)}</div><div class="stat-label">SEC CIK</div></div>`;
-      if (rep.assumed_industry) {
-        html += `<div class="stat"><div class="stat-value" style="font-size: 1rem; padding-top: 8px">${escape(rep.assumed_industry)}</div><div class="stat-label">Assumed industry</div></div>`;
+      let html = `<div class="${cls}">`;
+      html += `<div class="claim-text">${escape(r.claim)}</div>`;
+      html += '<div class="meta" style="display:flex;gap:6px;flex-wrap:wrap;">';
+      html += `<span class="chip ${verdictChipClass(verdict)}"><span class="material-symbols-rounded">${verdictIcon(verdict)}</span>${escape(verdict)}</span>`;
+      if (r.forward_looking) html += '<span class="chip chip-primary"><span class="material-symbols-rounded">trending_up</span>forward-looking</span>';
+      if (r.severity && r.severity !== 'NONE') html += `<span class="chip">severity: ${escape(r.severity)}</span>`;
+      if (r.analysis_method === 'web_search') html += '<span class="chip"><span class="material-symbols-rounded">travel_explore</span>web search</span>';
+      html += '</div>';
+      html += `<div class="explanation">${escape(r.explanation)}</div>`;
+      if (r.missing_information) {
+        html += `<div class="missing"><span class="material-symbols-rounded">info</span><div>Missing: ${escape(r.missing_information)}</div></div>`;
+      }
+      // SEC filing citations
+      for (const c of (r.cited_passages || [])) {
+        html += '<div class="cite">';
+        html += `<div><strong>P${c.passage_num}</strong> · ${escape(c.form)} filed ${escape(c.filing_date)} · <a href="${escape(c.url)}" target="_blank" rel="noopener">${escape(c.accession)}</a></div>`;
+        html += `<div class="excerpt">${escape(c.excerpt)}…</div>`;
+        html += '</div>';
+      }
+      // Web research sources (only present on market/industry claims)
+      if ((r.web_sources || []).length > 0) {
+        html += '<div class="section-heading" style="margin-top:12px;margin-bottom:6px;">Web sources consulted</div>';
+        for (const s of r.web_sources) {
+          html += `<div class="cite">`;
+          html += `<div><span class="material-symbols-rounded" style="font-size:14px;vertical-align:-2px;color:var(--md-primary)">open_in_new</span> `;
+          html += `<a href="${escape(s.url)}" target="_blank" rel="noopener">${escape(s.title || s.url)}</a>`;
+          if (s.page_age) html += ` <span style="color:var(--md-on-surface-variant);font-size:0.75rem">(${escape(s.page_age)})</span>`;
+          html += `</div><div class="excerpt">${escape(s.url)}</div>`;
+          html += `</div>`;
+        }
       }
       html += '</div>';
-
-      for (const w of (rep.warnings || [])) {
-        html += `<div class="banner"><span class="material-symbols-rounded">warning</span><div>${escape(w)}</div></div>`;
-      }
-
-      for (const r of rep.results) {
-        const verdict = r.verdict || 'INSUFFICIENT_EVIDENCE';
-        const isFlag = verdict === 'CONTRADICTS' && r.forward_looking;
-        let cls = 'result';
-        if (isFlag) cls += ' flag';
-        else if (verdict === 'CONSISTENT') cls += ' consistent';
-        else if (verdict === 'UNSUPPORTED' || verdict === 'INSUFFICIENT_EVIDENCE') cls += ' unsupported';
-
-        html += `<div class="${cls}">`;
-        html += `<div class="claim-text">${escape(r.claim)}</div>`;
-        html += '<div class="meta" style="display: flex; gap: 6px; flex-wrap: wrap;">';
-        html += `<span class="chip ${verdictChipClass(verdict)}"><span class="material-symbols-rounded">${verdictIcon(verdict)}</span>${escape(verdict)}</span>`;
-        if (r.forward_looking) html += '<span class="chip chip-primary"><span class="material-symbols-rounded">trending_up</span>forward-looking</span>';
-        if (r.severity && r.severity !== 'NONE') html += `<span class="chip">severity: ${escape(r.severity)}</span>`;
-        if (r.analysis_method === 'web_search') html += '<span class="chip"><span class="material-symbols-rounded">travel_explore</span>web search</span>';
-        html += '</div>';
-        html += `<div class="explanation">${escape(r.explanation)}</div>`;
-        if (r.missing_information) {
-          html += `<div class="missing"><span class="material-symbols-rounded">info</span><div>Missing: ${escape(r.missing_information)}</div></div>`;
-        }
-        for (const c of (r.cited_passages || [])) {
-          html += '<div class="cite">';
-          html += `<div><strong>P${c.passage_num}</strong> · ${escape(c.form)} filed ${escape(c.filing_date)} · <a href="${escape(c.url)}" target="_blank" rel="noopener">${escape(c.accession)}</a></div>`;
-          html += `<div class="excerpt">${escape(c.excerpt)}…</div>`;
-          html += '</div>';
-        }
-        html += '</div>';
-      }
-
-      const footer = `<div style="margin-top: 16px; color: var(--md-on-surface-variant); font-size: 0.75rem;">Generated ${escape(rep.generated_at)}${rep.log_path ? ' · log: ' + escape(rep.log_path) : ''}</div>`;
-      reportBody.innerHTML = html + footer;
+      return html;
     }
   </script>
 </body>

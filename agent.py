@@ -104,7 +104,7 @@ def build_index(
     return retriever, filings
 
 
-def run_compliance_report(
+def iter_compliance_report(
     *,
     claims: list[str],
     cik: str | None = None,
@@ -114,8 +114,21 @@ def run_compliance_report(
     top_k: int = 5,
     verbose: bool = True,
     analyzer_model: str | None = None,
-) -> dict:
-    """Importable entry point. Returns a report dict — never raises on missing data."""
+):
+    """Generator that yields events as each claim is analyzed.
+
+    Callers get findings immediately — no waiting for the full run.
+
+    Event shapes
+    ────────────
+    {"event": "start",        "data": {cik, company_name, assumed_industry,
+                                        total_claims, forms, generated_at}}
+    {"event": "warning",      "data": {"message": str}}
+    {"event": "status",       "data": {"message": str}}
+    {"event": "claim_result", "data": {"index": int, "total": int,
+                                        "entry": {claim, verdict, ...}}}
+    {"event": "done",         "data": {"report": {full aggregate dict}}}
+    """
     load_dotenv()
     forms = forms or ["10-K", "10-Q", "S-1", "8-K"]
 
@@ -123,7 +136,6 @@ def run_compliance_report(
     ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     cik_label = cik or "unknown"
 
-    # Assumed industry (from deck extraction) for report header + web-search fallback
     assumed_industry = deck.extraction.company.industry if deck else None
     company_name = deck.extraction.company.name if deck else None
 
@@ -140,32 +152,41 @@ def run_compliance_report(
         "warnings": [],
     }
 
-    if not claims:
-        report["warnings"].append(
-            "No claims provided. Extract claims from a pitch deck or supply them via --claim / --claims."
-        )
-        return report
+    yield {
+        "event": "start",
+        "data": {
+            "cik": cik,
+            "company_name": company_name,
+            "assumed_industry": assumed_industry,
+            "total_claims": len(claims),
+            "forms": forms,
+            "generated_at": ts,
+        },
+    }
 
+    if not claims:
+        w = "No claims provided. Extract claims from a pitch deck or supply them via --claim / --claims."
+        report["warnings"].append(w)
+        yield {"event": "warning", "data": {"message": w}}
+        yield {"event": "done", "data": {"report": report}}
+        return
+
+    # ── No CIK: web-search for market claims, INSUFFICIENT_EVIDENCE for rest ──
     if cik is None:
-        # No SEC filings available — common for early-stage startups.
-        # Industry / market / TAM claims can still be assessed via web search.
-        # Company-specific claims (financial, projection, traction, regulatory)
-        # require SEC disclosures and remain INSUFFICIENT_EVIDENCE.
         industry_note = (
             f"Assumed industry: {assumed_industry}"
             if assumed_industry
             else "No industry inferred from deck — web-search analyses will scope from the claim itself"
         )
-        report["warnings"].append(
+        w = (
             "Could not resolve company to an SEC CIK (common for private / early-stage "
             f"startups). {industry_note}. Market/industry claims will be assessed via "
             "web search; company-specific claims remain INSUFFICIENT_EVIDENCE."
         )
+        report["warnings"].append(w)
+        yield {"event": "warning", "data": {"message": w}}
 
-        # Build category lookup from deck if available
-        claim_meta = (
-            {c.text: c for c in deck.extraction.claims} if deck else {}
-        )
+        claim_meta = {c.text: c for c in deck.extraction.claims} if deck else {}
         client = anthropic.Anthropic(timeout=ANTHROPIC_TIMEOUT)
 
         for i, claim in enumerate(claims, start=1):
@@ -173,12 +194,14 @@ def run_compliance_report(
             category = meta.category if meta else None
             forward_looking_hint = meta.likely_forward_looking if meta else None
 
-            # Only "market" claims are meaningful without company-specific SEC data.
             if category == "market":
                 if verbose:
                     _log(f"[{i}/{len(claims)}] Web-searching industry claim: {claim[:100]}...")
+                yield {"event": "status", "data": {
+                    "message": f"[{i}/{len(claims)}] Web-searching: {claim[:80]}..."
+                }}
                 try:
-                    assessment = analyze_industry_claim(
+                    assessment, web_sources = analyze_industry_claim(
                         client,
                         claim,
                         company_name=company_name or "unknown",
@@ -193,6 +216,7 @@ def run_compliance_report(
                         "explanation": assessment.explanation,
                         "missing_information": assessment.missing_information,
                         "cited_passages": [],
+                        "web_sources": web_sources,
                         "analysis_method": "web_search",
                         "assumed_industry": assumed_industry,
                     }
@@ -205,11 +229,11 @@ def run_compliance_report(
                         "explanation": f"Web-search analysis failed: {exc}",
                         "missing_information": "Retry web search, or provide authoritative industry reports.",
                         "cited_passages": [],
+                        "web_sources": [],
                         "analysis_method": "web_search_failed",
                         "assumed_industry": assumed_industry,
                     }
             else:
-                # Company-specific claim — needs SEC filings
                 reason_category = category or "unknown category"
                 entry = {
                     "claim": claim,
@@ -226,14 +250,23 @@ def run_compliance_report(
                         "company disclosures (data room, audited financials)."
                     ),
                     "cited_passages": [],
+                    "web_sources": [],
                     "analysis_method": "none",
                     "assumed_industry": assumed_industry,
                 }
+
             report["results"].append(entry)
+            if verbose:
+                _log(f"    {entry['verdict']} [{entry['severity']}] {claim[:80]}")
+            yield {"event": "claim_result", "data": {"index": i, "total": len(claims), "entry": entry}}
 
         report["claims_analyzed"] = len(claims)
         _write_log(report, cik_label, ts)
-        return report
+        yield {"event": "done", "data": {"report": report}}
+        return
+
+    # ── CIK available: build dense index then analyze against SEC filings ──
+    yield {"event": "status", "data": {"message": "Fetching SEC filings and building search index…"}}
 
     retriever, filings = build_index(cik, forms=forms, limit=filings_limit, verbose=verbose)
     if retriever is None:
@@ -243,8 +276,9 @@ def run_compliance_report(
             "Consider rerunning with --forms D,S-1 or treat claims as unverified."
         )
         report["warnings"].append(msg)
-        for claim in claims:
-            report["results"].append({
+        yield {"event": "warning", "data": {"message": msg}}
+        for i, claim in enumerate(claims, start=1):
+            entry = {
                 "claim": claim,
                 "verdict": "INSUFFICIENT_EVIDENCE",
                 "forward_looking": None,
@@ -252,18 +286,26 @@ def run_compliance_report(
                 "explanation": msg,
                 "missing_information": "Applicable SEC filings for this company.",
                 "cited_passages": [],
-            })
+                "web_sources": [],
+            }
+            report["results"].append(entry)
+            yield {"event": "claim_result", "data": {"index": i, "total": len(claims), "entry": entry}}
         report["claims_analyzed"] = len(claims)
         _write_log(report, cik_label, ts)
-        return report
+        yield {"event": "done", "data": {"report": report}}
+        return
 
-    client = anthropic.Anthropic()
+    client = anthropic.Anthropic(timeout=ANTHROPIC_TIMEOUT)
     deck_ctx_str = deck.clarifying_context() if deck else None
-
     flagged = 0
+
     for i, claim in enumerate(claims, start=1):
         if verbose:
             _log(f"[{i}/{len(claims)}] Analyzing: {claim[:100]}...")
+        yield {"event": "status", "data": {
+            "message": f"[{i}/{len(claims)}] Analyzing: {claim[:80]}…"
+        }}
+
         hits = retriever.search(claim, top_k=top_k)
         if verbose:
             _log(f"    retrieved top-{len(hits)} passages; calling analyzer...")
@@ -290,20 +332,51 @@ def run_compliance_report(
                 for p in assessment.cited_passages
                 if 1 <= p <= len(hits)
             ],
+            "web_sources": [],  # SEC path has no web sources
         }
         report["results"].append(entry)
         if assessment.verdict == "CONTRADICTS" and assessment.forward_looking:
             flagged += 1
         if verbose:
-            flag = "⚠️  FLAG" if (
-                assessment.verdict == "CONTRADICTS" and assessment.forward_looking
-            ) else f"    {assessment.verdict}"
+            flag = "⚠️  FLAG" if (assessment.verdict == "CONTRADICTS" and assessment.forward_looking) else f"    {assessment.verdict}"
             _log(f"    {flag} [{assessment.severity}] forward_looking={assessment.forward_looking}")
             _log(f"    {assessment.explanation}")
+        yield {"event": "claim_result", "data": {"index": i, "total": len(claims), "entry": entry}}
 
     report["claims_analyzed"] = len(claims)
     report["flagged_forward_looking_contradictions"] = flagged
     _write_log(report, cik_label, ts)
+    yield {"event": "done", "data": {"report": report}}
+
+
+def run_compliance_report(
+    *,
+    claims: list[str],
+    cik: str | None = None,
+    deck: DeckContext | None = None,
+    forms: list[str] | None = None,
+    filings_limit: int = 3,
+    top_k: int = 5,
+    verbose: bool = True,
+    analyzer_model: str | None = None,
+) -> dict:
+    """Thin wrapper around iter_compliance_report — returns the final report dict.
+
+    Used by the CLI and any caller that doesn't need streaming.
+    """
+    report: dict = {}
+    for event in iter_compliance_report(
+        claims=claims,
+        cik=cik,
+        deck=deck,
+        forms=forms,
+        filings_limit=filings_limit,
+        top_k=top_k,
+        verbose=verbose,
+        analyzer_model=analyzer_model,
+    ):
+        if event["event"] == "done":
+            report = event["data"]["report"]
     return report
 
 
@@ -352,25 +425,43 @@ def main() -> int:
     cik = resolve_cik(args, deck)
     forms = [f.strip() for f in args.forms.split(",") if f.strip()]
 
-    report = run_compliance_report(
+    # Stream findings to the terminal as each claim finishes.
+    report: dict = {}
+    for event in iter_compliance_report(
         claims=claims,
         cik=cik,
         deck=deck,
         forms=forms,
         filings_limit=args.filings,
         top_k=args.top_k,
-    )
+        verbose=True,
+    ):
+        if event["event"] == "claim_result":
+            e = event["data"]["entry"]
+            idx = event["data"]["index"]
+            total = event["data"]["total"]
+            flag = "⚠️  FLAG" if (e["verdict"] == "CONTRADICTS" and e.get("forward_looking")) else ""
+            _log(f"\n── Claim {idx}/{total} {flag}")
+            _log(f"   {e['claim']}")
+            _log(f"   Verdict : {e['verdict']}  Severity: {e['severity']}")
+            _log(f"   {e['explanation']}")
+            if e.get("missing_information"):
+                _log(f"   Missing : {e['missing_information']}")
+            for src in e.get("web_sources", []):
+                _log(f"   Source  : {src['title']}  {src['url']}")
+        elif event["event"] == "done":
+            report = event["data"]["report"]
 
-    _log(f"[+] Discrepancy log written to {report.get('log_path')}")
+    _log(f"\n[+] Discrepancy log written to {report.get('log_path')}")
     _log(
         "[+] Flagged contradictory forward-looking statements: "
-        f"{report['flagged_forward_looking_contradictions']}"
+        f"{report.get('flagged_forward_looking_contradictions', 0)}"
     )
-    if report["warnings"]:
+    if report.get("warnings"):
         _log("[!] Warnings:")
         for w in report["warnings"]:
             _log(f"    - {w}")
-    return 1 if report["flagged_forward_looking_contradictions"] else 0
+    return 1 if report.get("flagged_forward_looking_contradictions") else 0
 
 
 if __name__ == "__main__":

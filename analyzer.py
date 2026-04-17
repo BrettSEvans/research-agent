@@ -111,6 +111,34 @@ ABSOLUTE RULES:
 - `cited_passages` must be empty — you are not working with numbered passages. Use `explanation` to reference URLs/publications inline."""
 
 
+def _collect_web_sources(response) -> list[dict]:
+    """Pull URL + title from every web_search_tool_result block in a response.
+
+    Deduped by URL, preserving order of first appearance. Used so the UI can
+    show the exact pages the model consulted — the user verifies the claim,
+    not just trusts the explanation.
+    """
+    sources: list[dict] = []
+    seen: set[str] = set()
+    for block in getattr(response, "content", []) or []:
+        if getattr(block, "type", None) != "web_search_tool_result":
+            continue
+        results = getattr(block, "content", []) or []
+        for item in results:
+            url = getattr(item, "url", None)
+            if not url or url in seen:
+                continue
+            seen.add(url)
+            sources.append(
+                {
+                    "url": url,
+                    "title": getattr(item, "title", None) or url,
+                    "page_age": getattr(item, "page_age", None),
+                }
+            )
+    return sources
+
+
 def analyze_industry_claim(
     client: anthropic.Anthropic,
     claim: str,
@@ -118,7 +146,7 @@ def analyze_industry_claim(
     company_name: str,
     industry: str | None,
     model: str | None = None,
-) -> ClaimAssessment:
+) -> tuple[ClaimAssessment, list[dict]]:
     """Verify an industry/market claim using Claude's web_search tool.
 
     Used when the target company has no resolvable SEC CIK (early-stage
@@ -129,23 +157,26 @@ def analyze_industry_claim(
     # Local models have no server-side web_search tool. Refuse cleanly rather
     # than fabricate — no URLs, no statistics we cannot cite.
     if llm_local.is_local_model(model):
-        return ClaimAssessment(
-            verdict="INSUFFICIENT_EVIDENCE",
-            forward_looking=False,
-            severity="NONE",
-            explanation=(
-                f"Local model '{model}' has no web-search capability, so this "
-                "industry/TAM claim cannot be verified against authoritative "
-                "online sources without fabrication. Re-run this claim with a "
-                "Claude model (which has the web_search tool) or supply an "
-                "industry report directly."
+        return (
+            ClaimAssessment(
+                verdict="INSUFFICIENT_EVIDENCE",
+                forward_looking=False,
+                severity="NONE",
+                explanation=(
+                    f"Local model '{model}' has no web-search capability, so this "
+                    "industry/TAM claim cannot be verified against authoritative "
+                    "online sources without fabrication. Re-run this claim with a "
+                    "Claude model (which has the web_search tool) or supply an "
+                    "industry report directly."
+                ),
+                cited_passages=[],
+                missing_information=(
+                    "Authoritative industry/market research (Statista, IBISWorld, "
+                    "Gartner, government data, or analyst reports) — or re-run "
+                    "with a Claude model that supports web_search."
+                ),
             ),
-            cited_passages=[],
-            missing_information=(
-                "Authoritative industry/market research (Statista, IBISWorld, "
-                "Gartner, government data, or analyst reports) — or re-run "
-                "with a Claude model that supports web_search."
-            ),
+            [],
         )
 
     context_lines = [f"Company: {company_name}"]
@@ -173,7 +204,7 @@ def analyze_industry_claim(
         output_format=ClaimAssessment,
         **_thinking_kwargs(model),
     )
-    return response.parsed_output
+    return response.parsed_output, _collect_web_sources(response)
 
 
 def analyze_claim(

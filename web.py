@@ -13,6 +13,7 @@ Run:
 """
 from __future__ import annotations
 
+import json
 import tempfile
 import uuid
 from pathlib import Path
@@ -21,10 +22,10 @@ from typing import Annotated
 import anthropic
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 
-from agent import run_compliance_report
+from agent import iter_compliance_report, run_compliance_report
 from deck_context import DeckContext
 from extractor import extract_from_pdf
 
@@ -90,6 +91,57 @@ async def extract(
             "context_path": str(context_path),
             "extraction": extraction.model_dump(),
         }
+    )
+
+
+@app.post("/verify/stream")
+def verify_stream(
+    context_id: Annotated[str, Form()],
+    forms: Annotated[str, Form()] = "10-K,10-Q,S-1,8-K",
+    filings_limit: Annotated[int, Form()] = 3,
+    top_k: Annotated[int, Form()] = 5,
+    analyzer_model: Annotated[str | None, Form()] = None,
+):
+    """Server-Sent Events endpoint: emits one claim_result event per claim
+    as soon as analysis finishes, so the browser can render incrementally."""
+    if analyzer_model and analyzer_model not in ALLOWED_MODELS:
+        raise HTTPException(status_code=400, detail=f"Unknown model: {analyzer_model}")
+    context_path = CONTEXT_DIR / f"deck_{context_id}.json"
+    if not context_path.exists():
+        raise HTTPException(status_code=404, detail=f"Unknown context_id: {context_id}")
+
+    deck = DeckContext.load(context_path)
+    claims = deck.claims_for_verification()
+
+    from sec import lookup_cik
+    cik = None
+    key = deck.company_lookup_key()
+    if key:
+        cik = key.zfill(10) if (key.isdigit() and len(key) <= 10) else lookup_cik(key)
+
+    def event_stream():
+        try:
+            for event in iter_compliance_report(
+                claims=claims,
+                cik=cik,
+                deck=deck,
+                forms=[f.strip() for f in forms.split(",") if f.strip()],
+                filings_limit=filings_limit,
+                top_k=top_k,
+                verbose=True,
+                analyzer_model=analyzer_model,
+            ):
+                yield f"data: {json.dumps(event)}\n\n"
+        except Exception as exc:
+            yield f"data: {json.dumps({'event': 'error', 'data': {'message': str(exc)}})}\n\n"
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",  # disable nginx buffering if behind a proxy
+        },
     )
 
 
