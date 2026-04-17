@@ -29,7 +29,9 @@ from sec import Filing, chunk_text, fetch_text, list_filings, lookup_cik
 from version import ANALYZER_VERSION, EXTRACTOR_VERSION
 
 
-LOG_DIR = Path(__file__).parent / "logs"
+import uuid
+
+SAVED_REPORTS_DIR = Path(__file__).parent / "saved_reports"
 
 # Give the Anthropic client an explicit timeout so a hung request can't stall
 # the whole run. Analysis calls with adaptive thinking can take 30-60s; web
@@ -162,7 +164,10 @@ def iter_compliance_report(
     assumed_industry = deck.extraction.company.industry if deck else None
     company_name = deck.extraction.company.name if deck else None
 
+    report_id = uuid.uuid4().hex[:12]
+    
     report: dict = {
+        "report_id": report_id,
         "generated_at": ts,
         "cik": cik,
         "forms": forms,
@@ -416,8 +421,9 @@ def run_compliance_report(
 
 
 def _write_log(report: dict, cik_label: str, ts: str) -> None:
-    LOG_DIR.mkdir(exist_ok=True)
-    log_path = LOG_DIR / f"discrepancies_{cik_label}_{ts}.json"
+    SAVED_REPORTS_DIR.mkdir(exist_ok=True)
+    report_id = report.get("report_id", uuid.uuid4().hex[:12])
+    log_path = SAVED_REPORTS_DIR / f"report_{report_id}.json"
     log_path.write_text(json.dumps(report, indent=2))
     report["log_path"] = str(log_path)
 

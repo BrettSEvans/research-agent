@@ -27,7 +27,7 @@ from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 
-from agent import iter_compliance_report, run_compliance_report
+from agent import iter_compliance_report, run_compliance_report, SAVED_REPORTS_DIR
 from deck_context import DeckContext
 from extractor import extract_from_pdf
 from version import ANALYZER_VERSION, EXTRACTOR_VERSION
@@ -320,3 +320,58 @@ async def verify(
         modules=modules.split(",") if modules else None,
     )
     return report
+
+# ───────────────────────── saved reports ──────────────────────────────
+
+@app.get("/reports")
+async def list_reports():
+    """Return all saved compliance reports, newest first."""
+    items = []
+    if not SAVED_REPORTS_DIR.exists():
+        return JSONResponse(items)
+
+    for p in sorted(SAVED_REPORTS_DIR.glob("*.json"), key=lambda f: f.stat().st_mtime, reverse=True):
+        try:
+            data = json.loads(p.read_text())
+            
+            # Compute compliance metric: Verified / (Verified + Contradicts + Flagged)
+            # Ignoring INSUFFICIENT_EVIDENCE to get a clearer picture of actual checks.
+            verified = sum(1 for r in data.get("results", []) if r.get("verdict") == "VERIFIED")
+            flagged = sum(1 for r in data.get("results", []) if r.get("verdict") in ("CONTRADICTS", "FLAGGED"))
+            total_checked = verified + flagged
+            
+            if total_checked > 0:
+                metric_pct = round((verified / total_checked) * 100)
+                metric_str = f"{metric_pct}% ({verified}/{total_checked} claims)"
+            else:
+                metric_str = "N/A"
+
+            items.append({
+                "report_id": data.get("report_id", p.stem.replace("report_", "")),
+                "company_name": data.get("company_name", "Unknown"),
+                "generated_at": data.get("generated_at", ""),
+                "analyzer_model": data.get("analyzer_model", ""),
+                "compliance_metric": metric_str,
+                "claims_analyzed": data.get("claims_analyzed", 0),
+            })
+        except Exception:
+            continue
+    return JSONResponse(items)
+
+@app.get("/reports/{report_id}")
+async def get_report(report_id: str):
+    """Retrieve a specific saved compliance report."""
+    report_path = SAVED_REPORTS_DIR / f"report_{report_id}.json"
+    if not report_path.exists():
+        raise HTTPException(status_code=404, detail=f"Unknown report_id: {report_id}")
+    return JSONResponse(json.loads(report_path.read_text()))
+
+@app.delete("/reports/{report_id}")
+async def delete_report(report_id: str):
+    """Delete a saved compliance report."""
+    report_path = SAVED_REPORTS_DIR / f"report_{report_id}.json"
+    if not report_path.exists():
+        raise HTTPException(status_code=404, detail=f"Unknown report_id: {report_id}")
+    report_path.unlink()
+    return JSONResponse({"deleted": report_id})
+

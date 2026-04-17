@@ -551,6 +551,40 @@
     .saved-item .saved-meta { font-size: 0.75rem; color: var(--md-on-surface-variant); margin-top: 2px; }
     .saved-item .saved-actions { display: flex; gap: 6px; flex-shrink: 0; }
     .saved-empty { color: var(--md-on-surface-variant); font-size: 0.875rem; font-style: italic; padding: 8px 0; }
+    
+    /* ============ Dashboard Table ============ */
+    .dashboard-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+    .dashboard-table th {
+      text-align: left;
+      padding: 12px;
+      font-weight: 500;
+      color: var(--md-on-surface-variant);
+      border-bottom: 2px solid var(--md-outline-variant);
+    }
+    .dashboard-table td {
+      padding: 12px;
+      border-bottom: 1px solid var(--md-surface-container-high);
+      vertical-align: middle;
+    }
+    .dashboard-table tbody tr:hover {
+      background: var(--md-surface-container-low);
+    }
+    .metric-badge {
+      display: inline-flex;
+      padding: 4px 8px;
+      border-radius: var(--md-shape-sm);
+      font-weight: 500;
+      font-size: 0.75rem;
+      background: var(--md-surface-container-highest);
+      color: var(--md-on-surface);
+    }
+    .metric-badge.high { background: var(--md-success-container); color: var(--md-on-success-container); }
+    .metric-badge.med { background: var(--md-warning-container); color: var(--md-on-warning-container); }
+    .metric-badge.low { background: var(--md-error-container); color: var(--md-on-error-container); }
   </style>
 </head>
 <body>
@@ -565,50 +599,73 @@
 
   <main class="container">
 
-    <!-- Model selection -->
-    <section class="card elevated">
-      <div class="card-header">
-        <span class="material-symbols-rounded" style="color: var(--md-primary)">tune</span>
-        <h2>Model configuration</h2>
+    <!-- DASHBOARD VIEW -->
+    <div id="dashboard-view">
+      <div class="row" style="justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h2 class="md-headline" style="margin: 0;">Compliance Reports Dashboard</h2>
+        <button class="btn btn-filled" onclick="showAnalysisView()">
+          <span class="material-symbols-rounded">add</span> New Analysis
+        </button>
       </div>
-      <div class="row">
-        <div class="select-field">
-          <label for="extractor-model">Extractor model</label>
-          <select id="extractor-model">
-            <option value="claude-haiku-4-5" selected>Claude Haiku 4.5 — fast, cheap, structured extraction</option>
-            <option value="claude-sonnet-4-6">Claude Sonnet 4.6 — balanced; better on image-heavy decks</option>
-            <option value="claude-opus-4-6">Claude Opus 4.6 — highest quality; slower and pricier</option>
-            <option value="qwen3.5:9b">Qwen 3.5 9B (local, Ollama) — text-only; PDF parsed via pypdf</option>
-          </select>
-          <span class="material-symbols-rounded arrow">arrow_drop_down</span>
-        </div>
-        <div class="select-field">
-          <label for="analyzer-model">Analyzer model</label>
-          <select id="analyzer-model">
-            <option value="claude-sonnet-4-6" selected>Claude Sonnet 4.6 — adaptive thinking, recommended</option>
-            <option value="claude-opus-4-6">Claude Opus 4.6 — deepest reasoning; best for subtle contradictions</option>
-            <option value="claude-haiku-4-5">Claude Haiku 4.5 — cheapest; may miss nuanced contradictions</option>
-            <option value="qwen3.5:9b">Qwen 3.5 9B (local, Ollama) — no web search; market claims → INSUFFICIENT_EVIDENCE</option>
-          </select>
-          <span class="material-symbols-rounded arrow">arrow_drop_down</span>
-        </div>
-      </div>
-      <p class="field-help">
-        Extraction is mechanical — Haiku is usually enough. Analysis requires reasoning about contradictions and forward-looking statements — Sonnet or Opus recommended.
-      </p>
-    </section>
+      
+      <section class="card elevated">
+        <table class="dashboard-table">
+          <thead>
+            <tr>
+              <th>Company</th>
+              <th>Date</th>
+              <th>Models Used</th>
+              <th>Compliance Metric</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="reports-table-body">
+            <tr><td colspan="5" style="text-align: center; color: var(--md-on-surface-variant);">Loading reports...</td></tr>
+          </tbody>
+        </table>
+      </section>
+    </div>
 
-    <!-- Saved extractions library -->
-    <section class="card elevated">
-      <div class="card-header">
-        <span class="material-symbols-rounded" style="color: var(--md-primary)">folder_open</span>
-        <h2>Saved extractions</h2>
+    <!-- ANALYSIS VIEW -->
+    <div id="analysis-view" class="hidden">
+      <div class="row" style="margin-bottom: 16px;">
+        <button class="btn btn-text" onclick="showDashboard()">
+          <span class="material-symbols-rounded">arrow_back</span> Back to Dashboard
+        </button>
       </div>
-      <p class="card-subtitle" style="margin: -8px 0 12px 0;">Load a previous extraction to run compliance without re-processing the PDF.</p>
-      <div id="saved-list" class="saved-list">
-        <div class="saved-empty">Loading…</div>
-      </div>
-    </section>
+
+      <!-- Model selection -->
+      <section class="card elevated">
+        <div class="card-header">
+          <span class="material-symbols-rounded" style="color: var(--md-primary)">tune</span>
+          <h2>Model configuration</h2>
+        </div>
+        <div class="row">
+          <div class="select-field">
+            <label for="extractor-model">Extractor model</label>
+            <select id="extractor-model">
+              <option value="claude-haiku-4-5" selected>Claude Haiku 4.5 — fast, cheap, structured extraction</option>
+              <option value="claude-sonnet-4-6">Claude Sonnet 4.6 — balanced; better on image-heavy decks</option>
+              <option value="claude-opus-4-6">Claude Opus 4.6 — highest quality; slower and pricier</option>
+              <option value="qwen3.5:9b">Qwen 3.5 9B (local, Ollama) — text-only; PDF parsed via pypdf</option>
+            </select>
+            <span class="material-symbols-rounded arrow">arrow_drop_down</span>
+          </div>
+          <div class="select-field">
+            <label for="analyzer-model">Analyzer model</label>
+            <select id="analyzer-model">
+              <option value="claude-sonnet-4-6" selected>Claude Sonnet 4.6 — adaptive thinking, recommended</option>
+              <option value="claude-opus-4-6">Claude Opus 4.6 — deepest reasoning; best for subtle contradictions</option>
+              <option value="claude-haiku-4-5">Claude Haiku 4.5 — cheapest; may miss nuanced contradictions</option>
+              <option value="qwen3.5:9b">Qwen 3.5 9B (local, Ollama) — no web search; market claims → INSUFFICIENT_EVIDENCE</option>
+            </select>
+            <span class="material-symbols-rounded arrow">arrow_drop_down</span>
+          </div>
+        </div>
+        <p class="field-help">
+          Extraction is mechanical — Haiku is usually enough. Analysis requires reasoning about contradictions and forward-looking statements — Sonnet or Opus recommended.
+        </p>
+      </section>
 
     <!-- Step 1: Upload -->
     <section class="card elevated">
@@ -734,6 +791,24 @@
       </div>
       <div id="report-body"></div>
     </section>
+    
+    </div> <!-- END ANALYSIS VIEW -->
+
+    <!-- DRILLDOWN VIEW -->
+    <div id="drilldown-view" class="hidden">
+      <div class="row" style="margin-bottom: 16px;">
+        <button class="btn btn-text" onclick="showDashboard()">
+          <span class="material-symbols-rounded">arrow_back</span> Back to Dashboard
+        </button>
+      </div>
+      <section class="card elevated">
+        <div class="card-header">
+          <span class="material-symbols-rounded" style="color: var(--md-primary)">analytics</span>
+          <h2 id="drilldown-title">Compliance Report Details</h2>
+        </div>
+        <div id="drilldown-body"></div>
+      </section>
+    </div>
 
   </main>
 
@@ -748,7 +823,6 @@
     const continueExtractBtn = document.getElementById('continue-extract-btn');
     const verifyBtn = document.getElementById('verify-btn');
     const cancelVerifyBtn = document.getElementById('cancel-verify-btn');
-    const saveBtn = document.getElementById('save-btn');
     const extractorSelect = document.getElementById('extractor-model');
     const analyzerSelect = document.getElementById('analyzer-model');
 
@@ -756,86 +830,94 @@
     let currentFilename = '';
     let lastReport = null;  // accumulated report for download
 
-    // ── Saved extractions ─────────────────────────────────────────────────
-    async function loadSavedList() {
-      const list = document.getElementById('saved-list');
+    // ── Navigation ─────────────────────────────────────────────────────────
+    function showDashboard() {
+      document.getElementById('dashboard-view').classList.remove('hidden');
+      document.getElementById('analysis-view').classList.add('hidden');
+      document.getElementById('drilldown-view').classList.add('hidden');
+      loadSavedReports();
+    }
+    function showAnalysisView() {
+      document.getElementById('dashboard-view').classList.add('hidden');
+      document.getElementById('analysis-view').classList.remove('hidden');
+      document.getElementById('drilldown-view').classList.add('hidden');
+    }
+    function showDrilldownView() {
+      document.getElementById('dashboard-view').classList.add('hidden');
+      document.getElementById('analysis-view').classList.add('hidden');
+      document.getElementById('drilldown-view').classList.remove('hidden');
+      document.getElementById('drilldown-view').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // ── Saved Reports Dashboard ───────────────────────────────────────────
+    function getMetricBadgeClass(pctStr) {
+      if (pctStr === "N/A") return "";
+      const pct = parseInt(pctStr);
+      if (pct >= 80) return "high";
+      if (pct >= 50) return "med";
+      return "low";
+    }
+
+    async function loadSavedReports() {
+      const tbody = document.getElementById('reports-table-body');
       try {
-        const r = await fetch('/saved-extractions');
+        const r = await fetch('/reports');
         const items = await r.json();
         if (!items.length) {
-          list.innerHTML = '<div class="saved-empty">No saved extractions yet. Upload a deck and click "Save extraction".</div>';
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 24px; color: var(--md-on-surface-variant);">No compliance reports generated yet. Click New Analysis to start.</td></tr>';
           return;
         }
-        list.innerHTML = items.map(it => `
-          <div class="saved-item" data-id="${escape(it.save_id)}">
-            <span class="material-symbols-rounded" style="color:var(--md-primary);flex-shrink:0">description</span>
-            <div class="saved-info">
-              <div class="saved-name">${escape(it.company_name)}</div>
-              <div class="saved-meta">${escape(it.original_filename)} · ${escape(it.extractor_model)}${it.extractor_version ? ' v' + escape(it.extractor_version) : ''} · ${escape(it.saved_at.slice(0,10))}</div>
-            </div>
-            <div class="saved-actions">
+        tbody.innerHTML = items.map(it => `
+          <tr>
+            <td style="font-weight: 500;">${escape(it.company_name)}</td>
+            <td>${escape(it.generated_at).replace('T', ' ').slice(0, 16)}</td>
+            <td>${escape(it.analyzer_model)}</td>
+            <td><span class="metric-badge ${getMetricBadgeClass(it.compliance_metric)}">${escape(it.compliance_metric)}</span></td>
+            <td>
               <button class="btn btn-outlined" style="height:32px;padding:0 12px;font-size:0.8rem"
-                      onclick="loadSavedExtraction('${escape(it.save_id)}')">
-                <span class="material-symbols-rounded" style="font-size:16px">play_arrow</span>Load
+                      onclick="loadReportDrilldown('${escape(it.report_id)}')">
+                <span class="material-symbols-rounded" style="font-size:16px">visibility</span> View
               </button>
               <button class="btn btn-text" style="height:32px;padding:0 8px;color:var(--md-error)"
-                      onclick="deleteSaved('${escape(it.save_id)}', this)">
+                      onclick="deleteReport('${escape(it.report_id)}')">
                 <span class="material-symbols-rounded" style="font-size:16px">delete</span>
               </button>
-            </div>
-          </div>`).join('');
+            </td>
+          </tr>`).join('');
       } catch (e) {
-        list.innerHTML = `<div class="saved-empty">Could not load saved extractions: ${escape(e.message)}</div>`;
+        tbody.innerHTML = `<tr><td colspan="5" style="color:var(--md-error);">Could not load reports: ${escape(e.message)}</td></tr>`;
       }
     }
 
-    async function loadSavedExtraction(saveId) {
+    async function loadReportDrilldown(reportId) {
       try {
-        const r = await fetch(`/saved-extractions/${saveId}/load`, { method: 'POST' });
-        if (!r.ok) throw new Error((await r.json()).detail);
-        const data = await r.json();
-        currentContextId = data.context_id;
-        currentFilename = data.meta?.original_filename || '';
-        renderExtraction(data.extraction);
-        restoreDropzone();
+        const r = await fetch(`/reports/${reportId}`);
+        if (!r.ok) throw new Error("Report not found");
+        const report = await r.json();
+        
+        document.getElementById('drilldown-title').textContent = `${report.company_name || 'Unknown'} - Compliance Report`;
+        
+        let html = buildReportSummary(report);
+        for (const res of report.results) {
+          html += renderResultEntry(res);
+        }
+        
+        document.getElementById('drilldown-body').innerHTML = html;
+        showDrilldownView();
       } catch (e) {
-        alert(`Failed to load: ${e.message}`);
+        alert("Failed to load report: " + e.message);
       }
     }
 
-    async function deleteSaved(saveId, btn) {
-      if (!confirm('Delete this saved extraction?')) return;
+    async function deleteReport(reportId) {
+      if (!confirm('Are you sure you want to delete this report?')) return;
       try {
-        await fetch(`/saved-extractions/${saveId}`, { method: 'DELETE' });
-        loadSavedList();
+        await fetch(`/reports/${reportId}`, { method: 'DELETE' });
+        loadSavedReports();
       } catch (e) {
-        alert(`Delete failed: ${e.message}`);
+        alert("Failed to delete report.");
       }
     }
-
-    document.getElementById('save-btn').addEventListener('click', async () => {
-      if (!currentContextId) return;
-      const btn = document.getElementById('save-btn');
-      btn.disabled = true;
-      try {
-        const fd = new FormData();
-        fd.append('context_id', currentContextId);
-        fd.append('original_filename', currentFilename);
-        fd.append('extractor_model', extractorSelect.value);
-        const r = await fetch('/saved-extractions', { method: 'POST', body: fd });
-        if (!r.ok) throw new Error((await r.json()).detail);
-        const data = await r.json();
-        btn.innerHTML = '<span class="material-symbols-rounded">bookmark</span> Saved!';
-        setTimeout(() => {
-          btn.innerHTML = '<span class="material-symbols-rounded">bookmark_add</span> Save extraction';
-          btn.disabled = false;
-        }, 2000);
-        loadSavedList();
-      } catch (e) {
-        alert(`Save failed: ${e.message}`);
-        btn.disabled = false;
-      }
-    });
 
     // ── Report download as Markdown ───────────────────────────────────────
     document.getElementById('download-report-btn').addEventListener('click', () => {
@@ -908,7 +990,8 @@
       return lines.join('\n');
     }
 
-    loadSavedList();
+    // Initialize Dashboard
+    loadSavedReports();
 
     fileInput.addEventListener('change', () => uploadFile(fileInput.files[0]));
     dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag'); });
@@ -975,7 +1058,6 @@
 
       continueExtractBtn.classList.remove('hidden');
       verifyBtn.classList.add('hidden');
-      saveBtn.classList.add('hidden');
       
       extractionPanel.classList.remove('hidden');
       reportPanel.classList.add('hidden');
@@ -1007,7 +1089,6 @@
       document.getElementById('analysis-config').classList.add('hidden'); // Hide config now that extraction is done
       continueExtractBtn.classList.add('hidden');
       verifyBtn.classList.remove('hidden');
-      saveBtn.classList.remove('hidden');
     }
 
     function updateModulesFromStage(stage) {
@@ -1070,10 +1151,8 @@
       reportPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
       // State accumulated while streaming
-      let summaryEl = null;
       let claimsCount = 0;
       let flaggedCount = 0;
-      let statusEl = null;
 
       activeAbortController = new AbortController();
 
@@ -1146,7 +1225,6 @@
             </div>
             <div id="stream-status" class="progress"><div class="progress-bar"></div><span id="stream-status-text">Initialising…</span></div>
             <div id="results-list"></div>`;
-          summaryEl = reportBody;
         }
 
         if (event === 'warning') {
@@ -1175,20 +1253,7 @@
 
           const node = document.createElement('div');
           node.innerHTML = renderResultEntry(entry);
-          // Animate in
-          node.firstElementChild.style.opacity = '0';
-          node.firstElementChild.style.transform = 'translateY(8px)';
-          node.firstElementChild.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
           document.getElementById('results-list')?.appendChild(node.firstElementChild);
-          requestAnimationFrame(() => {
-            node.firstElementChild?.remove(); // already moved above, nothing to do
-          });
-          // Animate the last appended child
-          const list = document.getElementById('results-list');
-          const last = list?.lastElementChild;
-          if (last) {
-            requestAnimationFrame(() => { last.style.opacity = '1'; last.style.transform = 'translateY(0)'; });
-          }
 
           // Update status line
           const t = document.getElementById('stream-status-text');
@@ -1199,25 +1264,20 @@
           document.getElementById('stream-status')?.remove();
           const rep = data.report;
           lastReport = rep;
-          // Update final counts from authoritative report
-          const ae = document.getElementById('stat-analyzed');
-          if (ae) ae.textContent = rep.claims_analyzed;
-          const fe = document.getElementById('stat-flagged');
-          if (fe) {
-            fe.textContent = rep.flagged_forward_looking_contradictions;
-            if (rep.flagged_forward_looking_contradictions > 0) fe.classList.add('flag');
+          // Build final report
+          let html = buildReportSummary(rep);
+          for (const res of rep.results) {
+            html += renderResultEntry(res);
           }
-          // Footer
-          const footer = document.createElement('div');
-          footer.style.cssText = 'margin-top:16px;color:var(--md-on-surface-variant);font-size:0.75rem;';
-          footer.textContent = `Generated ${rep.generated_at}${rep.log_path ? ' · log: ' + rep.log_path : ''}`;
-          document.getElementById('results-list')?.appendChild(footer);
+          reportBody.innerHTML = html;
           // Show download button
           document.getElementById('download-report-btn').style.display = '';
+          // Force a load of the dashboard in the background so it's fresh
+          loadSavedReports();
         }
 
         if (event === 'error') {
-          reportBody.innerHTML += `<div class="banner banner-error"><span class="material-symbols-rounded">error</span><div>${escape(data.message)}</div></div>`;
+          reportBody.innerHTML += `<div class="banner banner-error"><span class="material-symbols-rounded">error</span><div>Stream error: ${escape(data.message)}</div></div>`;
         }
       }
     });
