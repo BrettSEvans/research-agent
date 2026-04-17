@@ -26,6 +26,7 @@ from analyzer import analyze_claim, analyze_industry_claim
 from deck_context import DeckContext
 from retriever import DenseRetriever
 from sec import Filing, chunk_text, fetch_text, list_filings, lookup_cik
+from version import ANALYZER_VERSION, EXTRACTOR_VERSION
 
 
 LOG_DIR = Path(__file__).parent / "logs"
@@ -167,7 +168,9 @@ def iter_compliance_report(
         "assumed_industry": assumed_industry,
         "company_name": company_name,
         "extractor_model": extractor_model or os.environ.get("EXTRACTOR_MODEL", "claude-haiku-4-5"),
+        "extractor_version": EXTRACTOR_VERSION,
         "analyzer_model": analyzer_model or os.environ.get("ANALYZER_MODEL", "claude-sonnet-4-6"),
+        "analyzer_version": ANALYZER_VERSION,
         "claims_analyzed": 0,
         "flagged_forward_looking_contradictions": 0,
         "results": [],

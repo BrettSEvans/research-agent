@@ -698,7 +698,7 @@
             <span class="material-symbols-rounded" style="color:var(--md-primary);flex-shrink:0">description</span>
             <div class="saved-info">
               <div class="saved-name">${escape(it.company_name)}</div>
-              <div class="saved-meta">${escape(it.original_filename)} · ${escape(it.extractor_model)} · ${escape(it.saved_at.slice(0,10))}</div>
+              <div class="saved-meta">${escape(it.original_filename)} · ${escape(it.extractor_model)}${it.extractor_version ? ' v' + escape(it.extractor_version) : ''} · ${escape(it.saved_at.slice(0,10))}</div>
             </div>
             <div class="saved-actions">
               <button class="btn btn-outlined" style="height:32px;padding:0 12px;font-size:0.8rem"
@@ -784,8 +784,8 @@
       lines.push(`**Generated:** ${rep.generated_at}  `);
       lines.push(`**SEC CIK:** ${rep.cik || 'unresolved'}  `);
       if (rep.assumed_industry) lines.push(`**Industry:** ${rep.assumed_industry}  `);
-      lines.push(`**Extractor model:** ${rep.extractor_model || 'unknown'}  `);
-      lines.push(`**Analyzer model:** ${rep.analyzer_model || 'unknown'}  `);
+      lines.push(`**Extractor:** ${rep.extractor_model || 'unknown'}${rep.extractor_version ? ' (v' + rep.extractor_version + ')' : ''}  `);
+      lines.push(`**Analyzer:** ${rep.analyzer_model || 'unknown'}${rep.analyzer_version ? ' (v' + rep.analyzer_version + ')' : ''}  `);
       lines.push(`**Claims analyzed:** ${rep.claims_analyzed}  `);
       lines.push(`**Flagged FLS contradictions:** ${rep.flagged_forward_looking_contradictions}`);
       lines.push('');

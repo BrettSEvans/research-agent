@@ -30,6 +30,7 @@ from fastapi.templating import Jinja2Templates
 from agent import iter_compliance_report, run_compliance_report
 from deck_context import DeckContext
 from extractor import extract_from_pdf
+from version import ANALYZER_VERSION, EXTRACTOR_VERSION
 
 load_dotenv()
 
@@ -94,6 +95,7 @@ async def extract(
             "context_id": token,
             "context_path": str(context_path),
             "extraction": extraction.model_dump(),
+            "extractor_version": EXTRACTOR_VERSION,
         }
     )
 
@@ -165,6 +167,7 @@ async def list_saved_extractions():
                 "company_name": data.get("meta", {}).get("company_name", "Unknown"),
                 "original_filename": data.get("meta", {}).get("original_filename", ""),
                 "extractor_model": data.get("meta", {}).get("extractor_model", ""),
+                "extractor_version": data.get("meta", {}).get("extractor_version", ""),
                 "saved_at": data.get("meta", {}).get("saved_at", ""),
             })
         except Exception:
@@ -192,6 +195,7 @@ async def save_extraction(
             "company_name": company_name,
             "original_filename": original_filename,
             "extractor_model": extractor_model,
+            "extractor_version": EXTRACTOR_VERSION,
             "saved_at": datetime.now(timezone.utc).isoformat(),
         },
         "extraction": extraction_data,
