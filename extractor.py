@@ -53,6 +53,15 @@ class CompanyIdentity(BaseModel):
         default=None,
         description="One-sentence company description, verbatim from the deck if available.",
     )
+    industry: str | None = Field(
+        default=None,
+        description=(
+            "Industry/sector the company operates in (e.g., 'B2B SaaS for legal tech', "
+            "'fintech lending', 'biotech oncology'). Prefer terminology used in the deck. "
+            "If no industry is stated directly, infer conservatively from the product "
+            "description and market claims. Null only if the deck provides no basis."
+        ),
+    )
 
 
 class ExtractedClaim(BaseModel):
@@ -115,7 +124,17 @@ Prioritize these claim categories because the compliance agent cross-references 
 - traction: customer counts, retention, LTV/CAC
 - projection: future revenue, growth, unit economics, timelines
 - regulatory: compliance status, licenses, pending filings
-- product / team: only if they include specific verifiable claims"""
+- product / team: only if they include specific verifiable claims
+
+INDUSTRY FIELD:
+The compliance agent uses the `industry` field when the company has no SEC CIK
+(early-stage startups). With only a company name and no filings, it needs an
+industry label to scope web-based verification of market/TAM claims. Fill this
+field whenever the deck gives you enough basis — even if industry is not stated
+verbatim, conservative inference from the product description and market
+claims is appropriate (e.g., a deck about "AI-powered legal contract review"
+→ industry "B2B SaaS for legal tech"). Leave null only when the deck provides
+truly no basis."""
 
 
 def extract_from_pdf(

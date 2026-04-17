@@ -20,7 +20,7 @@ from pathlib import Path
 import anthropic
 from dotenv import load_dotenv
 
-from analyzer import analyze_claim
+from analyzer import analyze_claim, analyze_industry_claim
 from deck_context import DeckContext
 from retriever import DenseRetriever
 from sec import Filing, chunk_text, fetch_text, list_filings, lookup_cik
@@ -106,11 +106,17 @@ def run_compliance_report(
     ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     cik_label = cik or "unknown"
 
+    # Assumed industry (from deck extraction) for report header + web-search fallback
+    assumed_industry = deck.extraction.company.industry if deck else None
+    company_name = deck.extraction.company.name if deck else None
+
     report: dict = {
         "generated_at": ts,
         "cik": cik,
         "forms": forms,
         "deck_context_used": deck is not None,
+        "assumed_industry": assumed_industry,
+        "company_name": company_name,
         "claims_analyzed": 0,
         "flagged_forward_looking_contradictions": 0,
         "results": [],
@@ -124,22 +130,89 @@ def run_compliance_report(
         return report
 
     if cik is None:
-        report["warnings"].append(
-            "Could not resolve company to an SEC CIK. "
-            "Compliance verification against SEC filings is not possible without one. "
-            "Claims are logged but unverified."
+        # No SEC filings available — common for early-stage startups.
+        # Industry / market / TAM claims can still be assessed via web search.
+        # Company-specific claims (financial, projection, traction, regulatory)
+        # require SEC disclosures and remain INSUFFICIENT_EVIDENCE.
+        industry_note = (
+            f"Assumed industry: {assumed_industry}"
+            if assumed_industry
+            else "No industry inferred from deck — web-search analyses will scope from the claim itself"
         )
-        # Still record the claims so the user sees what was being checked
-        for claim in claims:
-            report["results"].append({
-                "claim": claim,
-                "verdict": "INSUFFICIENT_EVIDENCE",
-                "forward_looking": None,
-                "severity": "NONE",
-                "explanation": "Company could not be resolved to an SEC CIK; no filings available to verify against.",
-                "missing_information": "SEC CIK or ticker for the target company.",
-                "cited_passages": [],
-            })
+        report["warnings"].append(
+            "Could not resolve company to an SEC CIK (common for private / early-stage "
+            f"startups). {industry_note}. Market/industry claims will be assessed via "
+            "web search; company-specific claims remain INSUFFICIENT_EVIDENCE."
+        )
+
+        # Build category lookup from deck if available
+        claim_meta = (
+            {c.text: c for c in deck.extraction.claims} if deck else {}
+        )
+        client = anthropic.Anthropic()
+
+        for i, claim in enumerate(claims, start=1):
+            meta = claim_meta.get(claim)
+            category = meta.category if meta else None
+            forward_looking_hint = meta.likely_forward_looking if meta else None
+
+            # Only "market" claims are meaningful without company-specific SEC data.
+            if category == "market":
+                if verbose:
+                    print(f"\n[{i}/{len(claims)}] Web-searching industry claim: {claim[:100]}...")
+                try:
+                    assessment = analyze_industry_claim(
+                        client,
+                        claim,
+                        company_name=company_name or "unknown",
+                        industry=assumed_industry,
+                    )
+                    entry = {
+                        "claim": claim,
+                        "verdict": assessment.verdict,
+                        "forward_looking": assessment.forward_looking,
+                        "severity": assessment.severity,
+                        "explanation": assessment.explanation,
+                        "missing_information": assessment.missing_information,
+                        "cited_passages": [],
+                        "analysis_method": "web_search",
+                        "assumed_industry": assumed_industry,
+                    }
+                except Exception as exc:
+                    entry = {
+                        "claim": claim,
+                        "verdict": "INSUFFICIENT_EVIDENCE",
+                        "forward_looking": forward_looking_hint,
+                        "severity": "NONE",
+                        "explanation": f"Web-search analysis failed: {exc}",
+                        "missing_information": "Retry web search, or provide authoritative industry reports.",
+                        "cited_passages": [],
+                        "analysis_method": "web_search_failed",
+                        "assumed_industry": assumed_industry,
+                    }
+            else:
+                # Company-specific claim — needs SEC filings
+                reason_category = category or "unknown category"
+                entry = {
+                    "claim": claim,
+                    "verdict": "INSUFFICIENT_EVIDENCE",
+                    "forward_looking": forward_looking_hint,
+                    "severity": "NONE",
+                    "explanation": (
+                        f"This is a company-specific claim ({reason_category}) and cannot be "
+                        "verified without SEC filings for the target company. No CIK was "
+                        "resolved from the deck."
+                    ),
+                    "missing_information": (
+                        "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct "
+                        "company disclosures (data room, audited financials)."
+                    ),
+                    "cited_passages": [],
+                    "analysis_method": "none",
+                    "assumed_industry": assumed_industry,
+                }
+            report["results"].append(entry)
+
         report["claims_analyzed"] = len(claims)
         _write_log(report, cik_label, ts)
         return report

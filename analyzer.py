@@ -91,6 +91,68 @@ def _format_passages(hits: list[Hit]) -> str:
     return "\n\n---\n\n".join(lines)
 
 
+INDUSTRY_SYSTEM_PROMPT = """You are a market research analyst assisting a venture capital firm.
+
+You receive a CLAIM about an industry, market size, TAM/SAM/SOM, growth rate, or competitive landscape — NOT a claim about a specific company's financial performance.
+
+Use the web_search tool to find authoritative sources (industry reports, government data, reputable publications like Statista, IBISWorld, Gartner, McKinsey, or recent public filings from comparable companies) and assess whether the claim is supported.
+
+Verdicts:
+- CONTRADICTS: web sources materially conflict with the claim.
+- UNSUPPORTED: the claim is specific and checkable, but no authoritative web sources corroborate it.
+- CONSISTENT: web sources explicitly corroborate the claim (include specific figures/dates in the explanation).
+- INSUFFICIENT_EVIDENCE: web search did not return enough information to decide, OR the claim is not actually an industry/market claim and requires company-specific data you do not have.
+
+ABSOLUTE RULES:
+- NEVER fabricate statistics, figures, or sources. Every cited number/claim in `explanation` must come from a specific web search result with its URL or publication name named inline.
+- If the claim is actually company-specific (revenue, projections, traction for *this* company) and not industry-level, return INSUFFICIENT_EVIDENCE and explain that SEC filings or company disclosures would be required.
+- In `missing_information`, name the additional primary source that would be needed (if any).
+- `cited_passages` must be empty — you are not working with numbered passages. Use `explanation` to reference URLs/publications inline."""
+
+
+def analyze_industry_claim(
+    client: anthropic.Anthropic,
+    claim: str,
+    *,
+    company_name: str,
+    industry: str | None,
+    model: str | None = None,
+) -> ClaimAssessment:
+    """Verify an industry/market claim using Claude's web_search tool.
+
+    Used when the target company has no resolvable SEC CIK (early-stage
+    startups). Grounded in real URLs from web search — no fabrication.
+    """
+    model = model or _resolve_model()
+
+    context_lines = [f"Company: {company_name}"]
+    if industry:
+        context_lines.append(f"Assumed industry: {industry}")
+    else:
+        context_lines.append(
+            "Assumed industry: NOT STATED — infer conservatively from the claim itself."
+        )
+    context = "\n".join(context_lines)
+
+    user_content = (
+        f"{context}\n\n"
+        f"CLAIM:\n{claim}\n\n"
+        "Use web search to find authoritative data supporting or contradicting this "
+        "claim, then assess. Cite URLs or publication names inline in your explanation."
+    )
+
+    response = client.messages.parse(
+        model=model,
+        max_tokens=16000,
+        system=INDUSTRY_SYSTEM_PROMPT,
+        messages=[{"role": "user", "content": user_content}],
+        tools=[{"type": "web_search_20260209", "name": "web_search"}],
+        output_format=ClaimAssessment,
+        **_thinking_kwargs(model),
+    )
+    return response.parsed_output
+
+
 def analyze_claim(
     client: anthropic.Anthropic,
     claim: str,

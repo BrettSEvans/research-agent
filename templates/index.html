@@ -169,6 +169,7 @@
       html += `<dt>Name</dt><dd>${escape(c.name)}</dd>`;
       html += `<dt>Ticker</dt><dd>${c.ticker ? escape(c.ticker) : '<span class="muted">not stated in deck</span>'}</dd>`;
       html += `<dt>CIK</dt><dd>${c.cik ? escape(c.cik) : '<span class="muted">not stated in deck</span>'}</dd>`;
+      html += `<dt>Industry</dt><dd>${c.industry ? escape(c.industry) : '<span class="muted">—</span>'}</dd>`;
       html += `<dt>Website</dt><dd>${c.website ? escape(c.website) : '<span class="muted">—</span>'}</dd>`;
       html += `<dt>Fiscal year end</dt><dd>${ex.fiscal_year_end ? escape(ex.fiscal_year_end) : '<span class="muted">—</span>'}</dd>`;
       html += `<dt>Currency</dt><dd>${ex.currency ? escape(ex.currency) : '<span class="muted">—</span>'}</dd>`;
@@ -216,7 +217,11 @@
 
     function renderReport(rep) {
       let html = '';
-      html += `<div class="muted" style="margin-bottom: 0.75rem">Generated ${escape(rep.generated_at)} · CIK ${escape(rep.cik || 'unresolved')} · ${rep.claims_analyzed} claim(s) analyzed · <strong>${rep.flagged_forward_looking_contradictions}</strong> flagged</div>`;
+      const cikLabel = rep.cik || 'unresolved (no SEC filings)';
+      html += `<div class="muted" style="margin-bottom: 0.75rem">Generated ${escape(rep.generated_at)} · CIK ${escape(cikLabel)} · ${rep.claims_analyzed} claim(s) analyzed · <strong>${rep.flagged_forward_looking_contradictions}</strong> flagged</div>`;
+      if (rep.assumed_industry) {
+        html += `<div class="muted" style="margin-bottom: 0.75rem">Assumed industry (from deck): <strong>${escape(rep.assumed_industry)}</strong></div>`;
+      }
 
       for (const w of (rep.warnings || [])) {
         html += `<div class="warning">⚠ ${escape(w)}</div>`;
@@ -243,6 +248,7 @@
         html += `<span class="pill ${pillCls}">${escape(verdict)}</span>`;
         if (r.forward_looking) html += '<span class="pill pill-fl">forward-looking</span>';
         if (r.severity && r.severity !== 'NONE') html += `<span class="pill">severity: ${escape(r.severity)}</span>`;
+        if (r.analysis_method === 'web_search') html += '<span class="pill">verified via web search</span>';
         html += '</div>';
         html += `<div class="explanation">${escape(r.explanation)}</div>`;
         if (r.missing_information) {
