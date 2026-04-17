@@ -11,6 +11,11 @@ from bs4 import BeautifulSoup
 SEC_UA = "Compliance Agent research-agent@saasless.example"
 HEADERS = {"User-Agent": SEC_UA, "Accept-Encoding": "gzip, deflate"}
 
+# Explicit connect/read/write/pool timeouts — a single hung socket should not
+# hang the whole compliance run.
+SEC_TIMEOUT = httpx.Timeout(connect=10.0, read=45.0, write=10.0, pool=10.0)
+FETCH_TIMEOUT = httpx.Timeout(connect=10.0, read=90.0, write=10.0, pool=10.0)
+
 
 @dataclass
 class Filing:
@@ -30,7 +35,9 @@ def lookup_cik(query: str) -> str | None:
     """Resolve a ticker or company name to a 10-digit CIK."""
     q = query.strip().lower()
     r = httpx.get(
-        "https://www.sec.gov/files/company_tickers.json", headers=HEADERS, timeout=30
+        "https://www.sec.gov/files/company_tickers.json",
+        headers=HEADERS,
+        timeout=SEC_TIMEOUT,
     )
     r.raise_for_status()
     for row in r.json().values():
@@ -51,7 +58,7 @@ def list_filings(
     r = httpx.get(
         f"https://data.sec.gov/submissions/CIK{cik10}.json",
         headers=HEADERS,
-        timeout=30,
+        timeout=SEC_TIMEOUT,
     )
     r.raise_for_status()
     recent = r.json()["filings"]["recent"]
@@ -84,7 +91,9 @@ def list_filings(
 
 def fetch_text(filing: Filing) -> str:
     """Fetch a filing's primary document and return cleaned plain text."""
-    r = httpx.get(filing.url, headers=HEADERS, timeout=60, follow_redirects=True)
+    r = httpx.get(
+        filing.url, headers=HEADERS, timeout=FETCH_TIMEOUT, follow_redirects=True
+    )
     r.raise_for_status()
     ctype = r.headers.get("content-type", "").lower()
     if "html" in ctype or filing.primary_doc.lower().endswith((".htm", ".html")):

@@ -123,7 +123,7 @@ async def verify(
         forms=[f.strip() for f in forms.split(",") if f.strip()],
         filings_limit=filings_limit,
         top_k=top_k,
-        verbose=False,
+        verbose=True,
         analyzer_model=analyzer_model,
     )
     return report

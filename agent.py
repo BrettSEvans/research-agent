@@ -28,6 +28,20 @@ from sec import Filing, chunk_text, fetch_text, list_filings, lookup_cik
 
 LOG_DIR = Path(__file__).parent / "logs"
 
+# Give the Anthropic client an explicit timeout so a hung request can't stall
+# the whole run. Analysis calls with adaptive thinking can take 30-60s; web
+# search tool loops can take longer. 300s is a generous upper bound.
+ANTHROPIC_TIMEOUT = 300.0
+
+
+def _ts() -> str:
+    """HH:MM:SS timestamp for CLI log lines."""
+    return datetime.now().strftime("%H:%M:%S")
+
+
+def _log(msg: str) -> None:
+    print(f"[{_ts()}] {msg}", flush=True)
+
 
 # ---------------------------------------------------------------- helpers
 
@@ -69,22 +83,24 @@ def build_index(
     if not filings:
         return None, []
     if verbose:
-        print(f"[+] Found {len(filings)} filings; indexing...")
+        _log(f"[+] Found {len(filings)} filings; indexing...")
     retriever = DenseRetriever()
     for f in filings:
         if verbose:
-            print(f"    - {f.form} {f.filing_date} ({f.accession})")
+            _log(f"    - fetching {f.form} {f.filing_date} ({f.accession})")
         try:
             text = fetch_text(f)
         except Exception as e:
-            print(f"      ! fetch failed: {e}", file=sys.stderr)
+            _log(f"      ! fetch failed: {e}")
             continue
         retriever.add(f, chunk_text(text))
     if retriever.size == 0:
         return None, filings
+    if verbose:
+        _log(f"[+] Building dense index over {retriever.size} passages...")
     retriever.build()
     if verbose:
-        print(f"[+] Indexed {retriever.size} passages")
+        _log(f"[+] Indexed {retriever.size} passages")
     return retriever, filings
 
 
@@ -150,7 +166,7 @@ def run_compliance_report(
         claim_meta = (
             {c.text: c for c in deck.extraction.claims} if deck else {}
         )
-        client = anthropic.Anthropic()
+        client = anthropic.Anthropic(timeout=ANTHROPIC_TIMEOUT)
 
         for i, claim in enumerate(claims, start=1):
             meta = claim_meta.get(claim)
@@ -160,7 +176,7 @@ def run_compliance_report(
             # Only "market" claims are meaningful without company-specific SEC data.
             if category == "market":
                 if verbose:
-                    print(f"\n[{i}/{len(claims)}] Web-searching industry claim: {claim[:100]}...")
+                    _log(f"[{i}/{len(claims)}] Web-searching industry claim: {claim[:100]}...")
                 try:
                     assessment = analyze_industry_claim(
                         client,
@@ -247,8 +263,10 @@ def run_compliance_report(
     flagged = 0
     for i, claim in enumerate(claims, start=1):
         if verbose:
-            print(f"\n[{i}/{len(claims)}] Analyzing: {claim[:100]}...")
+            _log(f"[{i}/{len(claims)}] Analyzing: {claim[:100]}...")
         hits = retriever.search(claim, top_k=top_k)
+        if verbose:
+            _log(f"    retrieved top-{len(hits)} passages; calling analyzer...")
         assessment = analyze_claim(
             client, claim, hits, deck_context=deck_ctx_str, model=analyzer_model
         )
@@ -280,8 +298,8 @@ def run_compliance_report(
             flag = "⚠️  FLAG" if (
                 assessment.verdict == "CONTRADICTS" and assessment.forward_looking
             ) else f"    {assessment.verdict}"
-            print(f"    {flag} [{assessment.severity}] forward_looking={assessment.forward_looking}")
-            print(f"    {assessment.explanation}")
+            _log(f"    {flag} [{assessment.severity}] forward_looking={assessment.forward_looking}")
+            _log(f"    {assessment.explanation}")
 
     report["claims_analyzed"] = len(claims)
     report["flagged_forward_looking_contradictions"] = flagged
@@ -343,13 +361,15 @@ def main() -> int:
         top_k=args.top_k,
     )
 
-    print(f"\n[+] Discrepancy log written to {report.get('log_path')}")
-    print(f"[+] Flagged contradictory forward-looking statements: "
-          f"{report['flagged_forward_looking_contradictions']}")
+    _log(f"[+] Discrepancy log written to {report.get('log_path')}")
+    _log(
+        "[+] Flagged contradictory forward-looking statements: "
+        f"{report['flagged_forward_looking_contradictions']}"
+    )
     if report["warnings"]:
-        print("[!] Warnings:")
+        _log("[!] Warnings:")
         for w in report["warnings"]:
-            print(f"    - {w}")
+            _log(f"    - {w}")
     return 1 if report["flagged_forward_looking_contradictions"] else 0
 
 
