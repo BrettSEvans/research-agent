@@ -105,6 +105,7 @@ def verify_stream(
     filings_limit: Annotated[int, Form()] = 3,
     top_k: Annotated[int, Form()] = 5,
     analyzer_model: Annotated[str | None, Form()] = None,
+    extractor_model: Annotated[str | None, Form()] = None,
 ):
     """Server-Sent Events endpoint: emits one claim_result event per claim
     as soon as analysis finishes, so the browser can render incrementally."""
@@ -134,6 +135,7 @@ def verify_stream(
                 top_k=top_k,
                 verbose=True,
                 analyzer_model=analyzer_model,
+                extractor_model=extractor_model,
             ):
                 yield f"data: {json.dumps(event)}\n\n"
         except Exception as exc:

@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
@@ -131,6 +132,7 @@ def iter_compliance_report(
     top_k: int = 5,
     verbose: bool = True,
     analyzer_model: str | None = None,
+    extractor_model: str | None = None,
     max_workers: int | None = None,
 ):
     """Generator that yields events as each claim is analyzed.
@@ -164,6 +166,8 @@ def iter_compliance_report(
         "deck_context_used": deck is not None,
         "assumed_industry": assumed_industry,
         "company_name": company_name,
+        "extractor_model": extractor_model or os.environ.get("EXTRACTOR_MODEL", "claude-haiku-4-5"),
+        "analyzer_model": analyzer_model or os.environ.get("ANALYZER_MODEL", "claude-sonnet-4-6"),
         "claims_analyzed": 0,
         "flagged_forward_looking_contradictions": 0,
         "results": [],

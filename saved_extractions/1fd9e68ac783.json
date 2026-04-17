@@ -1,0 +1,136 @@
+{
+  "meta": {
+    "save_id": "1fd9e68ac783",
+    "company_name": "Canna Farm",
+    "original_filename": "cannabis presentation.pdf",
+    "extractor_model": "claude-sonnet-4-6",
+    "saved_at": "2026-04-17T19:27:27.982809+00:00"
+  },
+  "extraction": {
+    "company": {
+      "name": "Canna Farm",
+      "ticker": null,
+      "cik": null,
+      "website": "cannabusinessplan.com",
+      "description": "To build a successful commercial cultivation facility and create a recognizable brand in a rapidly growing industry.",
+      "industry": "Cannabis cultivation and wholesale (marijuana grow operations, California)"
+    },
+    "claims": [
+      {
+        "text": "The overall U.S. market projection for legal adult-use and medical cannabis sales is expected to reach $22.8 billion by 2029, with a CAGR of 28%.",
+        "verbatim": "The passage of initiatives in California, Nevada, Massachusetts, Maine, Florida, Arkansas, Montana and North Dalota will add $7.4 billion to the 2029 market forecast bringing the overall market projection for legal adult-use and medical sales in the U.S to $22.8 billion by 2029. That brings the compound annual growth rate (CAGR) to 28%.",
+        "slide": 5,
+        "category": "market",
+        "likely_forward_looking": true
+      },
+      {
+        "text": "State-level legalization initiatives will add $7.4 billion to the 2029 U.S. cannabis market forecast.",
+        "verbatim": "The passage of initiatives in California, Nevada, Massachusetts, Maine, Florida, Arkansas, Montana and North Dalota will add $7.4 billion to the 2029 market forecast",
+        "slide": 5,
+        "category": "market",
+        "likely_forward_looking": true
+      },
+      {
+        "text": "Recreational cannabis sales will account for more than 53% of the overall U.S. cannabis market by 2029.",
+        "verbatim": "Recreational cannabis sales will account for more than half (53%) of the overall market by 2029",
+        "slide": 6,
+        "category": "market",
+        "likely_forward_looking": true
+      },
+      {
+        "text": "The legal cannabis market is projected to reach $22.8 billion in total annual sales by 2029.",
+        "verbatim": "By 2029 legal cannabis market would see a whopping $22.8 billion in total annual sales.",
+        "slide": 6,
+        "category": "market",
+        "likely_forward_looking": true
+      },
+      {
+        "text": "As of August 1, 2025, California had 440 licensed retail marijuana stores, 583 licensed retail cultivations, 198 product manufacturers, and 15 testing facilities.",
+        "verbatim": "Licensed retail marijuana businesses as of Aug 1, 2025 Stores: 440 Cultivations: 583 Product Manufacturers: 198 Testing Facilities: 15",
+        "slide": 7,
+        "category": "regulatory",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "As of August 1, 2025, California had 531 licensed medical marijuana centres, 801 licensed medical cultivations, 242 infused product manufacturers, and 13 testing facilities.",
+        "verbatim": "Licensed medical marijuana businesses as of Aug 1, 2025 Centres: 531 Cultivations: 801 Infused Product Manufacturers: 242 Testing Facilities: 13",
+        "slide": 7,
+        "category": "regulatory",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "Canna Farm projects yearly revenue of approximately $200,000 in Year 1.",
+        "verbatim": "Yearly revenue of about $200,000 Year 1",
+        "slide": 14,
+        "category": "projection",
+        "likely_forward_looking": true
+      },
+      {
+        "text": "Canna Farm projects yearly revenue of approximately $1,000,000 in Year 2.",
+        "verbatim": "Yearly revenue of about $1,000,000 Year 2",
+        "slide": 14,
+        "category": "projection",
+        "likely_forward_looking": true
+      },
+      {
+        "text": "Canna Farm projects yearly revenue of approximately $1,500,000 in Year 3.",
+        "verbatim": "Yearly revenue of about $1,500,000 Year 3",
+        "slide": 14,
+        "category": "projection",
+        "likely_forward_looking": true
+      },
+      {
+        "text": "Canna Farm is seeking $330,000 USD in investment capital.",
+        "verbatim": "$330,000 US DOLLARS Investments Needed",
+        "slide": 15,
+        "category": "financial",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "The planned investment budget allocates $100,000 to greenhouses, $70,000 to land and development, $30,000 to legal fees and licensing, $30,000 to security equipment, $20,000 to sales and marketing, and $3,000 to administrative expenses.",
+        "verbatim": "$3,000 Administrative Expenses \u2022 $20,000 Sales % Marketing \u2022 $30,000 Legal Fees & Licensing \u2022 $30,000 Security Equipment \u2022 $70,000 Land & Development \u2022 $100,000 Greenhouses",
+        "slide": 15,
+        "category": "financial",
+        "likely_forward_looking": true
+      },
+      {
+        "text": "Indoor flower deal sizes range from 0.5 to 100 pounds.",
+        "verbatim": "Deal sizes for indoor flower ranged from 0.5 to 100 pounds.",
+        "slide": 13,
+        "category": "product",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "Greenhouse flower deal sizes range from 1 to 320 pounds.",
+        "verbatim": "Deal sizes for greenhouse flower ranged from 1 to 320 pounds.",
+        "slide": 13,
+        "category": "product",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "Outdoor flower deal sizes range from 1 to 200 pounds.",
+        "verbatim": "Deal sixes for outdoor flower ranged from 1 to 200 pounds.",
+        "slide": 13,
+        "category": "product",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "The company plans to own and operate a marijuana cultivation facility in the state of California.",
+        "verbatim": "Own and operate a marijuana cultivation facility in the state of California.",
+        "slide": 4,
+        "category": "product",
+        "likely_forward_looking": true
+      },
+      {
+        "text": "The company's leadership team consists of Sara Hills (CEO), Dave Turner (COO), Jacob Garner (CTO), and Allison Cobb (CFO).",
+        "verbatim": "Sara Hills CEO Dave Turner COO Jacob Garner CTO Allison Cobb CFO",
+        "slide": 12,
+        "category": "team",
+        "likely_forward_looking": false
+      }
+    ],
+    "fiscal_year_end": null,
+    "currency": "USD",
+    "extraction_notes": "Company name appears as 'Canna Farm' on slide 5 and 'CannaFarm' on slide 7; treated as the same entity. No ticker stated \u2014 company appears to be private and pre-revenue (still in fundraising/startup stage). No CIK stated. Website shown is cannabusinessplan.com (slide 16); contact email is info@cannabusiness.com. No fiscal year end is stated. Revenue projections on slide 14 are labeled Year 1/2/3 with no absolute calendar years anchored, making them difficult to cross-reference without knowing when operations begin. The $330,000 investment figure on slide 15 line items sum to $253,000, which does not match the stated $330,000 total \u2014 a potential arithmetic discrepancy the compliance agent should flag. The 28% CAGR and $22.8B market size claims are attributed to unnamed 'expert projections' with no cited source. No historical financial data (revenue, burn, ARR) is provided. Regulatory licensing status of Canna Farm itself is not disclosed; the licensed business counts shown are for the broader California market, not the company's own licenses. Team bios and credentials are entirely absent."
+  }
+}

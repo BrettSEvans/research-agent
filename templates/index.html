@@ -784,6 +784,8 @@
       lines.push(`**Generated:** ${rep.generated_at}  `);
       lines.push(`**SEC CIK:** ${rep.cik || 'unresolved'}  `);
       if (rep.assumed_industry) lines.push(`**Industry:** ${rep.assumed_industry}  `);
+      lines.push(`**Extractor model:** ${rep.extractor_model || 'unknown'}  `);
+      lines.push(`**Analyzer model:** ${rep.analyzer_model || 'unknown'}  `);
       lines.push(`**Claims analyzed:** ${rep.claims_analyzed}  `);
       lines.push(`**Flagged FLS contradictions:** ${rep.flagged_forward_looking_contradictions}`);
       lines.push('');
@@ -928,6 +930,7 @@
       const fd = new FormData();
       fd.append('context_id', currentContextId);
       fd.append('analyzer_model', analyzerSelect.value);
+      fd.append('extractor_model', extractorSelect.value);
 
       try {
         const resp = await fetch('/verify/stream', { method: 'POST', body: fd });
