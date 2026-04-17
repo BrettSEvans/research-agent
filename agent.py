@@ -110,14 +110,14 @@ def build_index(
 def _resolve_workers(model: str | None, requested: int | None) -> int:
     """How many parallel threads to use for claim analysis.
 
-    Local Ollama models are typically single-threaded (one inference at a time),
-    so cap at 1. Cloud models can safely run 4 concurrent calls before hitting
-    Anthropic's default rate limits — callers can raise this if they have
-    higher-tier limits.
+    Local Ollama models: queue inference sequentially, but can parallelize
+    DuckDuckGo web searches across workers. Safe at 2-3 workers.
+    Cloud models can safely run 4 concurrent calls before hitting Anthropic's
+    default rate limits — callers can raise this if they have higher-tier limits.
     """
     from llm_local import is_local_model
     if is_local_model(model):
-        return 1
+        return 3  # Parallel web searches; Ollama queues inference
     if requested is not None:
         return max(1, requested)
     return 4  # safe default for standard Anthropic API tier
