@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -104,6 +105,22 @@ def build_index(
     return retriever, filings
 
 
+def _resolve_workers(model: str | None, requested: int | None) -> int:
+    """How many parallel threads to use for claim analysis.
+
+    Local Ollama models are typically single-threaded (one inference at a time),
+    so cap at 1. Cloud models can safely run 4 concurrent calls before hitting
+    Anthropic's default rate limits — callers can raise this if they have
+    higher-tier limits.
+    """
+    from llm_local import is_local_model
+    if is_local_model(model):
+        return 1
+    if requested is not None:
+        return max(1, requested)
+    return 4  # safe default for standard Anthropic API tier
+
+
 def iter_compliance_report(
     *,
     claims: list[str],
@@ -114,6 +131,7 @@ def iter_compliance_report(
     top_k: int = 5,
     verbose: bool = True,
     analyzer_model: str | None = None,
+    max_workers: int | None = None,
 ):
     """Generator that yields events as each claim is analyzed.
 
@@ -188,77 +206,77 @@ def iter_compliance_report(
 
         claim_meta = {c.text: c for c in deck.extraction.claims} if deck else {}
         client = anthropic.Anthropic(timeout=ANTHROPIC_TIMEOUT)
+        workers = _resolve_workers(analyzer_model, max_workers)
 
-        for i, claim in enumerate(claims, start=1):
+        def _analyze_one(args):
+            i, claim = args
             meta = claim_meta.get(claim)
             category = meta.category if meta else None
             forward_looking_hint = meta.likely_forward_looking if meta else None
-
             if category == "market":
-                if verbose:
-                    _log(f"[{i}/{len(claims)}] Web-searching industry claim: {claim[:100]}...")
-                yield {"event": "status", "data": {
-                    "message": f"[{i}/{len(claims)}] Web-searching: {claim[:80]}..."
-                }}
                 try:
                     assessment, web_sources = analyze_industry_claim(
-                        client,
-                        claim,
+                        client, claim,
                         company_name=company_name or "unknown",
                         industry=assumed_industry,
                         model=analyzer_model,
                     )
-                    entry = {
-                        "claim": claim,
-                        "verdict": assessment.verdict,
+                    return i, {
+                        "claim": claim, "verdict": assessment.verdict,
                         "forward_looking": assessment.forward_looking,
                         "severity": assessment.severity,
                         "explanation": assessment.explanation,
                         "missing_information": assessment.missing_information,
-                        "cited_passages": [],
-                        "web_sources": web_sources,
+                        "cited_passages": [], "web_sources": web_sources,
                         "analysis_method": "web_search",
                         "assumed_industry": assumed_industry,
                     }
                 except Exception as exc:
-                    entry = {
-                        "claim": claim,
-                        "verdict": "INSUFFICIENT_EVIDENCE",
-                        "forward_looking": forward_looking_hint,
-                        "severity": "NONE",
+                    return i, {
+                        "claim": claim, "verdict": "INSUFFICIENT_EVIDENCE",
+                        "forward_looking": forward_looking_hint, "severity": "NONE",
                         "explanation": f"Web-search analysis failed: {exc}",
                         "missing_information": "Retry web search, or provide authoritative industry reports.",
-                        "cited_passages": [],
-                        "web_sources": [],
+                        "cited_passages": [], "web_sources": [],
                         "analysis_method": "web_search_failed",
                         "assumed_industry": assumed_industry,
                     }
             else:
                 reason_category = category or "unknown category"
-                entry = {
-                    "claim": claim,
-                    "verdict": "INSUFFICIENT_EVIDENCE",
-                    "forward_looking": forward_looking_hint,
-                    "severity": "NONE",
+                return i, {
+                    "claim": claim, "verdict": "INSUFFICIENT_EVIDENCE",
+                    "forward_looking": forward_looking_hint, "severity": "NONE",
                     "explanation": (
                         f"This is a company-specific claim ({reason_category}) and cannot be "
-                        "verified without SEC filings for the target company. No CIK was "
-                        "resolved from the deck."
+                        "verified without SEC filings for the target company. No CIK was resolved from the deck."
                     ),
                     "missing_information": (
                         "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct "
                         "company disclosures (data room, audited financials)."
                     ),
-                    "cited_passages": [],
-                    "web_sources": [],
+                    "cited_passages": [], "web_sources": [],
                     "analysis_method": "none",
                     "assumed_industry": assumed_industry,
                 }
 
-            report["results"].append(entry)
-            if verbose:
-                _log(f"    {entry['verdict']} [{entry['severity']}] {claim[:80]}")
-            yield {"event": "claim_result", "data": {"index": i, "total": len(claims), "entry": entry}}
+        indexed = list(enumerate(claims, start=1))
+        results_map: dict[int, dict] = {}
+        if verbose:
+            _log(f"[+] Analyzing {len(claims)} claims with {workers} parallel workers...")
+        yield {"event": "status", "data": {"message": f"Analyzing {len(claims)} claims ({workers} parallel)…"}}
+
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            futures = {pool.submit(_analyze_one, item): item for item in indexed}
+            for future in as_completed(futures):
+                i, entry = future.result()
+                results_map[i] = entry
+                if verbose:
+                    _log(f"    [{i}/{len(claims)}] {entry['verdict']} [{entry['severity']}] {entry['claim'][:80]}")
+                yield {"event": "claim_result", "data": {"index": i, "total": len(claims), "entry": entry}}
+
+        # Restore order for the final report
+        for i in range(1, len(claims) + 1):
+            report["results"].append(results_map[i])
 
         report["claims_analyzed"] = len(claims)
         _write_log(report, cik_label, ts)
@@ -297,21 +315,16 @@ def iter_compliance_report(
 
     client = anthropic.Anthropic(timeout=ANTHROPIC_TIMEOUT)
     deck_ctx_str = deck.clarifying_context() if deck else None
-    flagged = 0
+    workers = _resolve_workers(analyzer_model, max_workers)
 
-    for i, claim in enumerate(claims, start=1):
-        if verbose:
-            _log(f"[{i}/{len(claims)}] Analyzing: {claim[:100]}...")
-        yield {"event": "status", "data": {
-            "message": f"[{i}/{len(claims)}] Analyzing: {claim[:80]}…"
-        }}
+    if verbose:
+        _log(f"[+] Analyzing {len(claims)} claims with {workers} parallel workers...")
+    yield {"event": "status", "data": {"message": f"Analyzing {len(claims)} claims against SEC filings ({workers} parallel)…"}}
 
+    def _analyze_sec(args):
+        i, claim = args
         hits = retriever.search(claim, top_k=top_k)
-        if verbose:
-            _log(f"    retrieved top-{len(hits)} passages; calling analyzer...")
-        assessment = analyze_claim(
-            client, claim, hits, deck_context=deck_ctx_str, model=analyzer_model
-        )
+        assessment = analyze_claim(client, claim, hits, deck_context=deck_ctx_str, model=analyzer_model)
         entry = {
             "claim": claim,
             "verdict": assessment.verdict,
@@ -332,16 +345,23 @@ def iter_compliance_report(
                 for p in assessment.cited_passages
                 if 1 <= p <= len(hits)
             ],
-            "web_sources": [],  # SEC path has no web sources
+            "web_sources": [],
         }
-        report["results"].append(entry)
-        if assessment.verdict == "CONTRADICTS" and assessment.forward_looking:
-            flagged += 1
-        if verbose:
-            flag = "⚠️  FLAG" if (assessment.verdict == "CONTRADICTS" and assessment.forward_looking) else f"    {assessment.verdict}"
-            _log(f"    {flag} [{assessment.severity}] forward_looking={assessment.forward_looking}")
-            _log(f"    {assessment.explanation}")
-        yield {"event": "claim_result", "data": {"index": i, "total": len(claims), "entry": entry}}
+        return i, entry
+
+    results_map: dict[int, dict] = {}
+    flagged = 0
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        futures = {pool.submit(_analyze_sec, (i, c)): i for i, c in enumerate(claims, start=1)}
+        for future in as_completed(futures):
+            i, entry = future.result()
+            results_map[i] = entry
+            if entry["verdict"] == "CONTRADICTS" and entry.get("forward_looking"):
+                flagged += 1
+            if verbose:
+                flag = "⚠️  FLAG" if (entry["verdict"] == "CONTRADICTS" and entry.get("forward_looking")) else f"    {entry['verdict']}"
+                _log(f"    [{i}/{len(claims)}] {flag} [{entry['severity']}] {entry['claim'][:80]}")
+            yield {"event": "claim_result", "data": {"index": i, "total": len(claims), "entry": entry}}
 
     report["claims_analyzed"] = len(claims)
     report["flagged_forward_looking_contradictions"] = flagged
@@ -359,6 +379,7 @@ def run_compliance_report(
     top_k: int = 5,
     verbose: bool = True,
     analyzer_model: str | None = None,
+    max_workers: int | None = None,
 ) -> dict:
     """Thin wrapper around iter_compliance_report — returns the final report dict.
 
@@ -374,6 +395,7 @@ def run_compliance_report(
         top_k=top_k,
         verbose=verbose,
         analyzer_model=analyzer_model,
+        max_workers=max_workers,
     ):
         if event["event"] == "done":
             report = event["data"]["report"]

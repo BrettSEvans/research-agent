@@ -28,10 +28,19 @@ def _resolve_model() -> str:
     return os.environ.get("ANALYZER_MODEL", DEFAULT_MODEL)
 
 
-def _thinking_kwargs(model: str) -> dict:
-    if "haiku" in model:
+def _thinking_kwargs(model: str, budget_tokens: int = 4000) -> dict:
+    """Return extended-thinking kwargs for the model.
+
+    Haiku doesn't support thinking — return empty.
+    For Sonnet/Opus we use a fixed budget rather than `adaptive`.
+    `adaptive` lets the model spend up to max_tokens thinking, which routinely
+    burns 10 k+ tokens on straightforward claim checks and is the primary cause
+    of slow per-claim latency.  A 4 k budget handles all but the most complex
+    contradictions; callers can override for tasks that need more reasoning.
+    """
+    if "haiku" in model or llm_local.is_local_model(model):
         return {}
-    return {"thinking": {"type": "adaptive"}}
+    return {"thinking": {"type": "enabled", "budget_tokens": budget_tokens}}
 
 SYSTEM_PROMPT = """You are a securities-compliance analyst assisting a venture capital firm.
 
@@ -202,7 +211,7 @@ def analyze_industry_claim(
         messages=[{"role": "user", "content": user_content}],
         tools=[{"type": "web_search_20260209", "name": "web_search"}],
         output_format=ClaimAssessment,
-        **_thinking_kwargs(model),
+        **_thinking_kwargs(model, budget_tokens=2000),  # web-search is simpler; cap lower
     )
     return response.parsed_output, _collect_web_sources(response)
 
