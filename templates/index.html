@@ -534,6 +534,23 @@
     }
 
     a { color: var(--md-primary); }
+
+    /* ============ Saved extractions list ============ */
+    .saved-list { display: flex; flex-direction: column; gap: 8px; }
+    .saved-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      background: var(--md-surface-container-low);
+      border-radius: var(--md-shape-md);
+      border: 1px solid var(--md-outline-variant);
+    }
+    .saved-item .saved-info { flex: 1; min-width: 0; }
+    .saved-item .saved-name { font-weight: 500; color: var(--md-on-surface); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .saved-item .saved-meta { font-size: 0.75rem; color: var(--md-on-surface-variant); margin-top: 2px; }
+    .saved-item .saved-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .saved-empty { color: var(--md-on-surface-variant); font-size: 0.875rem; font-style: italic; padding: 8px 0; }
   </style>
 </head>
 <body>
@@ -581,6 +598,18 @@
       </p>
     </section>
 
+    <!-- Saved extractions library -->
+    <section class="card elevated">
+      <div class="card-header">
+        <span class="material-symbols-rounded" style="color: var(--md-primary)">folder_open</span>
+        <h2>Saved extractions</h2>
+      </div>
+      <p class="card-subtitle" style="margin: -8px 0 12px 0;">Load a previous extraction to run compliance without re-processing the PDF.</p>
+      <div id="saved-list" class="saved-list">
+        <div class="saved-empty">Loading…</div>
+      </div>
+    </section>
+
     <!-- Step 1: Upload -->
     <section class="card elevated">
       <div class="card-header">
@@ -610,6 +639,10 @@
           <span class="material-symbols-rounded">fact_check</span>
           Run compliance check
         </button>
+        <button class="btn btn-outlined" id="save-btn">
+          <span class="material-symbols-rounded">bookmark_add</span>
+          Save extraction
+        </button>
         <button class="btn btn-outlined" onclick="document.getElementById('file').click()">
           <span class="material-symbols-rounded">upload</span>
           Upload a different deck
@@ -622,6 +655,12 @@
       <div class="card-header">
         <span class="step-badge">3</span>
         <h2>Compliance report</h2>
+        <div style="margin-left:auto;">
+          <button class="btn btn-outlined" id="download-report-btn" style="display:none;">
+            <span class="material-symbols-rounded">download</span>
+            Download .md
+          </button>
+        </div>
       </div>
       <div id="report-body"></div>
     </section>
@@ -641,6 +680,156 @@
     const analyzerSelect = document.getElementById('analyzer-model');
 
     let currentContextId = null;
+    let currentFilename = '';
+    let lastReport = null;  // accumulated report for download
+
+    // ── Saved extractions ─────────────────────────────────────────────────
+    async function loadSavedList() {
+      const list = document.getElementById('saved-list');
+      try {
+        const r = await fetch('/saved-extractions');
+        const items = await r.json();
+        if (!items.length) {
+          list.innerHTML = '<div class="saved-empty">No saved extractions yet. Upload a deck and click "Save extraction".</div>';
+          return;
+        }
+        list.innerHTML = items.map(it => `
+          <div class="saved-item" data-id="${escape(it.save_id)}">
+            <span class="material-symbols-rounded" style="color:var(--md-primary);flex-shrink:0">description</span>
+            <div class="saved-info">
+              <div class="saved-name">${escape(it.company_name)}</div>
+              <div class="saved-meta">${escape(it.original_filename)} · ${escape(it.extractor_model)} · ${escape(it.saved_at.slice(0,10))}</div>
+            </div>
+            <div class="saved-actions">
+              <button class="btn btn-outlined" style="height:32px;padding:0 12px;font-size:0.8rem"
+                      onclick="loadSavedExtraction('${escape(it.save_id)}')">
+                <span class="material-symbols-rounded" style="font-size:16px">play_arrow</span>Load
+              </button>
+              <button class="btn btn-text" style="height:32px;padding:0 8px;color:var(--md-error)"
+                      onclick="deleteSaved('${escape(it.save_id)}', this)">
+                <span class="material-symbols-rounded" style="font-size:16px">delete</span>
+              </button>
+            </div>
+          </div>`).join('');
+      } catch (e) {
+        list.innerHTML = `<div class="saved-empty">Could not load saved extractions: ${escape(e.message)}</div>`;
+      }
+    }
+
+    async function loadSavedExtraction(saveId) {
+      try {
+        const r = await fetch(`/saved-extractions/${saveId}/load`, { method: 'POST' });
+        if (!r.ok) throw new Error((await r.json()).detail);
+        const data = await r.json();
+        currentContextId = data.context_id;
+        currentFilename = data.meta?.original_filename || '';
+        renderExtraction(data.extraction);
+        restoreDropzone();
+      } catch (e) {
+        alert(`Failed to load: ${e.message}`);
+      }
+    }
+
+    async function deleteSaved(saveId, btn) {
+      if (!confirm('Delete this saved extraction?')) return;
+      try {
+        await fetch(`/saved-extractions/${saveId}`, { method: 'DELETE' });
+        loadSavedList();
+      } catch (e) {
+        alert(`Delete failed: ${e.message}`);
+      }
+    }
+
+    document.getElementById('save-btn').addEventListener('click', async () => {
+      if (!currentContextId) return;
+      const btn = document.getElementById('save-btn');
+      btn.disabled = true;
+      try {
+        const fd = new FormData();
+        fd.append('context_id', currentContextId);
+        fd.append('original_filename', currentFilename);
+        fd.append('extractor_model', extractorSelect.value);
+        const r = await fetch('/saved-extractions', { method: 'POST', body: fd });
+        if (!r.ok) throw new Error((await r.json()).detail);
+        const data = await r.json();
+        btn.innerHTML = '<span class="material-symbols-rounded">bookmark</span> Saved!';
+        setTimeout(() => {
+          btn.innerHTML = '<span class="material-symbols-rounded">bookmark_add</span> Save extraction';
+          btn.disabled = false;
+        }, 2000);
+        loadSavedList();
+      } catch (e) {
+        alert(`Save failed: ${e.message}`);
+        btn.disabled = false;
+      }
+    });
+
+    // ── Report download as Markdown ───────────────────────────────────────
+    document.getElementById('download-report-btn').addEventListener('click', () => {
+      if (!lastReport) return;
+      const md = reportToMarkdown(lastReport);
+      const blob = new Blob([md], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const company = (lastReport.company_name || 'compliance-report').replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+      a.href = url;
+      a.download = `${company}-${lastReport.generated_at.slice(0,10)}.md`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    function reportToMarkdown(rep) {
+      const lines = [];
+      lines.push(`# Compliance Report: ${rep.company_name || 'Unknown Company'}`);
+      lines.push(`**Generated:** ${rep.generated_at}  `);
+      lines.push(`**SEC CIK:** ${rep.cik || 'unresolved'}  `);
+      if (rep.assumed_industry) lines.push(`**Industry:** ${rep.assumed_industry}  `);
+      lines.push(`**Claims analyzed:** ${rep.claims_analyzed}  `);
+      lines.push(`**Flagged FLS contradictions:** ${rep.flagged_forward_looking_contradictions}`);
+      lines.push('');
+      if ((rep.warnings || []).length) {
+        lines.push('## Warnings');
+        for (const w of rep.warnings) lines.push(`> ⚠️ ${w}`);
+        lines.push('');
+      }
+      lines.push('## Findings');
+      for (let i = 0; i < (rep.results || []).length; i++) {
+        const r = rep.results[i];
+        const flag = r.verdict === 'CONTRADICTS' && r.forward_looking ? ' 🚨' : '';
+        lines.push(`### ${i + 1}. ${r.claim}${flag}`);
+        lines.push('');
+        lines.push(`**Verdict:** \`${r.verdict}\`  `);
+        lines.push(`**Severity:** ${r.severity}  `);
+        lines.push(`**Forward-looking:** ${r.forward_looking ? 'Yes' : 'No'}  `);
+        if (r.analysis_method) lines.push(`**Method:** ${r.analysis_method}  `);
+        lines.push('');
+        lines.push(r.explanation);
+        lines.push('');
+        if (r.missing_information) {
+          lines.push(`> **Missing information:** ${r.missing_information}`);
+          lines.push('');
+        }
+        for (const c of (r.cited_passages || [])) {
+          lines.push(`**SEC P${c.passage_num}** · ${c.form} filed ${c.filing_date} · [${c.accession}](${c.url})`);
+          lines.push('');
+          lines.push(`> ${c.excerpt.replace(/\n/g, '  \n> ')}…`);
+          lines.push('');
+        }
+        if ((r.web_sources || []).length) {
+          lines.push('**Web sources consulted:**');
+          for (const s of r.web_sources) {
+            lines.push(`- [${s.title || s.url}](${s.url})${s.page_age ? ' (' + s.page_age + ')' : ''}`);
+          }
+          lines.push('');
+        }
+        lines.push('---');
+        lines.push('');
+      }
+      if (rep.log_path) lines.push(`_Log file: ${rep.log_path}_`);
+      return lines.join('\n');
+    }
+
+    loadSavedList();
 
     fileInput.addEventListener('change', () => uploadFile(fileInput.files[0]));
     dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag'); });
@@ -660,6 +849,7 @@
 
     async function uploadFile(file) {
       if (!file) return;
+      currentFilename = file.name;
       dzText.innerHTML = progressHTML(`Extracting with ${extractorSelect.value} from ${file.name}...`);
       const fd = new FormData();
       fd.append('file', file);
@@ -842,6 +1032,7 @@
         if (event === 'done') {
           document.getElementById('stream-status')?.remove();
           const rep = data.report;
+          lastReport = rep;
           // Update final counts from authoritative report
           const ae = document.getElementById('stat-analyzed');
           if (ae) ae.textContent = rep.claims_analyzed;
@@ -855,6 +1046,8 @@
           footer.style.cssText = 'margin-top:16px;color:var(--md-on-surface-variant);font-size:0.75rem;';
           footer.textContent = `Generated ${rep.generated_at}${rep.log_path ? ' · log: ' + rep.log_path : ''}`;
           document.getElementById('results-list')?.appendChild(footer);
+          // Show download button
+          document.getElementById('download-report-btn').style.display = '';
         }
 
         if (event === 'error') {

@@ -21,6 +21,8 @@ from typing import Annotated
 
 import anthropic
 from dotenv import load_dotenv
+from datetime import datetime, timezone
+
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
@@ -34,8 +36,10 @@ load_dotenv()
 BASE = Path(__file__).parent
 UPLOADS = BASE / "uploads"
 CONTEXT_DIR = BASE / "deck_contexts"
+SAVED_DIR = BASE / "saved_extractions"
 UPLOADS.mkdir(exist_ok=True)
 CONTEXT_DIR.mkdir(exist_ok=True)
+SAVED_DIR.mkdir(exist_ok=True)
 
 app = FastAPI(title="VC Pitch Deck + Compliance")
 templates = Jinja2Templates(directory=str(BASE / "templates"))
@@ -143,6 +147,86 @@ def verify_stream(
             "X-Accel-Buffering": "no",  # disable nginx buffering if behind a proxy
         },
     )
+
+
+# ───────────────────────── saved extractions ──────────────────────────────
+
+@app.get("/saved-extractions")
+async def list_saved_extractions():
+    """Return all saved extractions, newest first."""
+    items = []
+    for p in sorted(SAVED_DIR.glob("*.json"), key=lambda f: f.stat().st_mtime, reverse=True):
+        try:
+            data = json.loads(p.read_text())
+            items.append({
+                "save_id": p.stem,
+                "company_name": data.get("meta", {}).get("company_name", "Unknown"),
+                "original_filename": data.get("meta", {}).get("original_filename", ""),
+                "extractor_model": data.get("meta", {}).get("extractor_model", ""),
+                "saved_at": data.get("meta", {}).get("saved_at", ""),
+            })
+        except Exception:
+            continue
+    return JSONResponse(items)
+
+
+@app.post("/saved-extractions")
+async def save_extraction(
+    context_id: Annotated[str, Form()],
+    original_filename: Annotated[str, Form()] = "",
+    extractor_model: Annotated[str, Form()] = "",
+):
+    """Persist a session extraction to the saved library."""
+    context_path = CONTEXT_DIR / f"deck_{context_id}.json"
+    if not context_path.exists():
+        raise HTTPException(status_code=404, detail=f"Unknown context_id: {context_id}")
+
+    extraction_data = json.loads(context_path.read_text())
+    company_name = extraction_data.get("company", {}).get("name", "Unknown")
+    save_id = uuid.uuid4().hex[:12]
+    saved = {
+        "meta": {
+            "save_id": save_id,
+            "company_name": company_name,
+            "original_filename": original_filename,
+            "extractor_model": extractor_model,
+            "saved_at": datetime.now(timezone.utc).isoformat(),
+        },
+        "extraction": extraction_data,
+    }
+    (SAVED_DIR / f"{save_id}.json").write_text(json.dumps(saved, indent=2))
+    return JSONResponse({"save_id": save_id, "company_name": company_name})
+
+
+@app.post("/saved-extractions/{save_id}/load")
+async def load_saved_extraction(save_id: str):
+    """Load a saved extraction back into a fresh session context."""
+    saved_path = SAVED_DIR / f"{save_id}.json"
+    if not saved_path.exists():
+        raise HTTPException(status_code=404, detail=f"Unknown save_id: {save_id}")
+
+    data = json.loads(saved_path.read_text())
+    extraction_data = data["extraction"]
+
+    # Create a fresh session context so /verify/stream works normally
+    token = uuid.uuid4().hex[:12]
+    context_path = CONTEXT_DIR / f"deck_{token}.json"
+    context_path.write_text(json.dumps(extraction_data, indent=2))
+
+    return JSONResponse({
+        "context_id": token,
+        "extraction": extraction_data,
+        "meta": data.get("meta", {}),
+    })
+
+
+@app.delete("/saved-extractions/{save_id}")
+async def delete_saved_extraction(save_id: str):
+    saved_path = SAVED_DIR / f"{save_id}.json"
+    if not saved_path.exists():
+        raise HTTPException(status_code=404, detail=f"Unknown save_id: {save_id}")
+    saved_path.unlink()
+    return JSONResponse({"deleted": save_id})
 
 
 @app.post("/verify")
