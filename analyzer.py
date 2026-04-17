@@ -17,6 +17,7 @@ from pydantic import BaseModel, Field
 import anthropic
 
 import llm_local
+import search_api
 from retriever import Hit
 
 # Default: Sonnet 4.6. Analysis is a reasoning task and benefits from adaptive
@@ -163,31 +164,6 @@ def analyze_industry_claim(
     """
     model = model or _resolve_model()
 
-    # Local models have no server-side web_search tool. Refuse cleanly rather
-    # than fabricate — no URLs, no statistics we cannot cite.
-    if llm_local.is_local_model(model):
-        return (
-            ClaimAssessment(
-                verdict="INSUFFICIENT_EVIDENCE",
-                forward_looking=False,
-                severity="NONE",
-                explanation=(
-                    f"Local model '{model}' has no web-search capability, so this "
-                    "industry/TAM claim cannot be verified against authoritative "
-                    "online sources without fabrication. Re-run this claim with a "
-                    "Claude model (which has the web_search tool) or supply an "
-                    "industry report directly."
-                ),
-                cited_passages=[],
-                missing_information=(
-                    "Authoritative industry/market research (Statista, IBISWorld, "
-                    "Gartner, government data, or analyst reports) — or re-run "
-                    "with a Claude model that supports web_search."
-                ),
-            ),
-            [],
-        )
-
     context_lines = [f"Company: {company_name}"]
     if industry:
         context_lines.append(f"Assumed industry: {industry}")
@@ -197,6 +173,47 @@ def analyze_industry_claim(
         )
     context = "\n".join(context_lines)
 
+    # Local models: fetch results via DuckDuckGo and feed to the model.
+    if llm_local.is_local_model(model):
+        results = search_api.search(claim, max_results=5)
+        if not results:
+            return (
+                ClaimAssessment(
+                    verdict="INSUFFICIENT_EVIDENCE",
+                    forward_looking=False,
+                    severity="NONE",
+                    explanation=(
+                        f"DuckDuckGo search for '{claim}' returned no results. "
+                        "The claim cannot be verified without authoritative sources."
+                    ),
+                    cited_passages=[],
+                    missing_information=(
+                        "Authoritative industry/market research (Statista, IBISWorld, "
+                        "Gartner, government data, or analyst reports)."
+                    ),
+                ),
+                [],
+            )
+        formatted_results = search_api.format_results(results)
+        user_content = (
+            f"{context}\n\n"
+            f"CLAIM:\n{claim}\n\n"
+            f"SEARCH RESULTS (from DuckDuckGo):\n{formatted_results}\n\n"
+            "Assess the claim based on these search results. "
+            "Cite URLs and publication names inline in your explanation. "
+            "NEVER fabricate statistics — only cite what appears in the results."
+        )
+        assessment = llm_local.call_structured(
+            model=model,
+            system=INDUSTRY_SYSTEM_PROMPT,
+            user_content=user_content,
+            output_format=ClaimAssessment,
+        )
+        # Extract URLs from search results for the sources list
+        sources = [{"url": r["url"], "title": r["title"]} for r in results]
+        return assessment, sources
+
+    # Claude path: use the web_search tool
     user_content = (
         f"{context}\n\n"
         f"CLAIM:\n{claim}\n\n"
