@@ -134,6 +134,8 @@ def iter_compliance_report(
     verbose: bool = True,
     analyzer_model: str | None = None,
     extractor_model: str | None = None,
+    startup_stage: str | None = None,
+    modules: list[str] | None = None,
     max_workers: int | None = None,
 ):
     """Generator that yields events as each claim is analyzed.
@@ -386,6 +388,8 @@ def run_compliance_report(
     top_k: int = 5,
     verbose: bool = True,
     analyzer_model: str | None = None,
+    startup_stage: str | None = None,
+    modules: list[str] | None = None,
     max_workers: int | None = None,
 ) -> dict:
     """Thin wrapper around iter_compliance_report — returns the final report dict.
@@ -402,6 +406,8 @@ def run_compliance_report(
         top_k=top_k,
         verbose=verbose,
         analyzer_model=analyzer_model,
+        startup_stage=startup_stage,
+        modules=modules,
         max_workers=max_workers,
     ):
         if event["event"] == "done":

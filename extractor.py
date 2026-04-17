@@ -23,6 +23,7 @@ import anthropic
 from pydantic import BaseModel, Field
 
 import llm_local
+from stage import StageAssessment, FundingStage
 
 # Default: Haiku 4.5. Extraction is a structured, mechanical task — cheap model
 # is the right fit. Override with EXTRACTOR_MODEL env var if needed.
@@ -64,6 +65,10 @@ class CompanyIdentity(BaseModel):
             "description and market claims. Null only if the deck provides no basis."
         ),
     )
+    founders: list[str] = Field(
+        default_factory=list,
+        description="Names of the founders."
+    )
 
 
 class ExtractedClaim(BaseModel):
@@ -85,6 +90,10 @@ class ExtractedClaim(BaseModel):
     )
 
 
+class ExtractedMetric(BaseModel):
+    metric_name: str = Field(description="e.g., 'ARR', 'CAC', 'LTV', 'NRR', 'EBITDA', 'Waitlist Signups', 'Founder Domain Expertise'")
+    value: str = Field(description="The extracted value, e.g., '$5M', '$100', '120%', 'Ex-Googler'")
+
 class DeckExtraction(BaseModel):
     company: CompanyIdentity
     claims: list[ExtractedClaim] = Field(
@@ -101,6 +110,15 @@ class DeckExtraction(BaseModel):
         default=None,
         description="Primary currency for financial figures (e.g., 'USD') if inferable from the deck.",
     )
+    # --- Stage Inference ---
+    stage_assessment: StageAssessment | None = Field(default=None, description="Inferred stage based on the deck.")
+
+    # --- Stage-Specific Extracted Fields ---
+    key_metrics: list[ExtractedMetric] = Field(
+        default_factory=list, 
+        description="Extract key startup metrics based on the inferred stage (e.g. ARR, CAC, LTV, NRR, Gross Margin, EBITDA, Rule of 40, Exit Strategy, Early Validation Signals)."
+    )
+
     extraction_notes: str = Field(
         description=(
             "Honest commentary on what was and was NOT found. Call out ambiguity, "
@@ -136,7 +154,13 @@ field whenever the deck gives you enough basis — even if industry is not state
 verbatim, conservative inference from the product description and market
 claims is appropriate (e.g., a deck about "AI-powered legal contract review"
 → industry "B2B SaaS for legal tech"). Leave null only when the deck provides
-truly no basis."""
+truly no basis.
+
+You will also infer the startup's funding stage (Pre-Seed, Seed, Series A, Series B, Series C+) 
+and extract specific metrics if present (e.g. LTV, CAC, NRR, EBITDA, exit strategy). 
+Make sure you include the `stage_assessment` based on raise amounts, ARR, and traction metrics."""
+
+
 
 
 def extract_from_pdf(

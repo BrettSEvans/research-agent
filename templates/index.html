@@ -634,12 +634,82 @@
         <h2>Extracted information</h2>
       </div>
       <div id="extraction-body"></div>
+      
+      <div id="analysis-config" style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--md-outline-variant);">
+        <div class="section-heading" style="margin-top: 0;">Analysis Configuration</div>
+        <div class="row">
+          <div class="select-field">
+            <label for="startup-stage">Startup Stage</label>
+            <select id="startup-stage">
+              <option value="pre_seed">Pre-Seed</option>
+              <option value="seed">Seed</option>
+              <option value="series_a">Series A</option>
+              <option value="series_b">Series B</option>
+              <option value="series_c_plus">Series C+</option>
+            </select>
+            <span class="material-symbols-rounded arrow">arrow_drop_down</span>
+          </div>
+        </div>
+        <div class="row" style="margin-top: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+          <div class="module-group">
+            <div class="module-group-title" style="font-weight: 500; margin-bottom: 8px;">Universal</div>
+            <label style="display:flex; align-items:center; gap:8px; margin-bottom: 4px;">
+              <input type="checkbox" class="metric-cb universal" value="internal_consistency" checked /> Internal Consistency
+            </label>
+          </div>
+          <div class="module-group">
+            <div class="module-group-title" style="font-weight: 500; margin-bottom: 8px;">Seed / Pre-Seed</div>
+            <label style="display:flex; align-items:center; gap:8px; margin-bottom: 4px;">
+              <input type="checkbox" class="metric-cb seed" value="founder_pedigree" /> Founder Pedigree
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; margin-bottom: 4px;">
+              <input type="checkbox" class="metric-cb seed" value="early_validation" /> Early Validation
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; margin-bottom: 4px;">
+              <input type="checkbox" class="metric-cb seed" value="market_timing" /> Market Timing
+            </label>
+          </div>
+          <div class="module-group">
+            <div class="module-group-title" style="font-weight: 500; margin-bottom: 8px;">Series A / B</div>
+            <label style="display:flex; align-items:center; gap:8px; margin-bottom: 4px;">
+              <input type="checkbox" class="metric-cb series-ab" value="unit_economics" /> Unit Economics (LTV/CAC)
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; margin-bottom: 4px;">
+              <input type="checkbox" class="metric-cb series-ab" value="retention_churn" /> Retention & Churn
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; margin-bottom: 4px;">
+              <input type="checkbox" class="metric-cb series-ab" value="growth_velocity" /> Growth Velocity
+            </label>
+          </div>
+          <div class="module-group">
+            <div class="module-group-title" style="font-weight: 500; margin-bottom: 8px;">Late Stage</div>
+            <label style="display:flex; align-items:center; gap:8px; margin-bottom: 4px;">
+              <input type="checkbox" class="metric-cb late" value="ebitda_margins" /> EBITDA & Margins
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; margin-bottom: 4px;">
+              <input type="checkbox" class="metric-cb late" value="cap_table" /> Cap Table Dynamics
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; margin-bottom: 4px;">
+              <input type="checkbox" class="metric-cb late" value="sec_compliance" /> SEC Compliance
+            </label>
+          </div>
+        </div>
+      </div>
+
       <div class="button-row">
-        <button class="btn btn-filled" id="verify-btn">
+        <button class="btn btn-filled" id="continue-extract-btn">
+          <span class="material-symbols-rounded">manage_search</span>
+          Continue Extraction
+        </button>
+        <button class="btn btn-filled hidden" id="verify-btn">
           <span class="material-symbols-rounded">fact_check</span>
           Run compliance check
         </button>
-        <button class="btn btn-outlined" id="save-btn">
+        <button class="btn btn-outlined hidden" id="cancel-verify-btn" style="color: var(--md-error); border-color: var(--md-error);">
+          <span class="material-symbols-rounded">cancel</span>
+          Cancel
+        </button>
+        <button class="btn btn-outlined hidden" id="save-btn">
           <span class="material-symbols-rounded">bookmark_add</span>
           Save extraction
         </button>
@@ -675,7 +745,10 @@
     const extractionBody = document.getElementById('extraction-body');
     const reportPanel = document.getElementById('report-panel');
     const reportBody = document.getElementById('report-body');
+    const continueExtractBtn = document.getElementById('continue-extract-btn');
     const verifyBtn = document.getElementById('verify-btn');
+    const cancelVerifyBtn = document.getElementById('cancel-verify-btn');
+    const saveBtn = document.getElementById('save-btn');
     const extractorSelect = document.getElementById('extractor-model');
     const analyzerSelect = document.getElementById('analyzer-model');
 
@@ -856,16 +929,16 @@
     async function uploadFile(file) {
       if (!file) return;
       currentFilename = file.name;
-      dzText.innerHTML = progressHTML(`Extracting with ${extractorSelect.value} from ${file.name}...`);
+      dzText.innerHTML = progressHTML(`Analyzing stage and basic info with ${extractorSelect.value}...`);
       const fd = new FormData();
       fd.append('file', file);
       fd.append('extractor_model', extractorSelect.value);
       try {
         const r = await fetch('/extract', { method: 'POST', body: fd });
-        if (!r.ok) throw new Error((await r.json()).detail || 'Extract failed');
+        if (!r.ok) throw new Error((await r.json()).detail || 'Basic extraction failed');
         const data = await r.json();
         currentContextId = data.context_id;
-        renderExtraction(data.extraction);
+        renderBasicExtraction(data.extraction);
         restoreDropzone();
       } catch (e) {
         dzText.innerHTML = `<span class="material-symbols-rounded icon" style="color: var(--md-error)">error</span><div><strong>Extraction failed</strong></div><div class="hint">${escape(e.message)}</div>`;
@@ -883,7 +956,7 @@
       return v ? `<dd>${escape(v)}</dd>` : '<dd class="empty">not stated in deck</dd>';
     }
 
-    function renderExtraction(ex) {
+    function renderBasicExtraction(ex) {
       const c = ex.company;
       let html = '<div class="section-heading">Company identity</div><dl class="kv">';
       html += `<dt>Name</dt><dd>${escape(c.name)}</dd>`;
@@ -891,9 +964,28 @@
       html += `<dt>CIK</dt>${emptyOr(c.cik)}`;
       html += `<dt>Industry</dt>${emptyOr(c.industry)}`;
       html += `<dt>Website</dt>${emptyOr(c.website)}`;
-      html += `<dt>Fiscal year end</dt>${emptyOr(ex.fiscal_year_end)}`;
-      html += `<dt>Currency</dt>${emptyOr(ex.currency)}`;
       html += '</dl>';
+
+      extractionBody.innerHTML = html;
+      
+      if (ex.stage_assessment && ex.stage_assessment.stage) {
+        document.getElementById('startup-stage').value = ex.stage_assessment.stage;
+        updateModulesFromStage(ex.stage_assessment.stage);
+      }
+
+      continueExtractBtn.classList.remove('hidden');
+      verifyBtn.classList.add('hidden');
+      saveBtn.classList.add('hidden');
+      
+      extractionPanel.classList.remove('hidden');
+      reportPanel.classList.add('hidden');
+      reportBody.innerHTML = '';
+      extractionPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function renderDeepExtraction(ex) {
+      // Append deep extraction results to existing body
+      let html = extractionBody.innerHTML;
 
       html += `<div class="section-heading">Claims (${ex.claims.length})</div>`;
       for (const cl of ex.claims) {
@@ -911,16 +1003,68 @@
       html += `<pre class="notes">${escape(ex.extraction_notes)}</pre>`;
 
       extractionBody.innerHTML = html;
-      extractionPanel.classList.remove('hidden');
-      reportPanel.classList.add('hidden');
-      reportBody.innerHTML = '';
-      extractionPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      
+      document.getElementById('analysis-config').classList.add('hidden'); // Hide config now that extraction is done
+      continueExtractBtn.classList.add('hidden');
+      verifyBtn.classList.remove('hidden');
+      saveBtn.classList.remove('hidden');
     }
+
+    function updateModulesFromStage(stage) {
+      const isSeed = (stage === 'pre_seed' || stage === 'seed');
+      const isSeriesAB = (stage === 'series_a' || stage === 'series_b');
+      const isLate = (stage === 'series_c_plus');
+
+      document.querySelectorAll('.metric-cb.seed').forEach(cb => cb.checked = isSeed);
+      document.querySelectorAll('.metric-cb.series-ab').forEach(cb => cb.checked = isSeriesAB);
+      document.querySelectorAll('.metric-cb.late').forEach(cb => cb.checked = isLate);
+      document.querySelectorAll('.metric-cb.universal').forEach(cb => cb.checked = true);
+    }
+
+    document.getElementById('startup-stage').addEventListener('change', (e) => {
+      updateModulesFromStage(e.target.value);
+    });
+
+    let activeAbortController = null;
+
+    cancelVerifyBtn.addEventListener('click', () => {
+      if (activeAbortController) {
+        activeAbortController.abort();
+      }
+    });
+
+    continueExtractBtn.addEventListener('click', async () => {
+      if (!currentContextId) return;
+      
+      continueExtractBtn.disabled = true;
+      continueExtractBtn.innerHTML = '<span class="material-symbols-rounded">hourglass_empty</span> Extracting...';
+      
+      const fd = new FormData();
+      fd.append('context_id', currentContextId);
+      fd.append('extractor_model', extractorSelect.value);
+      fd.append('startup_stage', document.getElementById('startup-stage').value);
+      
+      const modules = Array.from(document.querySelectorAll('.metric-cb:checked')).map(cb => cb.value);
+      fd.append('modules', modules.join(','));
+
+      try {
+        const r = await fetch('/extract/deep', { method: 'POST', body: fd });
+        if (!r.ok) throw new Error((await r.json()).detail || 'Deep extraction failed');
+        const data = await r.json();
+        renderDeepExtraction(data.extraction);
+      } catch (e) {
+        alert("Deep Extraction Failed: " + e.message);
+      } finally {
+        continueExtractBtn.disabled = false;
+        continueExtractBtn.innerHTML = '<span class="material-symbols-rounded">manage_search</span> Continue Extraction';
+      }
+    });
 
     // ── Streaming compliance check ────────────────────────────────────────
     verifyBtn.addEventListener('click', async () => {
       if (!currentContextId) return;
       verifyBtn.disabled = true;
+      cancelVerifyBtn.classList.remove('hidden');
       reportPanel.classList.remove('hidden');
       reportBody.innerHTML = progressHTML(`Connecting to compliance engine · ${analyzerSelect.value}…`);
       reportPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -931,13 +1075,22 @@
       let flaggedCount = 0;
       let statusEl = null;
 
+      activeAbortController = new AbortController();
+
       const fd = new FormData();
       fd.append('context_id', currentContextId);
       fd.append('analyzer_model', analyzerSelect.value);
       fd.append('extractor_model', extractorSelect.value);
+      fd.append('startup_stage', document.getElementById('startup-stage').value);
+      const modules = Array.from(document.querySelectorAll('.metric-cb:checked')).map(cb => cb.value);
+      fd.append('modules', modules.join(','));
 
       try {
-        const resp = await fetch('/verify/stream', { method: 'POST', body: fd });
+        const resp = await fetch('/verify/stream', { 
+          method: 'POST', 
+          body: fd,
+          signal: activeAbortController.signal 
+        });
         if (!resp.ok) {
           const err = await resp.json().catch(() => ({ detail: resp.statusText }));
           throw new Error(err.detail || 'Stream failed');
@@ -964,9 +1117,15 @@
           }
         }
       } catch (e) {
-        reportBody.innerHTML = `<div class="banner banner-error"><span class="material-symbols-rounded">error</span><div>${escape(e.message)}</div></div>`;
+        if (e.name === 'AbortError') {
+          reportBody.innerHTML += `<div class="banner banner-error"><span class="material-symbols-rounded">cancel</span><div>Analysis cancelled by user.</div></div>`;
+        } else {
+          reportBody.innerHTML = `<div class="banner banner-error"><span class="material-symbols-rounded">error</span><div>${escape(e.message)}</div></div>`;
+        }
       } finally {
         verifyBtn.disabled = false;
+        cancelVerifyBtn.classList.add('hidden');
+        activeAbortController = null;
         // Remove any lingering status/progress indicator
         document.getElementById('stream-status')?.remove();
       }

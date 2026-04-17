@@ -80,19 +80,56 @@ async def extract(
 
     try:
         client = anthropic.Anthropic()
-        extraction = extract_from_pdf(pdf_path, client=client, model=extractor_model)
+        from extractor import extract_basics_and_infer_stage
+        extraction = extract_basics_and_infer_stage(pdf_path, client=client, model=extractor_model)
     except Exception as exc:
         pdf_path.unlink(missing_ok=True)
         raise HTTPException(status_code=500, detail=f"Extraction failed: {exc}") from exc
 
+    # Do not save DeckContext or unlink the PDF yet; we need it for /extract/deep
+    return JSONResponse(
+        {
+            "context_id": token,
+            "extraction": extraction.model_dump(),
+            "extractor_version": EXTRACTOR_VERSION,
+        }
+    )
+
+@app.post("/extract/deep")
+async def extract_deep(
+    context_id: Annotated[str, Form()],
+    extractor_model: Annotated[str | None, Form()] = None,
+    startup_stage: Annotated[str | None, Form()] = None,
+    modules: Annotated[str | None, Form()] = None,
+):
+    pdf_paths = list(UPLOADS.glob(f"{context_id}_*.pdf"))
+    if not pdf_paths:
+        raise HTTPException(status_code=404, detail="PDF not found for this context.")
+    pdf_path = pdf_paths[0]
+
+    requested_metrics = modules.split(",") if modules else None
+
+    try:
+        client = anthropic.Anthropic()
+        extraction = extract_from_pdf(
+            pdf_path, 
+            client=client, 
+            model=extractor_model,
+            requested_metrics=requested_metrics
+        )
+    except Exception as exc:
+        pdf_path.unlink(missing_ok=True)
+        raise HTTPException(status_code=500, detail=f"Deep extraction failed: {exc}") from exc
+
+    # Now save full context
     context = DeckContext(extraction)
-    context_path = CONTEXT_DIR / f"deck_{token}.json"
+    context_path = CONTEXT_DIR / f"deck_{context_id}.json"
     context.save(context_path)
     pdf_path.unlink(missing_ok=True)
 
     return JSONResponse(
         {
-            "context_id": token,
+            "context_id": context_id,
             "context_path": str(context_path),
             "extraction": extraction.model_dump(),
             "extractor_version": EXTRACTOR_VERSION,
@@ -108,6 +145,8 @@ def verify_stream(
     top_k: Annotated[int, Form()] = 5,
     analyzer_model: Annotated[str | None, Form()] = None,
     extractor_model: Annotated[str | None, Form()] = None,
+    startup_stage: Annotated[str | None, Form()] = None,
+    modules: Annotated[str | None, Form()] = None,
 ):
     """Server-Sent Events endpoint: emits one claim_result event per claim
     as soon as analysis finishes, so the browser can render incrementally."""
@@ -138,6 +177,8 @@ def verify_stream(
                 verbose=True,
                 analyzer_model=analyzer_model,
                 extractor_model=extractor_model,
+                startup_stage=startup_stage,
+                modules=modules.split(",") if modules else None,
             ):
                 yield f"data: {json.dumps(event)}\n\n"
         except Exception as exc:
@@ -242,6 +283,8 @@ async def verify(
     filings_limit: Annotated[int, Form()] = 3,
     top_k: Annotated[int, Form()] = 5,
     analyzer_model: Annotated[str | None, Form()] = None,
+    startup_stage: Annotated[str | None, Form()] = None,
+    modules: Annotated[str | None, Form()] = None,
 ):
     if analyzer_model and analyzer_model not in ALLOWED_MODELS:
         raise HTTPException(status_code=400, detail=f"Unknown model: {analyzer_model}")
@@ -273,5 +316,7 @@ async def verify(
         top_k=top_k,
         verbose=True,
         analyzer_model=analyzer_model,
+        startup_stage=startup_stage,
+        modules=modules.split(",") if modules else None,
     )
     return report
