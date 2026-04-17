@@ -97,6 +97,7 @@ def run_compliance_report(
     filings_limit: int = 3,
     top_k: int = 5,
     verbose: bool = True,
+    analyzer_model: str | None = None,
 ) -> dict:
     """Importable entry point. Returns a report dict — never raises on missing data."""
     load_dotenv()
@@ -166,6 +167,7 @@ def run_compliance_report(
                         claim,
                         company_name=company_name or "unknown",
                         industry=assumed_industry,
+                        model=analyzer_model,
                     )
                     entry = {
                         "claim": claim,
@@ -247,7 +249,9 @@ def run_compliance_report(
         if verbose:
             print(f"\n[{i}/{len(claims)}] Analyzing: {claim[:100]}...")
         hits = retriever.search(claim, top_k=top_k)
-        assessment = analyze_claim(client, claim, hits, deck_context=deck_ctx_str)
+        assessment = analyze_claim(
+            client, claim, hits, deck_context=deck_ctx_str, model=analyzer_model
+        )
         entry = {
             "claim": claim,
             "verdict": assessment.verdict,

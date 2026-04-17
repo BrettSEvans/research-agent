@@ -45,10 +45,18 @@ async def index(request: Request):
     return templates.TemplateResponse(request=request, name="index.html")
 
 
+ALLOWED_MODELS = {"claude-haiku-4-5", "claude-sonnet-4-6", "claude-opus-4-6"}
+
+
 @app.post("/extract")
-async def extract(file: UploadFile = File(...)):
+async def extract(
+    file: UploadFile = File(...),
+    extractor_model: Annotated[str | None, Form()] = None,
+):
     if not (file.filename or "").lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are supported.")
+    if extractor_model and extractor_model not in ALLOWED_MODELS:
+        raise HTTPException(status_code=400, detail=f"Unknown model: {extractor_model}")
 
     content = await file.read()
     token = uuid.uuid4().hex[:12]
@@ -60,7 +68,7 @@ async def extract(file: UploadFile = File(...)):
 
     try:
         client = anthropic.Anthropic()
-        extraction = extract_from_pdf(pdf_path, client=client)
+        extraction = extract_from_pdf(pdf_path, client=client, model=extractor_model)
     except Exception as exc:
         pdf_path.unlink(missing_ok=True)
         raise HTTPException(status_code=500, detail=f"Extraction failed: {exc}") from exc
@@ -85,7 +93,10 @@ async def verify(
     forms: Annotated[str, Form()] = "10-K,10-Q,S-1,8-K",
     filings_limit: Annotated[int, Form()] = 3,
     top_k: Annotated[int, Form()] = 5,
+    analyzer_model: Annotated[str | None, Form()] = None,
 ):
+    if analyzer_model and analyzer_model not in ALLOWED_MODELS:
+        raise HTTPException(status_code=400, detail=f"Unknown model: {analyzer_model}")
     context_path = CONTEXT_DIR / f"deck_{context_id}.json"
     if not context_path.exists():
         raise HTTPException(status_code=404, detail=f"Unknown context_id: {context_id}")
@@ -113,5 +124,6 @@ async def verify(
         filings_limit=filings_limit,
         top_k=top_k,
         verbose=False,
+        analyzer_model=analyzer_model,
     )
     return report

@@ -4,134 +4,622 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VC Compliance Pipeline</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Rounded" rel="stylesheet">
   <style>
+    /* ============ Material Design 3 tokens ============ */
     :root {
-      --bg: #0b0d10;
-      --panel: #14171c;
-      --border: #262a31;
-      --text: #e6e8eb;
-      --muted: #8b94a3;
-      --accent: #6cb7ff;
-      --ok: #70d491;
-      --warn: #f0c674;
-      --err: #f07a7a;
-      --flag: #ff5b5b;
+      --md-primary: #0B57D0;
+      --md-on-primary: #FFFFFF;
+      --md-primary-container: #D3E3FD;
+      --md-on-primary-container: #001D36;
+
+      --md-secondary: #535F70;
+      --md-on-secondary: #FFFFFF;
+      --md-secondary-container: #D7E3F8;
+      --md-on-secondary-container: #101C2B;
+
+      --md-tertiary: #6B5778;
+      --md-on-tertiary: #FFFFFF;
+
+      --md-error: #BA1A1A;
+      --md-on-error: #FFFFFF;
+      --md-error-container: #FFDAD6;
+      --md-on-error-container: #410002;
+
+      --md-success: #146C2E;
+      --md-success-container: #C5E8C8;
+      --md-on-success-container: #002106;
+
+      --md-warning: #7A5900;
+      --md-warning-container: #FFDF9E;
+      --md-on-warning-container: #261A00;
+
+      --md-surface: #FDFCFF;
+      --md-surface-dim: #DAD9DD;
+      --md-surface-bright: #FDFCFF;
+      --md-surface-container-lowest: #FFFFFF;
+      --md-surface-container-low: #F7F6FA;
+      --md-surface-container: #F1F0F4;
+      --md-surface-container-high: #ECEBEF;
+      --md-surface-container-highest: #E6E5E9;
+
+      --md-on-surface: #1A1C1E;
+      --md-on-surface-variant: #43474E;
+      --md-outline: #73777F;
+      --md-outline-variant: #C3C7CF;
+
+      /* Elevation */
+      --md-elev-1: 0 1px 2px 0 rgba(0,0,0,0.05), 0 1px 3px 1px rgba(0,0,0,0.08);
+      --md-elev-2: 0 1px 2px 0 rgba(0,0,0,0.08), 0 2px 6px 2px rgba(0,0,0,0.12);
+      --md-elev-3: 0 4px 8px 3px rgba(0,0,0,0.10), 0 1px 3px 0 rgba(0,0,0,0.12);
+
+      /* Shape */
+      --md-shape-sm: 8px;
+      --md-shape-md: 12px;
+      --md-shape-lg: 16px;
+      --md-shape-xl: 28px;
+      --md-shape-full: 999px;
     }
+
     * { box-sizing: border-box; }
-    body {
-      margin: 0; padding: 2rem;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: var(--bg); color: var(--text);
-      max-width: 1100px; margin: 0 auto; padding: 2rem;
+
+    html, body {
+      margin: 0; padding: 0;
+      background: var(--md-surface-container-low);
+      color: var(--md-on-surface);
+      font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
     }
-    h1 { font-size: 1.5rem; margin: 0 0 0.2rem; }
-    h2 { font-size: 1.1rem; margin: 1.5rem 0 0.75rem; color: var(--accent); }
-    h3 { font-size: 0.95rem; margin: 1rem 0 0.5rem; color: var(--muted); font-weight: 500; }
-    .subtitle { color: var(--muted); margin: 0 0 2rem; font-size: 0.9rem; }
-    .panel {
-      background: var(--panel); border: 1px solid var(--border);
-      border-radius: 8px; padding: 1.25rem; margin-bottom: 1rem;
+
+    /* ============ Typography ============ */
+    .md-display { font-size: 2rem; font-weight: 400; line-height: 1.2; letter-spacing: 0; }
+    .md-headline { font-size: 1.5rem; font-weight: 400; line-height: 1.3; letter-spacing: 0; }
+    .md-title-lg { font-size: 1.375rem; font-weight: 400; line-height: 1.27; }
+    .md-title { font-size: 1rem; font-weight: 500; line-height: 1.5; letter-spacing: 0.15px; }
+    .md-body-lg { font-size: 1rem; font-weight: 400; line-height: 1.5; letter-spacing: 0.5px; }
+    .md-body { font-size: 0.875rem; font-weight: 400; line-height: 1.43; letter-spacing: 0.25px; }
+    .md-label-lg { font-size: 0.875rem; font-weight: 500; letter-spacing: 0.1px; }
+    .md-label { font-size: 0.75rem; font-weight: 500; letter-spacing: 0.5px; }
+
+    /* ============ App bar ============ */
+    .app-bar {
+      background: var(--md-surface-container);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      border-bottom: 1px solid var(--md-outline-variant);
     }
+    .app-bar .icon-big {
+      font-size: 28px;
+      color: var(--md-primary);
+    }
+    .app-bar h1 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 500;
+      color: var(--md-on-surface);
+    }
+    .app-bar .subtitle {
+      color: var(--md-on-surface-variant);
+      font-size: 0.875rem;
+    }
+
+    /* ============ Layout ============ */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ============ Card ============ */
+    .card {
+      background: var(--md-surface-container-lowest);
+      border-radius: var(--md-shape-lg);
+      padding: 24px;
+      box-shadow: var(--md-elev-1);
+      transition: box-shadow 0.2s;
+    }
+    .card.elevated:hover { box-shadow: var(--md-elev-2); }
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .card-header .step-badge {
+      width: 32px; height: 32px;
+      border-radius: var(--md-shape-full);
+      background: var(--md-primary-container);
+      color: var(--md-on-primary-container);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 500;
+    }
+    .card-header h2 {
+      margin: 0;
+      font-size: 1.125rem;
+      font-weight: 500;
+      color: var(--md-on-surface);
+    }
+    .card-subtitle {
+      color: var(--md-on-surface-variant);
+      font-size: 0.875rem;
+      margin: -8px 0 16px 44px;
+    }
+
+    /* ============ Buttons ============ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      height: 40px;
+      padding: 0 24px;
+      border: none;
+      border-radius: var(--md-shape-full);
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 500;
+      letter-spacing: 0.1px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn:disabled { opacity: 0.38; cursor: not-allowed; }
+    .btn .material-symbols-rounded { font-size: 18px; }
+
+    .btn-filled {
+      background: var(--md-primary);
+      color: var(--md-on-primary);
+    }
+    .btn-filled:hover:not(:disabled) {
+      background: #0945A7;
+      box-shadow: var(--md-elev-1);
+    }
+
+    .btn-outlined {
+      background: transparent;
+      color: var(--md-primary);
+      border: 1px solid var(--md-outline);
+    }
+    .btn-outlined:hover:not(:disabled) {
+      background: rgba(11,87,208,0.08);
+    }
+
+    .btn-text {
+      background: transparent;
+      color: var(--md-primary);
+      padding: 0 12px;
+    }
+    .btn-text:hover:not(:disabled) {
+      background: rgba(11,87,208,0.08);
+    }
+
+    /* ============ Select (outlined text field style) ============ */
+    .select-field {
+      position: relative;
+      flex: 1;
+      min-width: 200px;
+    }
+    .select-field label {
+      position: absolute;
+      top: -7px;
+      left: 12px;
+      background: var(--md-surface-container-lowest);
+      padding: 0 4px;
+      font-size: 0.75rem;
+      color: var(--md-on-surface-variant);
+      pointer-events: none;
+      z-index: 1;
+    }
+    .select-field select {
+      width: 100%;
+      height: 48px;
+      padding: 0 40px 0 16px;
+      background: var(--md-surface-container-lowest);
+      border: 1px solid var(--md-outline);
+      border-radius: var(--md-shape-sm);
+      font-family: inherit;
+      font-size: 0.875rem;
+      color: var(--md-on-surface);
+      appearance: none;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .select-field select:hover { border-color: var(--md-on-surface); }
+    .select-field select:focus {
+      outline: none;
+      border: 2px solid var(--md-primary);
+      padding: 0 39px 0 15px;
+    }
+    .select-field .arrow {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--md-on-surface-variant);
+      pointer-events: none;
+    }
+    .field-help {
+      font-size: 0.75rem;
+      color: var(--md-on-surface-variant);
+      margin: 4px 16px 0;
+    }
+
+    /* ============ Dropzone ============ */
     .dropzone {
-      border: 2px dashed var(--border); border-radius: 8px;
-      padding: 2.5rem; text-align: center; cursor: pointer;
-      transition: all 0.15s;
+      border: 2px dashed var(--md-outline-variant);
+      border-radius: var(--md-shape-md);
+      padding: 48px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: var(--md-surface-container-low);
     }
-    .dropzone:hover, .dropzone.drag { border-color: var(--accent); background: #0f1216; }
+    .dropzone:hover, .dropzone.drag {
+      border-color: var(--md-primary);
+      background: var(--md-primary-container);
+    }
     .dropzone input { display: none; }
-    button {
-      background: var(--accent); color: #0b0d10; border: none;
-      padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer;
-      font-weight: 600; font-size: 0.9rem;
+    .dropzone .icon {
+      font-size: 48px;
+      color: var(--md-primary);
+      margin-bottom: 8px;
     }
-    button:disabled { opacity: 0.5; cursor: not-allowed; }
-    button.secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
-    .muted { color: var(--muted); font-size: 0.85rem; }
-    .pill {
-      display: inline-block; padding: 0.15rem 0.6rem;
-      border-radius: 999px; font-size: 0.75rem; font-weight: 600;
-      border: 1px solid var(--border);
+    .dropzone strong { font-weight: 500; color: var(--md-on-surface); }
+    .dropzone .hint {
+      color: var(--md-on-surface-variant);
+      font-size: 0.875rem;
+      margin-top: 4px;
     }
-    .pill-contradicts { background: rgba(255, 91, 91, 0.15); color: var(--flag); border-color: var(--flag); }
-    .pill-consistent { background: rgba(112, 212, 145, 0.15); color: var(--ok); border-color: var(--ok); }
-    .pill-unsupported { background: rgba(240, 198, 116, 0.15); color: var(--warn); border-color: var(--warn); }
-    .pill-insufficient { background: rgba(139, 148, 163, 0.15); color: var(--muted); }
-    .pill-fl { background: rgba(108, 183, 255, 0.15); color: var(--accent); border-color: var(--accent); }
+
+    /* ============ Key-value list ============ */
+    .kv {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      gap: 12px 24px;
+      font-size: 0.875rem;
+      padding: 8px 0;
+    }
+    .kv dt { color: var(--md-on-surface-variant); font-weight: 500; }
+    .kv dd { margin: 0; color: var(--md-on-surface); }
+    .kv dd.empty { color: var(--md-on-surface-variant); font-style: italic; }
+
+    /* ============ Chips ============ */
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      height: 24px;
+      padding: 0 10px;
+      border-radius: var(--md-shape-sm);
+      background: var(--md-surface-container-high);
+      color: var(--md-on-surface);
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.25px;
+      border: 1px solid transparent;
+    }
+    .chip-primary {
+      background: var(--md-primary-container);
+      color: var(--md-on-primary-container);
+    }
+    .chip-contradicts {
+      background: var(--md-error-container);
+      color: var(--md-on-error-container);
+    }
+    .chip-consistent {
+      background: var(--md-success-container);
+      color: var(--md-on-success-container);
+    }
+    .chip-unsupported, .chip-insufficient {
+      background: var(--md-warning-container);
+      color: var(--md-on-warning-container);
+    }
+    .chip .material-symbols-rounded { font-size: 14px; }
+
+    /* ============ Claim card (extraction) ============ */
     .claim {
-      background: #0f1216; border: 1px solid var(--border);
-      border-radius: 6px; padding: 0.75rem 1rem; margin-bottom: 0.5rem;
+      background: var(--md-surface-container-low);
+      border-radius: var(--md-shape-md);
+      padding: 16px;
+      margin-bottom: 8px;
     }
-    .claim .text { margin-bottom: 0.25rem; }
+    .claim .text { font-weight: 500; color: var(--md-on-surface); }
     .claim .verbatim {
-      color: var(--muted); font-style: italic; font-size: 0.85rem;
-      border-left: 2px solid var(--border); padding-left: 0.75rem; margin-top: 0.5rem;
+      color: var(--md-on-surface-variant);
+      font-style: italic;
+      font-size: 0.8125rem;
+      border-left: 3px solid var(--md-outline-variant);
+      padding-left: 12px;
+      margin-top: 8px;
     }
-    .claim .meta { font-size: 0.75rem; color: var(--muted); margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .claim .meta {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    /* ============ Result cards ============ */
     .result {
-      border-left: 3px solid var(--border);
-      padding: 0.75rem 1rem; margin-bottom: 0.75rem;
-      background: #0f1216; border-radius: 0 6px 6px 0;
+      background: var(--md-surface-container-lowest);
+      border: 1px solid var(--md-outline-variant);
+      border-left: 4px solid var(--md-outline-variant);
+      border-radius: var(--md-shape-md);
+      padding: 16px;
+      margin-bottom: 12px;
     }
-    .result.flag { border-left-color: var(--flag); }
-    .result.consistent { border-left-color: var(--ok); }
-    .result.unsupported { border-left-color: var(--warn); }
-    .result .explanation { color: var(--muted); font-size: 0.85rem; margin-top: 0.4rem; }
-    .result .missing { color: var(--warn); font-size: 0.8rem; margin-top: 0.4rem; }
+    .result.flag { border-left-color: var(--md-error); background: #FFF8F8; }
+    .result.consistent { border-left-color: var(--md-success); }
+    .result.unsupported { border-left-color: var(--md-warning); }
+    .result .claim-text { font-weight: 500; color: var(--md-on-surface); margin-bottom: 8px; }
+    .result .explanation {
+      color: var(--md-on-surface-variant);
+      font-size: 0.875rem;
+      margin-top: 10px;
+    }
+    .result .missing {
+      color: var(--md-warning);
+      font-size: 0.8125rem;
+      margin-top: 8px;
+      display: flex;
+      align-items: flex-start;
+      gap: 4px;
+    }
+    .result .missing .material-symbols-rounded { font-size: 16px; flex-shrink: 0; }
+
+    /* ============ Citation ============ */
     .cite {
-      background: #0b0d10; border: 1px solid var(--border);
-      border-radius: 4px; padding: 0.5rem 0.75rem; margin-top: 0.5rem;
-      font-size: 0.8rem;
+      background: var(--md-surface-container);
+      border-radius: var(--md-shape-sm);
+      padding: 10px 12px;
+      margin-top: 8px;
+      font-size: 0.8125rem;
     }
-    .cite a { color: var(--accent); text-decoration: none; }
-    .warning { background: rgba(240, 198, 116, 0.08); border: 1px solid var(--warn); color: var(--warn); padding: 0.75rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.85rem; }
-    pre.notes { white-space: pre-wrap; color: var(--muted); font-size: 0.85rem; margin: 0; }
-    .hidden { display: none; }
-    .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 0.5rem; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .kv { display: grid; grid-template-columns: 140px 1fr; gap: 0.4rem 1rem; font-size: 0.9rem; }
-    .kv dt { color: var(--muted); }
-    .kv dd { margin: 0; }
+    .cite a {
+      color: var(--md-primary);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .cite a:hover { text-decoration: underline; }
+    .cite .excerpt {
+      color: var(--md-on-surface-variant);
+      margin-top: 4px;
+      font-family: 'Roboto Mono', monospace;
+      font-size: 0.75rem;
+      line-height: 1.5;
+    }
+
+    /* ============ Banner/alert ============ */
+    .banner {
+      background: var(--md-warning-container);
+      color: var(--md-on-warning-container);
+      border-radius: var(--md-shape-sm);
+      padding: 12px 16px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 0.875rem;
+    }
+    .banner .material-symbols-rounded { font-size: 20px; flex-shrink: 0; }
+    .banner-error { background: var(--md-error-container); color: var(--md-on-error-container); }
+
+    /* ============ Progress ============ */
+    .progress {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 0;
+      color: var(--md-on-surface-variant);
+      font-size: 0.875rem;
+    }
+    .progress-bar {
+      position: relative;
+      height: 4px;
+      background: var(--md-surface-container-high);
+      border-radius: var(--md-shape-full);
+      overflow: hidden;
+      flex: 1;
+    }
+    .progress-bar::before {
+      content: '';
+      position: absolute;
+      left: -30%;
+      top: 0;
+      height: 100%;
+      width: 30%;
+      background: var(--md-primary);
+      border-radius: var(--md-shape-full);
+      animation: indeterminate 1.8s cubic-bezier(0.4,0,0.2,1) infinite;
+    }
+    @keyframes indeterminate {
+      0% { left: -30%; width: 30%; }
+      60% { left: 100%; width: 30%; }
+      100% { left: 100%; width: 0; }
+    }
+
+    /* ============ Extractor notes ============ */
+    .notes {
+      background: var(--md-surface-container);
+      border-radius: var(--md-shape-sm);
+      padding: 12px 16px;
+      font-family: 'Roboto Mono', monospace;
+      font-size: 0.8125rem;
+      color: var(--md-on-surface-variant);
+      white-space: pre-wrap;
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    .section-heading {
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--md-on-surface-variant);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin: 20px 0 10px;
+    }
+
+    .report-summary {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      padding: 12px 16px;
+      background: var(--md-surface-container-low);
+      border-radius: var(--md-shape-md);
+      margin-bottom: 16px;
+    }
+    .report-summary .stat {
+      display: flex;
+      flex-direction: column;
+    }
+    .report-summary .stat-value {
+      font-size: 1.5rem;
+      font-weight: 400;
+      color: var(--md-on-surface);
+    }
+    .report-summary .stat-value.flag { color: var(--md-error); }
+    .report-summary .stat-label {
+      font-size: 0.75rem;
+      color: var(--md-on-surface-variant);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .hidden { display: none !important; }
+
+    .row {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      align-items: flex-end;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    a { color: var(--md-primary); }
   </style>
 </head>
 <body>
-  <h1>VC Compliance Pipeline</h1>
-  <p class="subtitle">Upload a pitch deck → extract structured claims → cross-reference against SEC filings.</p>
 
-  <!-- Step 1: Upload -->
-  <div class="panel" id="upload-panel">
-    <h2>1. Upload pitch deck (PDF)</h2>
-    <label class="dropzone" id="dropzone">
-      <input type="file" id="file" accept="application/pdf" />
-      <div id="dz-text">
-        <strong>Click or drop a PDF here</strong>
-        <div class="muted">The extractor will not analyze the deck — only extract verbatim claims.</div>
-      </div>
-    </label>
-  </div>
-
-  <!-- Step 2: Extraction results -->
-  <div class="panel hidden" id="extraction-panel">
-    <h2>2. Extracted information</h2>
-    <div id="extraction-body"></div>
-    <div style="margin-top: 1rem;">
-      <button id="verify-btn">Run compliance check against SEC filings →</button>
+  <header class="app-bar">
+    <span class="material-symbols-rounded icon-big">policy</span>
+    <div>
+      <h1>VC Compliance Pipeline</h1>
+      <div class="subtitle">Pitch deck extraction → SEC filing cross-reference → discrepancy report</div>
     </div>
-  </div>
+  </header>
 
-  <!-- Step 3: Report -->
-  <div class="panel hidden" id="report-panel">
-    <h2>3. Compliance report</h2>
-    <div id="report-body"></div>
-  </div>
+  <main class="container">
+
+    <!-- Model selection -->
+    <section class="card elevated">
+      <div class="card-header">
+        <span class="material-symbols-rounded" style="color: var(--md-primary)">tune</span>
+        <h2>Model configuration</h2>
+      </div>
+      <div class="row">
+        <div class="select-field">
+          <label for="extractor-model">Extractor model</label>
+          <select id="extractor-model">
+            <option value="claude-haiku-4-5" selected>Claude Haiku 4.5 — fast, cheap, structured extraction</option>
+            <option value="claude-sonnet-4-6">Claude Sonnet 4.6 — balanced; better on image-heavy decks</option>
+            <option value="claude-opus-4-6">Claude Opus 4.6 — highest quality; slower and pricier</option>
+          </select>
+          <span class="material-symbols-rounded arrow">arrow_drop_down</span>
+        </div>
+        <div class="select-field">
+          <label for="analyzer-model">Analyzer model</label>
+          <select id="analyzer-model">
+            <option value="claude-sonnet-4-6" selected>Claude Sonnet 4.6 — adaptive thinking, recommended</option>
+            <option value="claude-opus-4-6">Claude Opus 4.6 — deepest reasoning; best for subtle contradictions</option>
+            <option value="claude-haiku-4-5">Claude Haiku 4.5 — cheapest; may miss nuanced contradictions</option>
+          </select>
+          <span class="material-symbols-rounded arrow">arrow_drop_down</span>
+        </div>
+      </div>
+      <p class="field-help">
+        Extraction is mechanical — Haiku is usually enough. Analysis requires reasoning about contradictions and forward-looking statements — Sonnet or Opus recommended.
+      </p>
+    </section>
+
+    <!-- Step 1: Upload -->
+    <section class="card elevated">
+      <div class="card-header">
+        <span class="step-badge">1</span>
+        <h2>Upload pitch deck</h2>
+      </div>
+      <p class="card-subtitle">PDF format. The extractor captures verbatim claims only — no analysis, no fabrication.</p>
+      <label class="dropzone" id="dropzone">
+        <input type="file" id="file" accept="application/pdf" />
+        <div id="dz-text">
+          <span class="material-symbols-rounded icon">upload_file</span>
+          <div><strong>Click or drop a PDF here</strong></div>
+          <div class="hint">Null fields indicate the deck did not state that value.</div>
+        </div>
+      </label>
+    </section>
+
+    <!-- Step 2: Extraction -->
+    <section class="card elevated hidden" id="extraction-panel">
+      <div class="card-header">
+        <span class="step-badge">2</span>
+        <h2>Extracted information</h2>
+      </div>
+      <div id="extraction-body"></div>
+      <div class="button-row">
+        <button class="btn btn-filled" id="verify-btn">
+          <span class="material-symbols-rounded">fact_check</span>
+          Run compliance check
+        </button>
+        <button class="btn btn-outlined" onclick="document.getElementById('file').click()">
+          <span class="material-symbols-rounded">upload</span>
+          Upload a different deck
+        </button>
+      </div>
+    </section>
+
+    <!-- Step 3: Report -->
+    <section class="card elevated hidden" id="report-panel">
+      <div class="card-header">
+        <span class="step-badge">3</span>
+        <h2>Compliance report</h2>
+      </div>
+      <div id="report-body"></div>
+    </section>
+
+  </main>
 
   <script>
     const fileInput = document.getElementById('file');
     const dropzone = document.getElementById('dropzone');
+    const dzText = document.getElementById('dz-text');
     const extractionPanel = document.getElementById('extraction-panel');
     const extractionBody = document.getElementById('extraction-body');
     const reportPanel = document.getElementById('report-panel');
     const reportBody = document.getElementById('report-body');
     const verifyBtn = document.getElementById('verify-btn');
+    const extractorSelect = document.getElementById('extractor-model');
+    const analyzerSelect = document.getElementById('analyzer-model');
 
     let currentContextId = null;
 
@@ -147,84 +635,127 @@
       return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     }
 
+    function progressHTML(label) {
+      return `<div class="progress"><div class="progress-bar"></div><span>${escape(label)}</span></div>`;
+    }
+
     async function uploadFile(file) {
       if (!file) return;
-      dropzone.innerHTML = '<div><span class="spinner"></span>Extracting claims from ' + escape(file.name) + '...</div>';
+      dzText.innerHTML = progressHTML(`Extracting with ${extractorSelect.value} from ${file.name}...`);
       const fd = new FormData();
       fd.append('file', file);
+      fd.append('extractor_model', extractorSelect.value);
       try {
         const r = await fetch('/extract', { method: 'POST', body: fd });
         if (!r.ok) throw new Error((await r.json()).detail || 'Extract failed');
         const data = await r.json();
         currentContextId = data.context_id;
         renderExtraction(data.extraction);
+        restoreDropzone();
       } catch (e) {
-        dropzone.innerHTML = '<div style="color: var(--err)">Error: ' + escape(e.message) + '</div>';
+        dzText.innerHTML = `<span class="material-symbols-rounded icon" style="color: var(--md-error)">error</span><div><strong>Extraction failed</strong></div><div class="hint">${escape(e.message)}</div>`;
       }
+    }
+
+    function restoreDropzone() {
+      dzText.innerHTML = `
+        <span class="material-symbols-rounded icon">upload_file</span>
+        <div><strong>Click or drop a PDF here</strong></div>
+        <div class="hint">Null fields indicate the deck did not state that value.</div>`;
+    }
+
+    function emptyOr(v) {
+      return v ? `<dd>${escape(v)}</dd>` : '<dd class="empty">not stated in deck</dd>';
     }
 
     function renderExtraction(ex) {
       const c = ex.company;
-      let html = '<h3>Company identity</h3><dl class="kv">';
+      let html = '<div class="section-heading">Company identity</div><dl class="kv">';
       html += `<dt>Name</dt><dd>${escape(c.name)}</dd>`;
-      html += `<dt>Ticker</dt><dd>${c.ticker ? escape(c.ticker) : '<span class="muted">not stated in deck</span>'}</dd>`;
-      html += `<dt>CIK</dt><dd>${c.cik ? escape(c.cik) : '<span class="muted">not stated in deck</span>'}</dd>`;
-      html += `<dt>Industry</dt><dd>${c.industry ? escape(c.industry) : '<span class="muted">—</span>'}</dd>`;
-      html += `<dt>Website</dt><dd>${c.website ? escape(c.website) : '<span class="muted">—</span>'}</dd>`;
-      html += `<dt>Fiscal year end</dt><dd>${ex.fiscal_year_end ? escape(ex.fiscal_year_end) : '<span class="muted">—</span>'}</dd>`;
-      html += `<dt>Currency</dt><dd>${ex.currency ? escape(ex.currency) : '<span class="muted">—</span>'}</dd>`;
+      html += `<dt>Ticker</dt>${emptyOr(c.ticker)}`;
+      html += `<dt>CIK</dt>${emptyOr(c.cik)}`;
+      html += `<dt>Industry</dt>${emptyOr(c.industry)}`;
+      html += `<dt>Website</dt>${emptyOr(c.website)}`;
+      html += `<dt>Fiscal year end</dt>${emptyOr(ex.fiscal_year_end)}`;
+      html += `<dt>Currency</dt>${emptyOr(ex.currency)}`;
       html += '</dl>';
 
-      html += `<h3>Claims (${ex.claims.length})</h3>`;
+      html += `<div class="section-heading">Claims (${ex.claims.length})</div>`;
       for (const cl of ex.claims) {
         html += '<div class="claim">';
         html += `<div class="text">${escape(cl.text)}</div>`;
         html += `<div class="verbatim">"${escape(cl.verbatim)}"</div>`;
         html += '<div class="meta">';
-        html += `<span class="pill">slide ${cl.slide}</span>`;
-        html += `<span class="pill">${escape(cl.category)}</span>`;
-        if (cl.likely_forward_looking) html += '<span class="pill pill-fl">forward-looking</span>';
+        html += `<span class="chip"><span class="material-symbols-rounded">photo_library</span>slide ${cl.slide}</span>`;
+        html += `<span class="chip">${escape(cl.category)}</span>`;
+        if (cl.likely_forward_looking) html += '<span class="chip chip-primary"><span class="material-symbols-rounded">trending_up</span>forward-looking</span>';
         html += '</div></div>';
       }
 
-      html += '<h3>Extractor transparency notes</h3>';
+      html += '<div class="section-heading">Extractor transparency notes</div>';
       html += `<pre class="notes">${escape(ex.extraction_notes)}</pre>`;
 
       extractionBody.innerHTML = html;
       extractionPanel.classList.remove('hidden');
-      // reset any prior report
       reportPanel.classList.add('hidden');
       reportBody.innerHTML = '';
+      extractionPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     verifyBtn.addEventListener('click', async () => {
       if (!currentContextId) return;
       reportPanel.classList.remove('hidden');
-      reportBody.innerHTML = '<div><span class="spinner"></span>Querying SEC EDGAR, indexing filings, and analyzing claims...</div>';
+      reportBody.innerHTML = progressHTML(`Querying SEC EDGAR · indexing filings · analyzing with ${analyzerSelect.value}...`);
       verifyBtn.disabled = true;
       try {
         const fd = new FormData();
         fd.append('context_id', currentContextId);
+        fd.append('analyzer_model', analyzerSelect.value);
         const r = await fetch('/verify', { method: 'POST', body: fd });
         if (!r.ok) throw new Error((await r.json()).detail || 'Verify failed');
         renderReport(await r.json());
       } catch (e) {
-        reportBody.innerHTML = '<div style="color: var(--err)">Error: ' + escape(e.message) + '</div>';
+        reportBody.innerHTML = `<div class="banner banner-error"><span class="material-symbols-rounded">error</span><div>${escape(e.message)}</div></div>`;
       } finally {
         verifyBtn.disabled = false;
       }
+      reportPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
+
+    function verdictChipClass(verdict) {
+      return {
+        'CONTRADICTS': 'chip-contradicts',
+        'CONSISTENT': 'chip-consistent',
+        'UNSUPPORTED': 'chip-unsupported',
+        'INSUFFICIENT_EVIDENCE': 'chip-insufficient'
+      }[verdict] || 'chip-insufficient';
+    }
+
+    function verdictIcon(verdict) {
+      return {
+        'CONTRADICTS': 'error',
+        'CONSISTENT': 'check_circle',
+        'UNSUPPORTED': 'help',
+        'INSUFFICIENT_EVIDENCE': 'help_outline'
+      }[verdict] || 'help_outline';
+    }
 
     function renderReport(rep) {
       let html = '';
-      const cikLabel = rep.cik || 'unresolved (no SEC filings)';
-      html += `<div class="muted" style="margin-bottom: 0.75rem">Generated ${escape(rep.generated_at)} · CIK ${escape(cikLabel)} · ${rep.claims_analyzed} claim(s) analyzed · <strong>${rep.flagged_forward_looking_contradictions}</strong> flagged</div>`;
+
+      // Summary stats
+      const cikLabel = rep.cik || 'unresolved';
+      html += '<div class="report-summary">';
+      html += `<div class="stat"><div class="stat-value">${rep.claims_analyzed}</div><div class="stat-label">Claims analyzed</div></div>`;
+      html += `<div class="stat"><div class="stat-value ${rep.flagged_forward_looking_contradictions > 0 ? 'flag' : ''}">${rep.flagged_forward_looking_contradictions}</div><div class="stat-label">Flagged FLS contradictions</div></div>`;
+      html += `<div class="stat"><div class="stat-value" style="font-size: 1rem; padding-top: 8px">${escape(cikLabel)}</div><div class="stat-label">SEC CIK</div></div>`;
       if (rep.assumed_industry) {
-        html += `<div class="muted" style="margin-bottom: 0.75rem">Assumed industry (from deck): <strong>${escape(rep.assumed_industry)}</strong></div>`;
+        html += `<div class="stat"><div class="stat-value" style="font-size: 1rem; padding-top: 8px">${escape(rep.assumed_industry)}</div><div class="stat-label">Assumed industry</div></div>`;
       }
+      html += '</div>';
 
       for (const w of (rep.warnings || [])) {
-        html += `<div class="warning">⚠ ${escape(w)}</div>`;
+        html += `<div class="banner"><span class="material-symbols-rounded">warning</span><div>${escape(w)}</div></div>`;
       }
 
       for (const r of rep.results) {
@@ -235,35 +766,29 @@
         else if (verdict === 'CONSISTENT') cls += ' consistent';
         else if (verdict === 'UNSUPPORTED' || verdict === 'INSUFFICIENT_EVIDENCE') cls += ' unsupported';
 
-        const pillCls = {
-          'CONTRADICTS': 'pill-contradicts',
-          'CONSISTENT': 'pill-consistent',
-          'UNSUPPORTED': 'pill-unsupported',
-          'INSUFFICIENT_EVIDENCE': 'pill-insufficient'
-        }[verdict] || 'pill-insufficient';
-
         html += `<div class="${cls}">`;
-        html += `<div><strong>${escape(r.claim)}</strong></div>`;
-        html += `<div class="meta" style="margin-top: 0.4rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">`;
-        html += `<span class="pill ${pillCls}">${escape(verdict)}</span>`;
-        if (r.forward_looking) html += '<span class="pill pill-fl">forward-looking</span>';
-        if (r.severity && r.severity !== 'NONE') html += `<span class="pill">severity: ${escape(r.severity)}</span>`;
-        if (r.analysis_method === 'web_search') html += '<span class="pill">verified via web search</span>';
+        html += `<div class="claim-text">${escape(r.claim)}</div>`;
+        html += '<div class="meta" style="display: flex; gap: 6px; flex-wrap: wrap;">';
+        html += `<span class="chip ${verdictChipClass(verdict)}"><span class="material-symbols-rounded">${verdictIcon(verdict)}</span>${escape(verdict)}</span>`;
+        if (r.forward_looking) html += '<span class="chip chip-primary"><span class="material-symbols-rounded">trending_up</span>forward-looking</span>';
+        if (r.severity && r.severity !== 'NONE') html += `<span class="chip">severity: ${escape(r.severity)}</span>`;
+        if (r.analysis_method === 'web_search') html += '<span class="chip"><span class="material-symbols-rounded">travel_explore</span>web search</span>';
         html += '</div>';
         html += `<div class="explanation">${escape(r.explanation)}</div>`;
         if (r.missing_information) {
-          html += `<div class="missing">Missing information: ${escape(r.missing_information)}</div>`;
+          html += `<div class="missing"><span class="material-symbols-rounded">info</span><div>Missing: ${escape(r.missing_information)}</div></div>`;
         }
         for (const c of (r.cited_passages || [])) {
           html += '<div class="cite">';
-          html += `<div><strong>P${c.passage_num}</strong> — ${escape(c.form)} filed ${escape(c.filing_date)} · <a href="${escape(c.url)}" target="_blank" rel="noopener">${escape(c.accession)}</a></div>`;
-          html += `<div class="muted" style="margin-top: 0.25rem;">${escape(c.excerpt)}...</div>`;
+          html += `<div><strong>P${c.passage_num}</strong> · ${escape(c.form)} filed ${escape(c.filing_date)} · <a href="${escape(c.url)}" target="_blank" rel="noopener">${escape(c.accession)}</a></div>`;
+          html += `<div class="excerpt">${escape(c.excerpt)}…</div>`;
           html += '</div>';
         }
         html += '</div>';
       }
 
-      reportBody.innerHTML = html;
+      const footer = `<div style="margin-top: 16px; color: var(--md-on-surface-variant); font-size: 0.75rem;">Generated ${escape(rep.generated_at)}${rep.log_path ? ' · log: ' + escape(rep.log_path) : ''}</div>`;
+      reportBody.innerHTML = html + footer;
     }
   </script>
 </body>
