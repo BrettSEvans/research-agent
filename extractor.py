@@ -22,6 +22,8 @@ from typing import Literal
 import anthropic
 from pydantic import BaseModel, Field
 
+import llm_local
+
 # Default: Haiku 4.5. Extraction is a structured, mechanical task — cheap model
 # is the right fit. Override with EXTRACTOR_MODEL env var if needed.
 DEFAULT_MODEL = "claude-haiku-4-5"
@@ -142,9 +144,34 @@ def extract_from_pdf(
     client: anthropic.Anthropic | None = None,
     model: str | None = None,
 ) -> DeckExtraction:
-    """Extract structured deck information from a PDF file."""
-    client = client or anthropic.Anthropic()
+    """Extract structured deck information from a PDF file.
+
+    Routes to Ollama for local (qwen/llama/...) models — which are text-only,
+    so page text is extracted with pypdf first. Claude models receive the
+    native PDF document block.
+    """
     model = model or _resolve_model()
+
+    # --- Local model path: no vision; use pypdf to pre-extract text ---
+    if llm_local.is_local_model(model):
+        page_text = llm_local.extract_pdf_text(pdf_path)
+        user_content = (
+            "The following is the raw text of a startup pitch deck, split by "
+            "slide. Extract structured pitch deck information. For each claim, "
+            "set `slide` to the 1-indexed slide number where it appears. "
+            "Every claim must include a `verbatim` field with the exact quote "
+            "from the deck.\n\n"
+            f"{page_text}"
+        )
+        return llm_local.call_structured(
+            model=model,
+            system=SYSTEM_PROMPT,
+            user_content=user_content,
+            output_format=DeckExtraction,
+        )
+
+    # --- Anthropic path: native PDF support ---
+    client = client or anthropic.Anthropic()
     pdf_bytes = Path(pdf_path).read_bytes()
     b64 = base64.standard_b64encode(pdf_bytes).decode("utf-8")
 

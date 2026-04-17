@@ -16,6 +16,7 @@ import os
 from pydantic import BaseModel, Field
 import anthropic
 
+import llm_local
 from retriever import Hit
 
 # Default: Sonnet 4.6. Analysis is a reasoning task and benefits from adaptive
@@ -125,6 +126,28 @@ def analyze_industry_claim(
     """
     model = model or _resolve_model()
 
+    # Local models have no server-side web_search tool. Refuse cleanly rather
+    # than fabricate — no URLs, no statistics we cannot cite.
+    if llm_local.is_local_model(model):
+        return ClaimAssessment(
+            verdict="INSUFFICIENT_EVIDENCE",
+            forward_looking=False,
+            severity="NONE",
+            explanation=(
+                f"Local model '{model}' has no web-search capability, so this "
+                "industry/TAM claim cannot be verified against authoritative "
+                "online sources without fabrication. Re-run this claim with a "
+                "Claude model (which has the web_search tool) or supply an "
+                "industry report directly."
+            ),
+            cited_passages=[],
+            missing_information=(
+                "Authoritative industry/market research (Statista, IBISWorld, "
+                "Gartner, government data, or analyst reports) — or re-run "
+                "with a Claude model that supports web_search."
+            ),
+        )
+
     context_lines = [f"Company: {company_name}"]
     if industry:
         context_lines.append(f"Assumed industry: {industry}")
@@ -170,6 +193,15 @@ def analyze_claim(
     )
     sections.append("Assess the claim against these passages.")
     user_content = "\n\n".join(sections)
+
+    # Local Ollama path — same prompt, same Pydantic schema, different backend.
+    if llm_local.is_local_model(model):
+        return llm_local.call_structured(
+            model=model,
+            system=SYSTEM_PROMPT,
+            user_content=user_content,
+            output_format=ClaimAssessment,
+        )
 
     response = client.messages.parse(
         model=model,
