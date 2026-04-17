@@ -771,9 +771,13 @@
       const blob = new Blob([md], { type: 'text/markdown' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      const company = (lastReport.company_name || 'compliance-report').replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+      const company = (lastReport.company_name || 'report').replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+      const shortModel = (m) => m ? m.replace(/^claude-/, '').replace(/^qwen/, 'qwen').replace(/[.:]/g, '').toLowerCase() : 'unknown';
+      const extractorShort = shortModel(lastReport.extractor_model);
+      const analyzerShort = shortModel(lastReport.analyzer_model);
+      const date = lastReport.generated_at.slice(0, 10);
       a.href = url;
-      a.download = `${company}-${lastReport.generated_at.slice(0,10)}.md`;
+      a.download = `${company}-${date}-${extractorShort}-${analyzerShort}.md`;
       a.click();
       URL.revokeObjectURL(url);
     });

@@ -1,0 +1,221 @@
+{
+  "meta": {
+    "save_id": "9dd1d5881c5b",
+    "company_name": "CannaFarm",
+    "original_filename": "cannabis presentation.pdf",
+    "extractor_model": "qwen3.5:9b",
+    "extractor_version": "1.2.0",
+    "saved_at": "2026-04-17T19:40:12.337079+00:00"
+  },
+  "extraction": {
+    "company": {
+      "name": "CannaFarm",
+      "ticker": null,
+      "cik": null,
+      "website": "cannabusinessplan.com",
+      "description": "To build a successful commercial cultivation facility and create a recognizable brand in a rapidly growing industry.",
+      "industry": "Cannabis cultivation and wholesale (marijuana growing, California)"
+    },
+    "claims": [
+      {
+        "text": "The passage of state initiatives in California, Nevada, Massachusetts, Maine, Florida, Arkansas, Montana, and North Dakota will add $7.4 billion to the 2029 U.S. cannabis market forecast.",
+        "verbatim": "The passage of initiatives in California, Nevada, Massachusetts, Maine, Florida, Arkansas, Montana and North Dalota will add $7.4 billion to the 2029 market forecast bringing the overall market projection for legal adult-use and medical sales in the U.S to $22.8 billion by 2029",
+        "slide": 5,
+        "category": "market",
+        "likely_forward_looking": true
+      },
+      {
+        "text": "The overall U.S. legal adult-use and medical cannabis market is projected to reach $22.8 billion by 2029.",
+        "verbatim": "bringing the overall market projection for legal adult-use and medical sales in the U.S to $22.8 billion by 2029",
+        "slide": 5,
+        "category": "market",
+        "likely_forward_looking": true
+      },
+      {
+        "text": "The compound annual growth rate (CAGR) for the U.S. legal cannabis market is 28%.",
+        "verbatim": "That brings the compound annual growth rate (CAGR) to 28%.",
+        "slide": 5,
+        "category": "market",
+        "likely_forward_looking": true
+      },
+      {
+        "text": "Recreational cannabis sales will account for 53% of the overall cannabis market by 2029.",
+        "verbatim": "Recreational cannabis sales will account for more than half (53%) of the overall market by 2029",
+        "slide": 6,
+        "category": "market",
+        "likely_forward_looking": true
+      },
+      {
+        "text": "By 2029, the legal cannabis market would see $22.8 billion in total annual sales.",
+        "verbatim": "By 2029 legal cannabis market would see a whopping $22.8 billion in total annual sales.",
+        "slide": 6,
+        "category": "market",
+        "likely_forward_looking": true
+      },
+      {
+        "text": "As of August 1, 2025, there were 440 licensed retail marijuana stores in the state.",
+        "verbatim": "Licensed retail marijuana businesses as of Aug 1, 2025 Stores: 440",
+        "slide": 7,
+        "category": "market",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "As of August 1, 2025, there were 583 licensed retail marijuana cultivation operations.",
+        "verbatim": "Cultivations: 583",
+        "slide": 7,
+        "category": "market",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "As of August 1, 2025, there were 198 licensed retail marijuana product manufacturers.",
+        "verbatim": "Product Manufacturers: 198",
+        "slide": 7,
+        "category": "market",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "As of August 1, 2025, there were 15 licensed retail marijuana testing facilities.",
+        "verbatim": "Testing Facilities: 15",
+        "slide": 7,
+        "category": "market",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "As of August 1, 2025, there were 531 licensed medical marijuana centres.",
+        "verbatim": "Licensed medical marijuana businesses as of Aug 1, 2025 Centres: 531",
+        "slide": 7,
+        "category": "market",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "As of August 1, 2025, there were 801 licensed medical marijuana cultivations.",
+        "verbatim": "Cultivations: 801",
+        "slide": 7,
+        "category": "market",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "As of August 1, 2025, there were 242 licensed medical marijuana infused product manufacturers.",
+        "verbatim": "Infused Product Manufacturers: 242",
+        "slide": 7,
+        "category": "market",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "As of August 1, 2025, there were 13 licensed medical marijuana testing facilities.",
+        "verbatim": "Testing Facilities: 13",
+        "slide": 7,
+        "category": "market",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "CannaFarm's main customers are dispensaries, manufacturers of edible products, and wholesale buyers in California.",
+        "verbatim": "Main customers are dispensaries and manufacturers of edible products and also whole buyers in the state of California.",
+        "slide": 7,
+        "category": "traction",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "Deal sizes for indoor flower ranged from 0.5 to 100 pounds.",
+        "verbatim": "Deal sizes for indoor flower ranged from 0.5 to 100 pounds.",
+        "slide": 13,
+        "category": "product",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "Deal sizes for greenhouse flower ranged from 1 to 320 pounds.",
+        "verbatim": "Deal sizes for greenhouse flower ranged from 1 to 320 pounds.",
+        "slide": 13,
+        "category": "product",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "Deal sizes for outdoor flower ranged from 1 to 200 pounds.",
+        "verbatim": "Deal sixes for outdoor flower ranged from 1 to 200 pounds.",
+        "slide": 13,
+        "category": "product",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "CannaFarm projects yearly revenue of about $200,000 in Year 1.",
+        "verbatim": "Yearly revenue of about $200,000 Year 1",
+        "slide": 14,
+        "category": "projection",
+        "likely_forward_looking": true
+      },
+      {
+        "text": "CannaFarm projects yearly revenue of about $1,000,000 in Year 2.",
+        "verbatim": "Yearly revenue of about $1,000,000 Year 2",
+        "slide": 14,
+        "category": "projection",
+        "likely_forward_looking": true
+      },
+      {
+        "text": "CannaFarm projects yearly revenue of about $1,500,000 in Year 3.",
+        "verbatim": "Yearly revenue of about $1,500, 000 Year 3",
+        "slide": 14,
+        "category": "projection",
+        "likely_forward_looking": true
+      },
+      {
+        "text": "CannaFarm requires a total investment of $330,000 USD.",
+        "verbatim": "$330,000 US DOLLARS Investments Needed",
+        "slide": 15,
+        "category": "financial",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "$3,000 of the investment is allocated to Administrative Expenses.",
+        "verbatim": "$3,000 \u25ba Administrative Expenses",
+        "slide": 15,
+        "category": "financial",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "$20,000 of the investment is allocated to Sales & Marketing.",
+        "verbatim": "$20,000 \u25ba Sales % Marketing",
+        "slide": 15,
+        "category": "financial",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "$30,000 of the investment is allocated to Legal Fees & Licensing.",
+        "verbatim": "$30,000 \u25ba Legal Fees & Licensing",
+        "slide": 15,
+        "category": "financial",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "$30,000 of the investment is allocated to Security Equipment.",
+        "verbatim": "$30,000 \u25ba Security Equipment",
+        "slide": 15,
+        "category": "financial",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "$70,000 of the investment is allocated to Land & Development.",
+        "verbatim": "$70,000 \u25ba Land & Development",
+        "slide": 15,
+        "category": "financial",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "$100,000 of the investment is allocated to Greenhouses.",
+        "verbatim": "$100,000 \u25ba Greenhouses",
+        "slide": 15,
+        "category": "financial",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "The leadership team consists of Sara Hills (CEO), Dave Turner (COO), Jacob Garner (CTO), and Allison Cobb (CFO).",
+        "verbatim": "Sara Hills CEO Dave Turner COO Jacob Garner CTO Allison Cobb CFO",
+        "slide": 12,
+        "category": "team",
+        "likely_forward_looking": false
+      }
+    ],
+    "fiscal_year_end": null,
+    "currency": "USD",
+    "extraction_notes": "COMPANY NAME: The deck uses both 'Canna Farm' (slide 5) and 'CannaFarm' (slide 7); I used 'CannaFarm' as the more formal reference. The title slide says only 'Cannabis Investor Pitch Deck' with no company name. NO TICKER OR CIK stated \u2014 company appears to be a pre-revenue private startup seeking seed/early-stage investment. WEBSITE: Contact slide shows 'cannabusinessplan.com' and email 'info@cannabusiness.com' \u2014 note the domain mismatch between the two. REVENUE FIGURES: All revenue projections (Year 1\u20133) are forward-looking and use approximate language ('about'). The chart on slide 13 shows Net Income and Gross Profit for Years 1\u20135 but exact values are only readable from the chart axis (approximate) and not stated textually beyond deal size ranges. The chart y-axis on slide 14 is labeled '$US K' implying thousands; Year 1 \u2248 $3K in chart but text says $200K \u2014 there may be an inconsistency between chart scale and textual annotation. MARKET DATA: The $22.8B by 2029 figure and 28% CAGR are attributed to unspecified 'expert projections' with no source cited. The licensed business counts are dated Aug 1, 2025 but do not specify which state (context implies California). REGULATORY: No specific license status, pending filings, or compliance claims are made. The SWOT slide (8) mentions 'Product liability/legal issues' and 'Enhanced risk of banking/financial/IRS scrutiny' as weaknesses but does not state any current compliance posture. TEAM: Only names and titles provided \u2014 no background, credentials, or prior experience stated. TRACTION: No current customer counts, retention metrics, LTV/CAC, or historical revenue are stated. FISCAL YEAR END: Not stated or implied."
+  }
+}

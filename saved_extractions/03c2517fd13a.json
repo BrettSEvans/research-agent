@@ -1,0 +1,200 @@
+{
+  "meta": {
+    "save_id": "03c2517fd13a",
+    "company_name": "Canna Farm",
+    "original_filename": "cannabis presentation.pdf",
+    "extractor_model": "claude-haiku-4-5",
+    "extractor_version": "1.2.0",
+    "saved_at": "2026-04-17T19:36:56.107888+00:00"
+  },
+  "extraction": {
+    "company": {
+      "name": "Canna Farm",
+      "ticker": null,
+      "cik": null,
+      "website": "cannabusinessplan.com",
+      "description": "To build a successful commercial cultivation facility and create a recognizable brand in a rapidly growing industry.",
+      "industry": "Cannabis cultivation (legal marijuana growing and retail in California)"
+    },
+    "claims": [
+      {
+        "text": "The national legal cannabis market is projected to reach $22.8 billion by 2029.",
+        "verbatim": "the overall market projection for legal adult-use and medical sales in the U.S to $22.8 billion by 2029",
+        "slide": 5,
+        "category": "market",
+        "likely_forward_looking": true
+      },
+      {
+        "text": "The passage of initiatives in California, Nevada, Massachusetts, Maine, Florida, Arkansas, Montana and North Dakota will add $7.4 billion to the 2029 market forecast.",
+        "verbatim": "The passage of initiatives in California, Nevada, Massachusetts, Maine, Florida, Arkansas, Montana and North Dakota will add $7.4 billion to the 2029 market forecast",
+        "slide": 5,
+        "category": "market",
+        "likely_forward_looking": true
+      },
+      {
+        "text": "The cannabis market will experience a compound annual growth rate (CAGR) of 28% through 2029.",
+        "verbatim": "That brings the compound annual growth rate (CAGR) to 28%.",
+        "slide": 5,
+        "category": "market",
+        "likely_forward_looking": true
+      },
+      {
+        "text": "Recreational cannabis sales will account for more than 53% of the overall market by 2029.",
+        "verbatim": "Recreational cannabis sales will account for more than half (53%) of the overall market by 2029",
+        "slide": 6,
+        "category": "market",
+        "likely_forward_looking": true
+      },
+      {
+        "text": "There are 440 licensed retail marijuana stores in California as of August 1, 2025.",
+        "verbatim": "Stores: 440",
+        "slide": 7,
+        "category": "market",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "There are 583 licensed cannabis cultivations in California as of August 1, 2025.",
+        "verbatim": "Cultivations: 583",
+        "slide": 7,
+        "category": "market",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "There are 198 licensed product manufacturers in California as of August 1, 2025.",
+        "verbatim": "Product Manufacturers: 198",
+        "slide": 7,
+        "category": "market",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "There are 15 licensed cannabis testing facilities in California as of August 1, 2025.",
+        "verbatim": "Testing Facilities: 15",
+        "slide": 7,
+        "category": "market",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "There are 531 licensed medical marijuana centres in California as of August 1, 2025.",
+        "verbatim": "Centres: 531",
+        "slide": 7,
+        "category": "market",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "There are 801 licensed medical cannabis cultivations in California as of August 1, 2025.",
+        "verbatim": "Cultivations: 801",
+        "slide": 7,
+        "category": "market",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "There are 242 licensed infused product manufacturers in California as of August 1, 2025.",
+        "verbatim": "Infused Product Manufacturers: 242",
+        "slide": 7,
+        "category": "market",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "There are 13 licensed medical cannabis testing facilities in California as of August 1, 2025.",
+        "verbatim": "Testing Facilities: 13",
+        "slide": 7,
+        "category": "market",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "Deal sizes for indoor flower range from 0.5 to 100 pounds.",
+        "verbatim": "Deal sizes for indoor flower ranged from 0.5 to 100 pounds.",
+        "slide": 13,
+        "category": "product",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "Deal sizes for greenhouse flower range from 1 to 320 pounds.",
+        "verbatim": "Deal sizes for greenhouse flower ranged from 1 to 320 pounds.",
+        "slide": 13,
+        "category": "product",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "Deal sizes for outdoor flower range from 1 to 200 pounds.",
+        "verbatim": "Deal sizes for outdoor flower ranged from 1 to 200 pounds.",
+        "slide": 13,
+        "category": "product",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "Canna Farm projects Year 1 revenue of approximately $200,000.",
+        "verbatim": "Yearly revenue of about $200,000 Year 1",
+        "slide": 14,
+        "category": "projection",
+        "likely_forward_looking": true
+      },
+      {
+        "text": "Canna Farm projects Year 2 revenue of approximately $1,000,000.",
+        "verbatim": "Yearly revenue of about $1,000,000 Year 2",
+        "slide": 14,
+        "category": "projection",
+        "likely_forward_looking": true
+      },
+      {
+        "text": "Canna Farm projects Year 3 revenue of approximately $1,500,000.",
+        "verbatim": "Yearly revenue of about $1,500,000 Year 3",
+        "slide": 14,
+        "category": "projection",
+        "likely_forward_looking": true
+      },
+      {
+        "text": "Canna Farm requires $330,000 USD in total investments.",
+        "verbatim": "$330,000 US DOLLARS Investments Needed",
+        "slide": 15,
+        "category": "financial",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "Canna Farm allocation for administrative expenses is $3,000.",
+        "verbatim": "$3,000 \u25b6 Administrative Expenses",
+        "slide": 15,
+        "category": "financial",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "Canna Farm allocation for sales and marketing is $20,000.",
+        "verbatim": "$20,000 \u25b6 Sales % Marketing",
+        "slide": 15,
+        "category": "financial",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "Canna Farm allocation for legal fees and licensing is $30,000.",
+        "verbatim": "$30,000 \u25b6 Legal Fees & Licensing",
+        "slide": 15,
+        "category": "financial",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "Canna Farm allocation for security equipment is $30,000.",
+        "verbatim": "$30,000 \u25b6 Security Equipment",
+        "slide": 15,
+        "category": "financial",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "Canna Farm allocation for land and development is $70,000.",
+        "verbatim": "$70,000 \u25b6 Land & Development",
+        "slide": 15,
+        "category": "financial",
+        "likely_forward_looking": false
+      },
+      {
+        "text": "Canna Farm allocation for greenhouses is $100,000.",
+        "verbatim": "$100,000 \u25b6 Greenhouses",
+        "slide": 15,
+        "category": "financial",
+        "likely_forward_looking": false
+      }
+    ],
+    "fiscal_year_end": null,
+    "currency": "USD",
+    "extraction_notes": "This is a generic cannabis investor pitch deck template, with placeholder content. The company identity is 'Canna Farm', inferred from website 'cannabusinessplan.com' and repeated references to 'Canna Farm' in the deck. No ticker or CIK provided\u2014company appears to be private/pre-launch. Team members are listed by name and title (CEO Sara Hills, COO Dave Turner, CTO Jacob Garner, CFO Allison Cobb) but no detailed background or credentials provided. The deck includes market projections, competitive landscape data as of August 1, 2025, deal size ranges, and 3-year revenue projections. Financial projections and investment needs are stated but unsubstantiated. No actual traction (customer names, signed deals, operating history) is provided. The revenue forecast chart on page 13 shows three cultivation types (indoor, greenhouse, outdoor) with net income and gross profit breakdowns, but the narrative is disconnected from the company's specific plan. The 'Construction & Growing' chart on page 14 projects cumulative values by year but lacks detail on assumptions. No historical financial data, burn rate, or unit economics provided. SWOT analysis (page 8) includes generic strengths (California weather, greenhouse efficiency) and threats (regulatory uncertainty, pricing pressure) but lacks specificity to Canna Farm's own position. The deck is clearly a template; compliance verification of all projections (TAM, revenue, unit economics) will require primary research."
+  }
+}
