@@ -18,9 +18,15 @@ import httpx
 from pydantic import BaseModel
 
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")
-# Local inference on a 9B model is slow on CPU / modest GPUs. Generous read
-# timeout — but still finite so a hung server fails cleanly.
-OLLAMA_TIMEOUT = httpx.Timeout(connect=10.0, read=600.0, write=30.0, pool=10.0)
+# Local inference on a 9B model is slow on CPU / modest GPUs, but should
+# complete within 2 minutes. If it hangs, fail cleanly rather than waiting
+# 10 minutes. User can increase OLLAMA_TIMEOUT env var if needed.
+OLLAMA_TIMEOUT = httpx.Timeout(
+    connect=10.0,
+    read=float(os.environ.get("OLLAMA_TIMEOUT_READ", "120.0")),
+    write=30.0,
+    pool=10.0,
+)
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -58,6 +64,7 @@ def call_structured(
     system: str,
     user_content: str,
     output_format: Type[T],
+    verbose: bool = True,
 ) -> T:
     """Structured-output chat completion against Ollama.
 
@@ -75,8 +82,18 @@ def call_structured(
         "stream": False,
         "options": {"temperature": 0},
     }
+
+    if verbose:
+        preview = user_content[:100].replace("\n", " ")
+        print(f"[ollama] Querying {model}: {preview}...")
+
     try:
         r = httpx.post(f"{OLLAMA_URL}/api/chat", json=payload, timeout=OLLAMA_TIMEOUT)
+    except httpx.TimeoutException as e:
+        raise RuntimeError(
+            f"Ollama inference timed out after {OLLAMA_TIMEOUT.read}s on {model}. "
+            "Model may be overloaded or stuck. Try restarting: `ollama serve`"
+        ) from e
     except httpx.ConnectError as e:
         raise RuntimeError(
             f"Could not reach Ollama at {OLLAMA_URL}. Is it running? "
@@ -88,6 +105,11 @@ def call_structured(
             f"Ollama model '{model}' not found locally. Pull it first: "
             f"`ollama pull {model}`."
         )
+
     r.raise_for_status()
     content = r.json()["message"]["content"]
+
+    if verbose:
+        print(f"[ollama] ✓ {model} completed")
+
     return output_format.model_validate_json(content)
