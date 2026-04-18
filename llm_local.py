@@ -18,12 +18,12 @@ import httpx
 from pydantic import BaseModel
 
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")
-# Local inference on a 9B model is slow on CPU / modest GPUs, but should
-# complete within 2 minutes. If it hangs, fail cleanly rather than waiting
-# 10 minutes. User can increase OLLAMA_TIMEOUT env var if needed.
+# 300s covers full-deck extraction (heavy, 2-5 min on a 9B model) while still
+# catching genuinely stuck inference. Claim analysis is much faster (~30-60s).
+# Override with OLLAMA_TIMEOUT_READ env var if your hardware needs more time.
 OLLAMA_TIMEOUT = httpx.Timeout(
     connect=10.0,
-    read=float(os.environ.get("OLLAMA_TIMEOUT_READ", "120.0")),
+    read=float(os.environ.get("OLLAMA_TIMEOUT_READ", "300.0")),
     write=30.0,
     pool=10.0,
 )
