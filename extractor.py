@@ -35,11 +35,20 @@ def _resolve_model() -> str:
     return os.environ.get("EXTRACTOR_MODEL", DEFAULT_MODEL)
 
 
-def _thinking_kwargs(model: str) -> dict:
-    """Adaptive thinking is supported on Opus 4.6 and Sonnet 4.6, not Haiku 4.5."""
-    if "haiku" in model:
+def _thinking_kwargs(model: str, budget_tokens: int = 3000) -> dict:
+    """Return extended-thinking kwargs for extraction.
+
+    Extraction is a structured, mechanical task — it does not benefit from
+    deep reasoning. Adaptive thinking routinely burns 10k+ tokens on a full
+    deck and is the primary cause of extraction hangs on Series A/B (4 metrics
+    → model reasons extensively before writing output).
+
+    Cap at 3000 tokens: enough to resolve ambiguous slides but fast enough to
+    return promptly. Haiku and non-Claude models don't support thinking at all.
+    """
+    if "haiku" in model or llm_local.is_local_model(model) or llm_inception.is_inception_model(model):
         return {}
-    return {"thinking": {"type": "adaptive"}}
+    return {"thinking": {"type": "enabled", "budget_tokens": budget_tokens}}
 
 
 class CompanyIdentity(BaseModel):
