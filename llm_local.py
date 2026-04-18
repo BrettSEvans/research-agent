@@ -34,12 +34,14 @@ T = TypeVar("T", bound=BaseModel)
 def is_local_model(model: str | None) -> bool:
     """True if the model name refers to an Ollama-served local model.
 
-    Our convention: Anthropic model names start with 'claude-'. Anything else
-    (e.g., 'qwen3.5:9b', 'llama3.1:8b') is treated as local.
+    Anthropic models start with 'claude-'; Inception models start with 'mercury-'.
+    Everything else (e.g. 'qwen3.5:9b', 'llama3.1:8b') is treated as a local
+    Ollama model.
     """
     if not model:
         return False
-    return not model.lower().startswith("claude-")
+    m = model.lower()
+    return not m.startswith("claude-") and not m.startswith("mercury-")
 
 
 def extract_pdf_text(pdf_path: str | Path) -> str:
