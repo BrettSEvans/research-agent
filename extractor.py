@@ -265,6 +265,50 @@ def extract_basics_and_infer_stage(
     return response.parsed_output
 
 
+def _merge_deck_extractions(
+    batches: list[DeckExtraction],
+    batch_size: int,
+) -> DeckExtraction:
+    """Merge partial DeckExtraction results from batched vision inference.
+
+    Company identity and stage come from the first batch (usually the cover /
+    intro slides). Claims and key metrics are concatenated across all batches;
+    extraction notes are joined with a per-batch header.
+    """
+    if len(batches) == 1:
+        return batches[0]
+
+    all_claims = []
+    for batch_idx, ex in enumerate(batches):
+        all_claims.extend(ex.claims)
+
+    seen_metric_names: set[str] = set()
+    all_metrics: list[ExtractedMetric] = []
+    for ex in batches:
+        for m in ex.key_metrics:
+            if m.metric_name not in seen_metric_names:
+                seen_metric_names.add(m.metric_name)
+                all_metrics.append(m)
+
+    notes_parts = []
+    for i, ex in enumerate(batches):
+        start = i * batch_size + 1
+        end = start + batch_size - 1
+        if ex.extraction_notes:
+            notes_parts.append(f"[Slides {start}–{end}] {ex.extraction_notes}")
+    combined_notes = "\n\n".join(notes_parts) if notes_parts else "Batched extraction — see individual slide ranges above."
+
+    return DeckExtraction(
+        company=batches[0].company,
+        claims=all_claims,
+        fiscal_year_end=next((e.fiscal_year_end for e in batches if e.fiscal_year_end), None),
+        currency=next((e.currency for e in batches if e.currency), None),
+        stage_assessment=next((e.stage_assessment for e in batches if e.stage_assessment), None),
+        key_metrics=all_metrics,
+        extraction_notes=combined_notes,
+    )
+
+
 def extract_from_pdf(
     pdf_path: str | Path,
     client: anthropic.Anthropic | None = None,
@@ -275,31 +319,48 @@ def extract_from_pdf(
 
     Routes to Ollama for local (qwen/llama/...) models — which are text-only,
     so page text is extracted with pypdf first. Claude models receive the
-    native PDF document block.
+    native PDF document block. Vision-capable local models receive rendered
+    page images, batched to avoid Ollama OOM errors.
     """
     model = model or _resolve_model()
-    
+
     metrics_str = "No specific metrics requested."
     if requested_metrics:
         metrics_str = "Please extract the following specific metrics if they exist in the deck: " + ", ".join(requested_metrics)
 
-    # --- Vision-capable local models: render all pages as images ---
+    # --- Vision-capable local models: render pages as images, batch to avoid OOM ---
     # Check BEFORE is_local_model() — vision models satisfy both predicates.
     if llm_local.is_vision_local_model(model):
-        images = llm_local.pdf_to_base64_images(pdf_path)
-        user_text = (
-            "These are the slides of a startup pitch deck. Extract structured "
-            "pitch deck information. For each claim, set `slide` to the 1-indexed "
-            "slide number where it appears. Every claim must include a `verbatim` "
-            f"field with the exact quote from the deck. {metrics_str}"
-        )
-        return llm_local.call_structured_vision(
-            model=model,
-            system=SYSTEM_PROMPT,
-            user_text=user_text,
-            images_b64=images,
-            output_format=DeckExtraction,
-        )
+        all_images = llm_local.pdf_to_base64_images(pdf_path)
+        batch_size = llm_local.OLLAMA_VISION_BATCH
+        batches_in = [
+            all_images[i : i + batch_size]
+            for i in range(0, len(all_images), batch_size)
+        ]
+        total = len(all_images)
+        print(f"[ollama-vision] {total} slide(s) → {len(batches_in)} batch(es) of ≤{batch_size}")
+
+        results: list[DeckExtraction] = []
+        for idx, batch_imgs in enumerate(batches_in):
+            start_slide = idx * batch_size + 1
+            end_slide = start_slide + len(batch_imgs) - 1
+            user_text = (
+                f"These are slides {start_slide}–{end_slide} of a {total}-slide "
+                "startup pitch deck. Extract structured pitch deck information. "
+                f"For each claim, set `slide` to the absolute slide number ({start_slide}–{end_slide}). "
+                "Every claim must include a `verbatim` field with the exact quote "
+                f"from the deck. {metrics_str}"
+            )
+            result = llm_local.call_structured_vision(
+                model=model,
+                system=SYSTEM_PROMPT,
+                user_text=user_text,
+                images_b64=batch_imgs,
+                output_format=DeckExtraction,
+            )
+            results.append(result)
+
+        return _merge_deck_extractions(results, batch_size)
 
     # --- Text-only local (Ollama) and Inception: pre-extract text with pypdf ---
     if llm_local.is_local_model(model) or llm_inception.is_inception_model(model):

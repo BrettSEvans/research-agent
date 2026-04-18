@@ -75,9 +75,17 @@ def is_vision_local_model(model: str | None) -> bool:
 
 
 # Resolution for rendered PDF pages sent to vision models.
-# 150 DPI balances legibility vs. payload size for typical slide decks.
-# Increase to 200 for decks with very small print. Override with env var.
-OLLAMA_VISION_DPI = int(os.environ.get("OLLAMA_VISION_DPI", "150"))
+# 100 DPI is the safe default: a 1920×1080 slide becomes ~1100×619px which is
+# sharp enough for Ollama to read text and numbers but ~2.5× smaller in memory
+# than 150 DPI. Raise to 150 only if the model misses small-print details.
+# Override with OLLAMA_VISION_DPI env var.
+OLLAMA_VISION_DPI = int(os.environ.get("OLLAMA_VISION_DPI", "100"))
+
+# Maximum slides to include in a single Ollama vision request.
+# Sending too many images at once causes Ollama to return 500 (OOM/context overflow).
+# extractor.py batches longer decks automatically and merges the results.
+# Override with OLLAMA_VISION_BATCH env var.
+OLLAMA_VISION_BATCH = int(os.environ.get("OLLAMA_VISION_BATCH", "6"))
 
 
 MIN_EXTRACTABLE_CHARS = 300  # below this, deck is almost certainly image-based
@@ -210,6 +218,13 @@ def call_structured_vision(
                 raise RuntimeError(
                     f"Ollama model '{model}' not found locally. Pull it first: "
                     f"`ollama pull {model}`."
+                )
+            if r.status_code == 500:
+                raise RuntimeError(
+                    f"Ollama returned 500 on {model} — likely out of memory or context overflow "
+                    f"with {len(images_b64)} image(s). "
+                    "The extractor will retry with smaller batches automatically. "
+                    "If this persists, set OLLAMA_VISION_DPI=72 or OLLAMA_VISION_BATCH=3."
                 )
             r.raise_for_status()
 
