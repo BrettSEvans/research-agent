@@ -1305,6 +1305,68 @@
                'UNSUPPORTED':'help','INSUFFICIENT_EVIDENCE':'help_outline' }[verdict] || 'help_outline';
     }
 
+    function buildReportSummary(rep) {
+      const flagCount = rep.flagged_forward_looking_contradictions || 0;
+      const claimCount = rep.claims_analyzed || 0;
+      const pct = claimCount > 0
+        ? Math.round((flagCount / claimCount) * 100)
+        : 0;
+
+      let html = '<div style="margin-bottom:20px;">';
+
+      // Key stats row
+      html += '<div class="row" style="gap:12px;flex-wrap:wrap;margin-bottom:16px;">';
+      html += `<div style="background:var(--md-surface-container);border-radius:12px;padding:12px 16px;flex:1;min-width:140px;">
+        <div style="font-size:0.75rem;color:var(--md-on-surface-variant);margin-bottom:2px;">Claims analyzed</div>
+        <div style="font-size:1.5rem;font-weight:600;">${claimCount}</div>
+      </div>`;
+      html += `<div style="background:var(--md-surface-container);border-radius:12px;padding:12px 16px;flex:1;min-width:140px;">
+        <div style="font-size:0.75rem;color:var(--md-on-surface-variant);margin-bottom:2px;">FLS contradictions</div>
+        <div style="font-size:1.5rem;font-weight:600;color:${flagCount > 0 ? 'var(--md-error)' : 'inherit'};">${flagCount}</div>
+      </div>`;
+      html += `<div style="background:var(--md-surface-container);border-radius:12px;padding:12px 16px;flex:1;min-width:140px;">
+        <div style="font-size:0.75rem;color:var(--md-on-surface-variant);margin-bottom:2px;">CIK</div>
+        <div style="font-size:0.95rem;font-weight:500;">${escape(rep.cik || 'unresolved')}</div>
+      </div>`;
+      if (rep.assumed_industry) {
+        html += `<div style="background:var(--md-surface-container);border-radius:12px;padding:12px 16px;flex:1;min-width:140px;">
+          <div style="font-size:0.75rem;color:var(--md-on-surface-variant);margin-bottom:2px;">Industry</div>
+          <div style="font-size:0.95rem;font-weight:500;">${escape(rep.assumed_industry)}</div>
+        </div>`;
+      }
+      html += '</div>';
+
+      // Model / version metadata
+      html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">';
+      if (rep.extractor_model) {
+        html += `<span class="chip"><span class="material-symbols-rounded">psychology</span>Extractor: ${escape(rep.extractor_model)}${rep.extractor_version ? ' v' + escape(rep.extractor_version) : ''}</span>`;
+      }
+      if (rep.analyzer_model) {
+        html += `<span class="chip"><span class="material-symbols-rounded">manage_search</span>Analyzer: ${escape(rep.analyzer_model)}${rep.analyzer_version ? ' v' + escape(rep.analyzer_version) : ''}</span>`;
+      }
+      if (rep.generated_at) {
+        const dt = rep.generated_at.replace('T', ' ').slice(0, 16);
+        html += `<span class="chip"><span class="material-symbols-rounded">schedule</span>${escape(dt)}</span>`;
+      }
+      html += '</div>';
+
+      // Warnings
+      for (const w of (rep.warnings || [])) {
+        html += `<div class="banner" style="margin-bottom:8px;">
+          <span class="material-symbols-rounded">warning</span>
+          <div>${escape(w)}</div>
+        </div>`;
+      }
+
+      html += '</div>';
+
+      if (claimCount > 0) {
+        html += `<div class="section-heading">Findings (${claimCount} claims)</div>`;
+      }
+
+      return html;
+    }
+
     function renderResultEntry(r) {
       const verdict = r.verdict || 'INSUFFICIENT_EVIDENCE';
       const isFlag = verdict === 'CONTRADICTS' && r.forward_looking;
