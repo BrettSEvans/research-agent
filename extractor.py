@@ -182,27 +182,30 @@ def extract_basics_and_infer_stage(
     """Pass 1: Extract only the company identity and infer the funding stage."""
     model = model or _resolve_model()
 
-    # Vision-capable local models: render first 6 pages as images.
+    # Vision-capable local models: render first 3 pages as images.
+    # Company name, website, and stage signals are almost always on slides 1–3.
     # Check this BEFORE is_local_model() — vision models satisfy both predicates.
     if llm_local.is_vision_local_model(model):
-        images = llm_local.pdf_to_base64_images(pdf_path, max_pages=6)
-        return llm_local.call_structured_vision(
+        images = llm_local.pdf_to_base64_images(pdf_path, max_pages=3)
+        basic_system = (
+            "You extract company identity information and infer the funding stage "
+            "from startup pitch deck slides.\n\n"
+            "RULES:\n"
+            "- Extract the company NAME exactly as written — never paraphrase or guess.\n"
+            "- TICKER and CIK: only if explicitly stated. NEVER guess.\n"
+            "- WEBSITE: extract the URL if it appears anywhere.\n"
+            "- INDUSTRY: infer conservatively from the product and market claims if not stated.\n"
+            "- FOUNDERS: list all founder names shown on team slides.\n"
+            "- STAGE: infer from raise amount, ARR, prior rounds, and traction signals.\n"
+            "- Do NOT extract detailed claims — that happens in the deep extraction pass."
+        )
+        return _vision_call_with_retry(
             model=model,
-            system=(
-                "You extract company identity information and infer the funding stage "
-                "from startup pitch deck slides.\n\n"
-                "RULES:\n"
-                "- Extract the company NAME exactly as written — never paraphrase or guess.\n"
-                "- TICKER and CIK: only if explicitly stated. NEVER guess.\n"
-                "- WEBSITE: extract the URL if it appears anywhere.\n"
-                "- INDUSTRY: infer conservatively from the product and market claims if not stated.\n"
-                "- FOUNDERS: list all founder names shown on team slides.\n"
-                "- STAGE: infer from raise amount, ARR, prior rounds, and traction signals.\n"
-                "- Do NOT extract detailed claims — that happens in the deep extraction pass."
-            ),
+            system=basic_system,
             user_text="Extract the company identity fields and infer the funding stage from these slides.",
             images_b64=images,
             output_format=BasicExtraction,
+            label="basic extraction",
         )
 
     # Text-only local (Ollama) and Inception models — extract text with pypdf first.
@@ -263,6 +266,42 @@ def extract_basics_and_infer_stage(
         output_format=BasicExtraction,
     )
     return response.parsed_output
+
+
+def _vision_call_with_retry(
+    *,
+    model: str,
+    system: str,
+    user_text: str,
+    images_b64: list[str],
+    output_format,
+    label: str = "",
+) -> object:
+    """Call call_structured_vision, halving the image list on each 500 OOM.
+
+    If the model OOMs on N images it retries with N//2, N//4, … down to 1.
+    A 500 on a single image is a hard failure (model/hardware issue).
+    """
+    imgs = images_b64
+    while imgs:
+        try:
+            return llm_local.call_structured_vision(
+                model=model,
+                system=system,
+                user_text=user_text,
+                images_b64=imgs,
+                output_format=output_format,
+            )
+        except RuntimeError as exc:
+            if "ollama-vision-500" not in str(exc) or len(imgs) <= 1:
+                raise
+            half = len(imgs) // 2
+            print(
+                f"[ollama-vision] ⚠ OOM{' on ' + label if label else ''} "
+                f"with {len(imgs)} images → retrying with {half}"
+            )
+            imgs = imgs[:half]
+    raise RuntimeError("Vision extraction failed: no images to send")
 
 
 def _merge_deck_extractions(
@@ -357,24 +396,20 @@ def extract_from_pdf(
                 f"field with the exact quote from the deck. {metrics_str}"
             )
             try:
-                result = llm_local.call_structured_vision(
+                result = _vision_call_with_retry(
                     model=model,
                     system=SYSTEM_PROMPT,
                     user_text=user_text,
                     images_b64=batch_imgs,
                     output_format=DeckExtraction,
+                    label=f"slides {start_slide}–{end_slide}",
                 )
                 results.append(result)
             except RuntimeError as exc:
                 if "ollama-vision-500" not in str(exc) or len(batch_imgs) <= 1:
                     raise
-                # OOM — split this batch in half and re-queue both halves
+                # Still OOM after halving to 1 image — re-queue as two halves
                 mid = len(batch_imgs) // 2
-                print(
-                    f"[ollama-vision] ⚠ OOM on slides {start_slide}–{end_slide} "
-                    f"({len(batch_imgs)} images), retrying as "
-                    f"{start_slide}–{start_slide+mid-1} + {start_slide+mid}–{end_slide}"
-                )
                 queue.insert(0, (start_idx + mid, batch_imgs[mid:]))
                 queue.insert(0, (start_idx, batch_imgs[:mid]))
 
