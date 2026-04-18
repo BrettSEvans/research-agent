@@ -185,10 +185,26 @@ def extract_basics_and_infer_stage(
     pdf_bytes = Path(pdf_path).read_bytes()
     b64 = base64.standard_b64encode(pdf_bytes).decode("utf-8")
 
+    basic_system = (
+        "You extract company identity information and infer the funding stage from a startup pitch deck.\n\n"
+        "RULES:\n"
+        "- Extract the company NAME exactly as written — never paraphrase or guess.\n"
+        "- TICKER and CIK: only if explicitly stated. NEVER guess. Leave null for private companies.\n"
+        "- WEBSITE: extract the URL if it appears anywhere in the deck.\n"
+        "- DESCRIPTION: one sentence verbatim from the deck if available, else a conservative summary.\n"
+        "- INDUSTRY: required. Even if not stated directly, infer conservatively from the product and market "
+        "claims (e.g. 'AI-powered contract review' → 'B2B SaaS for legal tech'). Leave null only if the deck "
+        "gives truly no basis.\n"
+        "- FOUNDERS: list all founder names shown on team slides or bios.\n"
+        "- STAGE: infer from raise amount, ARR, prior rounds, and traction signals. "
+        "Set confidence low if signals are ambiguous.\n"
+        "- Do NOT extract detailed claims — that happens in the deep extraction pass."
+    )
+
     response = client.messages.parse(
         model=model,
         max_tokens=4000,
-        system="Extract the basic company identity and infer the startup's funding stage from the deck. Do not extract detailed claims.",
+        system=basic_system,
         **_thinking_kwargs(model),
         messages=[
             {
@@ -204,7 +220,7 @@ def extract_basics_and_infer_stage(
                     },
                     {
                         "type": "text",
-                        "text": "Extract company identity and stage assessment.",
+                        "text": "Extract the company identity fields and infer the funding stage.",
                     },
                 ],
             }
