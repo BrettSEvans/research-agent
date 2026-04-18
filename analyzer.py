@@ -17,6 +17,7 @@ from pydantic import BaseModel, Field
 import anthropic
 
 import llm_local
+import llm_inception
 import search_api
 from retriever import Hit
 
@@ -32,14 +33,14 @@ def _resolve_model() -> str:
 def _thinking_kwargs(model: str, budget_tokens: int = 4000) -> dict:
     """Return extended-thinking kwargs for the model.
 
-    Haiku doesn't support thinking — return empty.
+    Haiku, local Ollama, and Inception models don't support Claude-style thinking.
     For Sonnet/Opus we use a fixed budget rather than `adaptive`.
     `adaptive` lets the model spend up to max_tokens thinking, which routinely
     burns 10 k+ tokens on straightforward claim checks and is the primary cause
     of slow per-claim latency.  A 4 k budget handles all but the most complex
     contradictions; callers can override for tasks that need more reasoning.
     """
-    if "haiku" in model or llm_local.is_local_model(model):
+    if "haiku" in model or llm_local.is_local_model(model) or llm_inception.is_inception_model(model):
         return {}
     return {"thinking": {"type": "enabled", "budget_tokens": budget_tokens}}
 
@@ -173,8 +174,9 @@ def analyze_industry_claim(
         )
     context = "\n".join(context_lines)
 
-    # Local models: fetch results via DuckDuckGo and feed to the model.
-    if llm_local.is_local_model(model):
+    # Local (Ollama) and Inception models: no native web_search tool.
+    # Fetch DuckDuckGo results and feed them into the model as prompt text.
+    if llm_local.is_local_model(model) or llm_inception.is_inception_model(model):
         results = search_api.search(claim, max_results=5)
         if not results:
             return (
@@ -203,17 +205,21 @@ def analyze_industry_claim(
             "Cite URLs and publication names inline in your explanation. "
             "NEVER fabricate statistics — only cite what appears in the results."
         )
-        assessment = llm_local.call_structured(
+        caller = (
+            llm_inception.call_structured
+            if llm_inception.is_inception_model(model)
+            else llm_local.call_structured
+        )
+        assessment = caller(
             model=model,
             system=INDUSTRY_SYSTEM_PROMPT,
             user_content=user_content,
             output_format=ClaimAssessment,
         )
-        # Extract URLs from search results for the sources list
         sources = [{"url": r["url"], "title": r["title"]} for r in results]
         return assessment, sources
 
-    # Claude path: use the web_search tool
+    # Claude path: use the native web_search tool
     user_content = (
         f"{context}\n\n"
         f"CLAIM:\n{claim}\n\n"
@@ -258,6 +264,16 @@ def analyze_claim(
             system=SYSTEM_PROMPT,
             user_content=user_content,
             output_format=ClaimAssessment,
+        )
+
+    # Inception Mercury path — OpenAI-compatible structured output.
+    if llm_inception.is_inception_model(model):
+        return llm_inception.call_structured(
+            model=model,
+            system=SYSTEM_PROMPT,
+            user_content=user_content,
+            output_format=ClaimAssessment,
+            reasoning_effort="medium",
         )
 
     response = client.messages.parse(

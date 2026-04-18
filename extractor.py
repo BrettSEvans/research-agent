@@ -23,6 +23,7 @@ import anthropic
 from pydantic import BaseModel, Field
 
 import llm_local
+import llm_inception
 from stage import StageAssessment, FundingStage
 
 # Default: Haiku 4.5. Extraction is a structured, mechanical task — cheap model
@@ -172,9 +173,11 @@ def extract_basics_and_infer_stage(
     """Pass 1: Extract only the company identity and infer the funding stage."""
     model = model or _resolve_model()
 
-    if llm_local.is_local_model(model):
+    # Local (Ollama) and Inception models have no native PDF support — extract text first.
+    if llm_local.is_local_model(model) or llm_inception.is_inception_model(model):
         page_text = llm_local.extract_pdf_text(pdf_path)
-        return llm_local.call_structured(
+        caller = llm_inception.call_structured if llm_inception.is_inception_model(model) else llm_local.call_structured
+        return caller(
             model=model,
             system="Extract the basic company identity and infer the startup's funding stage from the deck.",
             user_content=f"Raw text of the pitch deck:\n\n{page_text}",
@@ -248,8 +251,8 @@ def extract_from_pdf(
     if requested_metrics:
         metrics_str = "Please extract the following specific metrics if they exist in the deck: " + ", ".join(requested_metrics)
 
-    # --- Local model path: no vision; use pypdf to pre-extract text ---
-    if llm_local.is_local_model(model):
+    # --- Local (Ollama) and Inception: no native PDF vision; pre-extract text ---
+    if llm_local.is_local_model(model) or llm_inception.is_inception_model(model):
         page_text = llm_local.extract_pdf_text(pdf_path)
         user_content = (
             "The following is the raw text of a startup pitch deck, split by "
@@ -259,7 +262,8 @@ def extract_from_pdf(
             f"from the deck. {metrics_str}\n\n"
             f"{page_text}"
         )
-        return llm_local.call_structured(
+        caller = llm_inception.call_structured if llm_inception.is_inception_model(model) else llm_local.call_structured
+        return caller(
             model=model,
             system=SYSTEM_PROMPT,
             user_content=user_content,
