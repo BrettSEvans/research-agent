@@ -219,11 +219,23 @@ def verify_stream(
 
 @app.get("/saved-extractions")
 async def list_saved_extractions():
-    """Return all saved extractions, newest first."""
+    """Return all saved extractions, newest first, with per-category claim stats."""
     items = []
     for p in sorted(SAVED_DIR.glob("*.json"), key=lambda f: f.stat().st_mtime, reverse=True):
         try:
             data = json.loads(p.read_text())
+            extraction = data.get("extraction", {})
+
+            # Tally claims by category
+            claims = extraction.get("claims", [])
+            by_category: dict[str, int] = {}
+            for cl in claims:
+                cat = cl.get("category", "other")
+                by_category[cat] = by_category.get(cat, 0) + 1
+
+            # Key metrics names
+            metrics = [m.get("metric_name", "") for m in extraction.get("key_metrics", []) if m.get("metric_name")]
+
             items.append({
                 "save_id": p.stem,
                 "company_name": data.get("meta", {}).get("company_name", "Unknown"),
@@ -231,6 +243,11 @@ async def list_saved_extractions():
                 "extractor_model": data.get("meta", {}).get("extractor_model", ""),
                 "extractor_version": data.get("meta", {}).get("extractor_version", ""),
                 "saved_at": data.get("meta", {}).get("saved_at", ""),
+                # Stats for the info popover
+                "claims_count": len(claims),
+                "claims_by_category": by_category,
+                "key_metrics": metrics,
+                "stage": extraction.get("stage_assessment", {}).get("stage") if extraction.get("stage_assessment") else None,
             })
         except Exception:
             continue
@@ -346,7 +363,7 @@ async def verify(
 
 @app.get("/reports")
 async def list_reports():
-    """Return all saved compliance reports, newest first."""
+    """Return all saved compliance reports, newest first, with per-verdict counts."""
     items = []
     if not SAVED_REPORTS_DIR.exists():
         return JSONResponse(items)
@@ -354,26 +371,40 @@ async def list_reports():
     for p in sorted(SAVED_REPORTS_DIR.glob("*.json"), key=lambda f: f.stat().st_mtime, reverse=True):
         try:
             data = json.loads(p.read_text())
-            
-            # Compute compliance metric: Verified / (Verified + Contradicts + Flagged)
-            # Ignoring INSUFFICIENT_EVIDENCE to get a clearer picture of actual checks.
-            verified = sum(1 for r in data.get("results", []) if r.get("verdict") == "VERIFIED")
-            flagged = sum(1 for r in data.get("results", []) if r.get("verdict") in ("CONTRADICTS", "FLAGGED"))
-            total_checked = verified + flagged
-            
-            if total_checked > 0:
-                metric_pct = round((verified / total_checked) * 100)
-                metric_str = f"{metric_pct}% ({verified}/{total_checked} claims)"
-            else:
-                metric_str = "N/A"
+            results = data.get("results", [])
+
+            # Per-verdict counts (actual verdict names from analyzer.py)
+            consistent   = sum(1 for r in results if r.get("verdict") == "CONSISTENT")
+            contradicts  = sum(1 for r in results if r.get("verdict") == "CONTRADICTS")
+            unsupported  = sum(1 for r in results if r.get("verdict") == "UNSUPPORTED")
+            insufficient = sum(1 for r in results if r.get("verdict") == "INSUFFICIENT_EVIDENCE")
+            fls_flags    = sum(1 for r in results if r.get("verdict") == "CONTRADICTS" and r.get("forward_looking"))
+
+            # Top flagged findings for dashboard preview (up to 3)
+            top_flags = [
+                {"claim": r.get("claim", ""), "verdict": r.get("verdict", ""), "forward_looking": r.get("forward_looking", False)}
+                for r in results if r.get("verdict") == "CONTRADICTS"
+            ][:3]
 
             items.append({
                 "report_id": data.get("report_id", p.stem.replace("report_", "")),
                 "company_name": data.get("company_name", "Unknown"),
                 "generated_at": data.get("generated_at", ""),
+                "assumed_industry": data.get("assumed_industry", ""),
+                "cik": data.get("cik", ""),
+                # Models + versions
+                "extractor_model": data.get("extractor_model", ""),
+                "extractor_version": data.get("extractor_version", ""),
                 "analyzer_model": data.get("analyzer_model", ""),
-                "compliance_metric": metric_str,
+                "analyzer_version": data.get("analyzer_version", ""),
+                # Verdict breakdown
                 "claims_analyzed": data.get("claims_analyzed", 0),
+                "consistent": consistent,
+                "contradicts": contradicts,
+                "unsupported": unsupported,
+                "insufficient": insufficient,
+                "fls_flags": fls_flags,
+                "top_flags": top_flags,
             })
         except Exception:
             continue

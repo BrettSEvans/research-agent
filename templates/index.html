@@ -519,6 +519,77 @@
 
     .hidden { display: none !important; }
 
+    /* ============ Collapsible result entries ============ */
+    .result { cursor: pointer; }
+    .result .result-chevron {
+      margin-left: auto;
+      flex-shrink: 0;
+      font-size: 20px !important;
+      color: var(--md-on-surface-variant);
+      transition: transform 0.18s ease;
+    }
+    .result.open .result-chevron { transform: rotate(180deg); }
+    .result-detail { display: none; padding-top: 10px; margin-top: 10px; border-top: 1px solid var(--md-outline-variant); }
+    .result.open .result-detail { display: block; }
+
+    /* ============ Compact dropzone (after file selected) ============ */
+    .dropzone.compact { padding: 14px 20px; }
+    .dropzone.compact .icon { font-size: 28px; margin-bottom: 2px; }
+
+    /* ============ Accordion sections (claims list, notes) ============ */
+    .acc-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      user-select: none;
+      padding: 6px 0;
+      color: var(--md-on-surface-variant);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin: 16px 0 0;
+    }
+    .acc-header:hover { color: var(--md-on-surface); }
+    .acc-header .acc-chevron {
+      font-size: 16px !important;
+      transition: transform 0.18s ease;
+    }
+    .acc-header.open .acc-chevron { transform: rotate(180deg); }
+    .acc-body { display: none; padding-top: 4px; }
+    .acc-body.open { display: block; }
+
+    /* ============ Verdict breakdown bar ============ */
+    .verdict-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; font-size: 0.8125rem; }
+    .verdict-bar .vb-item { display: flex; align-items: center; gap: 3px; font-weight: 600; }
+    .vb-ok   { color: var(--md-success); }
+    .vb-flag { color: var(--md-error); }
+    .vb-warn { color: var(--md-warning); }
+    .vb-grey { color: var(--md-on-surface-variant); }
+    .vb-item .material-symbols-rounded { font-size: 14px; }
+
+    /* ============ Dashboard report rows (expandable) ============ */
+    .report-row-detail {
+      display: none;
+      padding: 8px 12px 12px;
+      background: var(--md-surface-container-low);
+      border-top: 1px solid var(--md-surface-container-high);
+    }
+    .report-row-detail.open { display: block; }
+    .flag-preview {
+      font-size: 0.8125rem;
+      color: var(--md-on-error-container);
+      background: var(--md-error-container);
+      border-radius: var(--md-shape-sm);
+      padding: 6px 10px;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+    .flag-preview .material-symbols-rounded { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+
     .row {
       display: flex;
       gap: 16px;
@@ -552,6 +623,86 @@
     .saved-item .saved-actions { display: flex; gap: 6px; flex-shrink: 0; }
     .saved-empty { color: var(--md-on-surface-variant); font-size: 0.875rem; font-style: italic; padding: 8px 0; }
     
+    /* ============ Info popover ============ */
+    .info-wrap {
+      position: relative;
+      display: inline-flex;
+    }
+    .info-btn {
+      width: 28px; height: 28px;
+      border-radius: var(--md-shape-full);
+      border: none;
+      background: transparent;
+      color: var(--md-on-surface-variant);
+      cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+      transition: background 0.15s, color 0.15s;
+      padding: 0;
+    }
+    .info-btn:hover { background: var(--md-surface-container-high); color: var(--md-primary); }
+    .info-popup {
+      display: none;
+      position: absolute;
+      bottom: calc(100% + 8px);
+      right: 0;
+      min-width: 220px;
+      max-width: 300px;
+      background: var(--md-surface-container-lowest);
+      border: 1px solid var(--md-outline-variant);
+      border-radius: var(--md-shape-md);
+      box-shadow: var(--md-elev-3);
+      padding: 14px 16px;
+      z-index: 100;
+      font-size: 0.8125rem;
+      color: var(--md-on-surface);
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    .info-wrap:hover .info-popup,
+    .info-wrap:focus-within .info-popup { display: block; }
+    .info-popup .pop-title {
+      font-weight: 500;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--md-on-surface-variant);
+      margin-bottom: 8px;
+    }
+    .info-popup .pop-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 3px 0;
+      border-bottom: 1px solid var(--md-surface-container-high);
+    }
+    .info-popup .pop-row:last-of-type { border-bottom: none; }
+    .info-popup .pop-row .cat { color: var(--md-on-surface-variant); }
+    .info-popup .pop-row .cnt { font-weight: 500; }
+    .info-popup .pop-total {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 6px 0 2px;
+      font-weight: 600;
+    }
+    .info-popup .pop-metrics {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--md-outline-variant);
+      color: var(--md-on-surface-variant);
+      font-size: 0.75rem;
+      white-space: normal;
+      line-height: 1.5;
+    }
+    .info-popup .pop-stage {
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--md-outline-variant);
+      font-size: 0.75rem;
+    }
+
     /* ============ Dashboard Table ============ */
     .dashboard-table {
       width: 100%;
@@ -613,16 +764,29 @@
           <thead>
             <tr>
               <th>Company</th>
+              <th>Findings</th>
               <th>Date</th>
-              <th>Models Used</th>
-              <th>Compliance Metric</th>
-              <th>Actions</th>
+              <th style="width:96px;">Actions</th>
             </tr>
           </thead>
           <tbody id="reports-table-body">
-            <tr><td colspan="5" style="text-align: center; color: var(--md-on-surface-variant);">Loading reports...</td></tr>
+            <tr><td colspan="4" style="text-align: center; color: var(--md-on-surface-variant);">Loading reports...</td></tr>
           </tbody>
         </table>
+      </section>
+
+      <!-- Saved Extractions Library -->
+      <div class="row" style="justify-content: space-between; align-items: center; margin-top: 32px; margin-bottom: 16px;">
+        <h2 class="md-headline" style="margin: 0;">
+          <span class="material-symbols-rounded" style="vertical-align: -4px; color: var(--md-primary); font-size: 26px;">bookmark</span>
+          Saved Extractions
+        </h2>
+      </div>
+      <section class="card elevated">
+        <p class="card-subtitle" style="margin: 0 0 16px;">Run a fresh compliance check against any previously saved deck extraction — no re-upload needed.</p>
+        <div id="saved-extractions-list">
+          <div style="text-align:center;color:var(--md-on-surface-variant);padding:16px;">Loading saved extractions…</div>
+        </div>
       </section>
     </div>
 
@@ -842,6 +1006,7 @@
       document.getElementById('analysis-view').classList.add('hidden');
       document.getElementById('drilldown-view').classList.add('hidden');
       loadSavedReports();
+      loadSavedExtractionsList();
     }
     function showAnalysisView() {
       document.getElementById('dashboard-view').classList.add('hidden');
@@ -864,35 +1029,77 @@
       return "low";
     }
 
+    function shortModel(m) {
+      if (!m) return '—';
+      return m.replace('claude-', '').replace('-latest', '').replace(/-(\d)/g, ' $1');
+    }
+
     async function loadSavedReports() {
       const tbody = document.getElementById('reports-table-body');
       try {
         const r = await fetch('/reports');
         const items = await r.json();
         if (!items.length) {
-          tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 24px; color: var(--md-on-surface-variant);">No compliance reports generated yet. Click New Analysis to start.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--md-on-surface-variant);">No compliance reports yet. Click <strong>New Analysis</strong> to start.</td></tr>';
           return;
         }
-        tbody.innerHTML = items.map(it => `
-          <tr>
-            <td style="font-weight: 500;">${escape(it.company_name)}</td>
-            <td>${escape(it.generated_at).replace('T', ' ').slice(0, 16)}</td>
-            <td>${escape(it.analyzer_model)}</td>
-            <td><span class="metric-badge ${getMetricBadgeClass(it.compliance_metric)}">${escape(it.compliance_metric)}</span></td>
+        tbody.innerHTML = items.map(it => {
+          const dt = it.generated_at ? it.generated_at.replace('T',' ').slice(0,16) : '—';
+          const rid = escape(it.report_id);
+
+          // Verdict bar
+          const total = it.claims_analyzed || 0;
+          const vbar = `<div class="verdict-bar">
+            ${it.consistent   ? `<span class="vb-item vb-ok"><span class="material-symbols-rounded">check_circle</span>${it.consistent}</span>` : ''}
+            ${it.contradicts  ? `<span class="vb-item vb-flag"><span class="material-symbols-rounded">error</span>${it.contradicts}</span>` : ''}
+            ${it.unsupported  ? `<span class="vb-item vb-warn"><span class="material-symbols-rounded">help</span>${it.unsupported}</span>` : ''}
+            ${it.insufficient ? `<span class="vb-item vb-grey"><span class="material-symbols-rounded">help_outline</span>${it.insufficient}</span>` : ''}
+            <span style="color:var(--md-on-surface-variant);font-size:0.75rem;margin-left:2px;">${total} claims</span>
+          </div>`;
+
+          // Model line
+          const modelLine = `<div style="font-size:0.75rem;color:var(--md-on-surface-variant);margin-top:4px;">
+            <span title="Extractor">${escape(shortModel(it.extractor_model))}${it.extractor_version ? ' v'+escape(it.extractor_version) : ''}</span>
+            <span style="margin:0 4px;">→</span>
+            <span title="Analyzer">${escape(shortModel(it.analyzer_model))}${it.analyzer_version ? ' v'+escape(it.analyzer_version) : ''}</span>
+            ${it.assumed_industry ? `<span style="margin-left:6px;opacity:0.7;">· ${escape(it.assumed_industry)}</span>` : ''}
+          </div>`;
+
+          // Flag preview rows
+          const flagRows = (it.top_flags || []).map(f =>
+            `<div class="flag-preview"><span class="material-symbols-rounded">error</span>${escape(f.claim)}</div>`
+          ).join('');
+          const detailId = `rpd-${rid}`;
+          const hasDetail = (it.top_flags || []).length > 0;
+
+          return `<tr style="cursor:${hasDetail?'pointer':'default'}" ${hasDetail ? `onclick="toggleRowDetail('${detailId}')"` : ''}>
             <td>
-              <button class="btn btn-outlined" style="height:32px;padding:0 12px;font-size:0.8rem"
-                      onclick="loadReportDrilldown('${escape(it.report_id)}')">
-                <span class="material-symbols-rounded" style="font-size:16px">visibility</span> View
-              </button>
-              <button class="btn btn-text" style="height:32px;padding:0 8px;color:var(--md-error)"
-                      onclick="deleteReport('${escape(it.report_id)}')">
-                <span class="material-symbols-rounded" style="font-size:16px">delete</span>
-              </button>
+              <div style="font-weight:500;color:var(--md-on-surface);">${escape(it.company_name)}</div>
+              ${modelLine}
             </td>
-          </tr>`).join('');
+            <td>${vbar}</td>
+            <td style="white-space:nowrap;color:var(--md-on-surface-variant);font-size:0.8125rem;">${escape(dt)}</td>
+            <td>
+              <div style="display:flex;gap:4px;">
+                <button class="btn btn-outlined" style="height:30px;padding:0 10px;font-size:0.8rem" onclick="event.stopPropagation();loadReportDrilldown('${rid}')">
+                  <span class="material-symbols-rounded" style="font-size:15px">open_in_new</span>
+                </button>
+                <button class="btn btn-text" style="height:30px;padding:0 6px;color:var(--md-error)" onclick="event.stopPropagation();deleteReport('${rid}')">
+                  <span class="material-symbols-rounded" style="font-size:15px">delete</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+          ${hasDetail ? `<tr><td colspan="4" style="padding:0"><div id="${detailId}" class="report-row-detail">${flagRows}</div></td></tr>` : ''}`;
+        }).join('');
       } catch (e) {
-        tbody.innerHTML = `<tr><td colspan="5" style="color:var(--md-error);">Could not load reports: ${escape(e.message)}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" style="color:var(--md-error);">Could not load reports: ${escape(e.message)}</td></tr>`;
       }
+    }
+
+    function toggleRowDetail(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.toggle('open');
     }
 
     async function loadReportDrilldown(reportId) {
@@ -998,6 +1205,7 @@
 
     // Initialize Dashboard
     loadSavedReports();
+    loadSavedExtractionsList();
 
     fileInput.addEventListener('change', () => uploadFile(fileInput.files[0]));
     dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag'); });
@@ -1036,16 +1244,24 @@
 
     function restoreDropzone(filename) {
       if (filename) {
+        dropzone.classList.add('compact');
         dzText.innerHTML = `
-          <span class="material-symbols-rounded icon" style="color: var(--md-primary)">picture_as_pdf</span>
+          <span class="material-symbols-rounded icon" style="color:var(--md-primary)">picture_as_pdf</span>
           <div><strong>${escape(filename)}</strong></div>
           <div class="hint">Drop a different PDF to replace</div>`;
       } else {
+        dropzone.classList.remove('compact');
         dzText.innerHTML = `
           <span class="material-symbols-rounded icon">upload_file</span>
           <div><strong>Click or drop a PDF here</strong></div>
           <div class="hint">Null fields indicate the deck did not state that value.</div>`;
       }
+    }
+
+    function toggleAccordion(header) {
+      header.classList.toggle('open');
+      const body = header.nextElementSibling;
+      if (body) body.classList.toggle('open');
     }
 
     function emptyOr(v) {
@@ -1054,13 +1270,22 @@
 
     function renderBasicExtraction(ex) {
       const c = ex.company;
-      let html = '<div class="section-heading">Company identity</div><dl class="kv">';
-      html += `<dt>Name</dt><dd>${escape(c.name)}</dd>`;
-      html += `<dt>Ticker</dt>${emptyOr(c.ticker)}`;
-      html += `<dt>CIK</dt>${emptyOr(c.cik)}`;
-      html += `<dt>Industry</dt>${emptyOr(c.industry)}`;
-      html += `<dt>Website</dt>${emptyOr(c.website)}`;
-      html += '</dl>';
+      const stageLabel = ex.stage_assessment?.stage
+        ? ex.stage_assessment.stage.replace(/_/g,' ').replace(/\b\w/g, l => l.toUpperCase())
+        : null;
+
+      let html = `<div class="acc-header open" onclick="toggleAccordion(this)">
+        <span class="material-symbols-rounded acc-chevron">expand_more</span>
+        Company identity
+        ${stageLabel ? `<span class="chip chip-primary" style="margin-left:8px;text-transform:none;letter-spacing:0;">${escape(stageLabel)}</span>` : ''}
+      </div>
+      <div class="acc-body open"><dl class="kv">
+        <dt>Name</dt><dd>${escape(c.name)}</dd>
+        <dt>Ticker</dt>${emptyOr(c.ticker)}
+        <dt>CIK</dt>${emptyOr(c.cik)}
+        <dt>Industry</dt>${emptyOr(c.industry)}
+        <dt>Website</dt>${emptyOr(c.website)}
+      </dl></div>`;
 
       extractionBody.innerHTML = html;
       
@@ -1078,30 +1303,57 @@
       extractionPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    function renderDeepExtraction(ex) {
-      // Append deep extraction results to existing body
-      let html = extractionBody.innerHTML;
-
-      html += `<div class="section-heading">Claims (${ex.claims.length})</div>`;
-      for (const cl of ex.claims) {
-        html += '<div class="claim">';
-        html += `<div class="text">${escape(cl.text)}</div>`;
-        html += `<div class="verbatim">"${escape(cl.verbatim)}"</div>`;
-        html += '<div class="meta">';
-        html += `<span class="chip"><span class="material-symbols-rounded">photo_library</span>slide ${cl.slide}</span>`;
-        html += `<span class="chip">${escape(cl.category)}</span>`;
-        if (cl.likely_forward_looking) html += '<span class="chip chip-primary"><span class="material-symbols-rounded">trending_up</span>forward-looking</span>';
-        html += '</div></div>';
+    function buildClaimsAccordion(claims, notes) {
+      // Category colour map for chips
+      const catColor = { financial:'#0B57D0', market:'#6B5778', traction:'#146C2E',
+                         projection:'#7A5900', regulatory:'#BA1A1A' };
+      let claimsHtml = '';
+      for (const cl of claims) {
+        const cc = catColor[cl.category] || 'var(--md-on-surface-variant)';
+        claimsHtml += `<div class="claim">
+          <div class="text">${escape(cl.text)}</div>
+          <div class="verbatim">"${escape(cl.verbatim)}"</div>
+          <div class="meta">
+            <span class="chip"><span class="material-symbols-rounded">photo_library</span>slide ${cl.slide}</span>
+            <span class="chip" style="border-color:${cc};color:${cc};">${escape(cl.category)}</span>
+            ${cl.likely_forward_looking ? '<span class="chip chip-primary"><span class="material-symbols-rounded">trending_up</span>FLS</span>' : ''}
+          </div>
+        </div>`;
       }
 
-      html += '<div class="section-heading">Extractor transparency notes</div>';
-      html += `<pre class="notes">${escape(ex.extraction_notes)}</pre>`;
+      // Count by category for the header badge
+      const cats = {};
+      for (const cl of claims) cats[cl.category] = (cats[cl.category] || 0) + 1;
+      const catSummary = Object.entries(cats).map(([k,v]) => `${v} ${k}`).join(', ');
 
+      let html = `
+        <div class="acc-header open" onclick="toggleAccordion(this)">
+          <span class="material-symbols-rounded acc-chevron">expand_more</span>
+          Claims (${claims.length})
+          <span style="margin-left:6px;font-weight:400;opacity:0.7;font-size:0.75rem;text-transform:none;letter-spacing:0;">${catSummary}</span>
+        </div>
+        <div class="acc-body open">${claimsHtml}</div>`;
+
+      if (notes) {
+        html += `
+        <div class="acc-header" onclick="toggleAccordion(this)">
+          <span class="material-symbols-rounded acc-chevron">expand_more</span>
+          Extractor notes
+        </div>
+        <div class="acc-body"><pre class="notes">${escape(notes)}</pre></div>`;
+      }
+      return html;
+    }
+
+    function renderDeepExtraction(ex) {
+      let html = extractionBody.innerHTML;
+      html += buildClaimsAccordion(ex.claims, ex.extraction_notes);
       extractionBody.innerHTML = html;
-      
-      document.getElementById('analysis-config').classList.add('hidden'); // Hide config now that extraction is done
+
+      document.getElementById('analysis-config').classList.add('hidden');
       continueExtractBtn.classList.add('hidden');
       verifyBtn.classList.remove('hidden');
+      document.getElementById('save-btn').classList.remove('hidden');
     }
 
     function updateModulesFromStage(stage) {
@@ -1306,107 +1558,301 @@
     }
 
     function buildReportSummary(rep) {
-      const flagCount = rep.flagged_forward_looking_contradictions || 0;
-      const claimCount = rep.claims_analyzed || 0;
-      const pct = claimCount > 0
-        ? Math.round((flagCount / claimCount) * 100)
-        : 0;
+      const claimCount  = rep.claims_analyzed || 0;
+      const flagCount   = rep.flagged_forward_looking_contradictions || 0;
+      const results     = rep.results || [];
+      const consistent  = results.filter(r => r.verdict === 'CONSISTENT').length;
+      const contradicts = results.filter(r => r.verdict === 'CONTRADICTS').length;
+      const unsupported = results.filter(r => r.verdict === 'UNSUPPORTED').length;
+      const insufficient= results.filter(r => r.verdict === 'INSUFFICIENT_EVIDENCE').length;
 
-      let html = '<div style="margin-bottom:20px;">';
+      let html = '<div style="margin-bottom:16px;">';
 
-      // Key stats row
-      html += '<div class="row" style="gap:12px;flex-wrap:wrap;margin-bottom:16px;">';
-      html += `<div style="background:var(--md-surface-container);border-radius:12px;padding:12px 16px;flex:1;min-width:140px;">
-        <div style="font-size:0.75rem;color:var(--md-on-surface-variant);margin-bottom:2px;">Claims analyzed</div>
-        <div style="font-size:1.5rem;font-weight:600;">${claimCount}</div>
-      </div>`;
-      html += `<div style="background:var(--md-surface-container);border-radius:12px;padding:12px 16px;flex:1;min-width:140px;">
-        <div style="font-size:0.75rem;color:var(--md-on-surface-variant);margin-bottom:2px;">FLS contradictions</div>
-        <div style="font-size:1.5rem;font-weight:600;color:${flagCount > 0 ? 'var(--md-error)' : 'inherit'};">${flagCount}</div>
-      </div>`;
-      html += `<div style="background:var(--md-surface-container);border-radius:12px;padding:12px 16px;flex:1;min-width:140px;">
-        <div style="font-size:0.75rem;color:var(--md-on-surface-variant);margin-bottom:2px;">CIK</div>
-        <div style="font-size:0.95rem;font-weight:500;">${escape(rep.cik || 'unresolved')}</div>
-      </div>`;
-      if (rep.assumed_industry) {
-        html += `<div style="background:var(--md-surface-container);border-radius:12px;padding:12px 16px;flex:1;min-width:140px;">
-          <div style="font-size:0.75rem;color:var(--md-on-surface-variant);margin-bottom:2px;">Industry</div>
-          <div style="font-size:0.95rem;font-weight:500;">${escape(rep.assumed_industry)}</div>
-        </div>`;
+      // ── Compact metadata bar ────────────────────────────────────────────
+      html += '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:12px;">';
+      if (rep.generated_at) {
+        html += `<span class="chip"><span class="material-symbols-rounded">schedule</span>${escape(rep.generated_at.replace('T',' ').slice(0,16))}</span>`;
       }
-      html += '</div>';
-
-      // Model / version metadata
-      html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">';
       if (rep.extractor_model) {
-        html += `<span class="chip"><span class="material-symbols-rounded">psychology</span>Extractor: ${escape(rep.extractor_model)}${rep.extractor_version ? ' v' + escape(rep.extractor_version) : ''}</span>`;
+        html += `<span class="chip" title="Extractor"><span class="material-symbols-rounded">psychology</span>${escape(shortModel(rep.extractor_model))}${rep.extractor_version ? ' v'+escape(rep.extractor_version) : ''}</span>`;
       }
       if (rep.analyzer_model) {
-        html += `<span class="chip"><span class="material-symbols-rounded">manage_search</span>Analyzer: ${escape(rep.analyzer_model)}${rep.analyzer_version ? ' v' + escape(rep.analyzer_version) : ''}</span>`;
+        html += `<span class="chip" title="Analyzer"><span class="material-symbols-rounded">manage_search</span>${escape(shortModel(rep.analyzer_model))}${rep.analyzer_version ? ' v'+escape(rep.analyzer_version) : ''}</span>`;
       }
-      if (rep.generated_at) {
-        const dt = rep.generated_at.replace('T', ' ').slice(0, 16);
-        html += `<span class="chip"><span class="material-symbols-rounded">schedule</span>${escape(dt)}</span>`;
+      if (rep.cik) html += `<span class="chip"><span class="material-symbols-rounded">receipt_long</span>CIK ${escape(rep.cik)}</span>`;
+      if (rep.assumed_industry) html += `<span class="chip">${escape(rep.assumed_industry)}</span>`;
+      html += '</div>';
+
+      // ── Verdict breakdown tiles ─────────────────────────────────────────
+      html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">';
+      const tile = (val, label, color, icon) =>
+        `<div style="background:var(--md-surface-container);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:8px;min-width:100px;">
+          <span class="material-symbols-rounded" style="color:${color};font-size:20px;">${icon}</span>
+          <div>
+            <div style="font-size:1.25rem;font-weight:600;color:${color};line-height:1;">${val}</div>
+            <div style="font-size:0.7rem;color:var(--md-on-surface-variant);text-transform:uppercase;letter-spacing:0.4px;">${label}</div>
+          </div>
+        </div>`;
+      html += tile(consistent,   'Consistent',   'var(--md-success)',              'check_circle');
+      html += tile(contradicts,  'Contradicts',  contradicts ? 'var(--md-error)' : 'var(--md-on-surface-variant)', 'error');
+      html += tile(unsupported,  'Unsupported',  'var(--md-warning)',              'help');
+      html += tile(insufficient, 'Insufficient', 'var(--md-on-surface-variant)',   'help_outline');
+      if (flagCount) {
+        html += tile(flagCount,  'FLS flags',    'var(--md-error)',                'flag');
       }
       html += '</div>';
 
-      // Warnings
+      // ── Warnings ────────────────────────────────────────────────────────
       for (const w of (rep.warnings || [])) {
-        html += `<div class="banner" style="margin-bottom:8px;">
-          <span class="material-symbols-rounded">warning</span>
-          <div>${escape(w)}</div>
-        </div>`;
+        html += `<div class="banner" style="margin-bottom:8px;"><span class="material-symbols-rounded">warning</span><div>${escape(w)}</div></div>`;
       }
 
       html += '</div>';
 
       if (claimCount > 0) {
-        html += `<div class="section-heading">Findings (${claimCount} claims)</div>`;
+        html += `<div style="font-size:0.8rem;color:var(--md-on-surface-variant);margin-bottom:8px;">
+          Click any finding to expand · <strong style="color:var(--md-error)">CONTRADICTS</strong> shown expanded by default
+        </div>`;
+        html += `<div class="section-heading" style="margin-top:0;">Findings (${claimCount} claims)</div>`;
       }
 
       return html;
     }
 
+    // ── Save extraction ───────────────────────────────────────────────────
+    const saveBtn = document.getElementById('save-btn');
+    saveBtn.addEventListener('click', async () => {
+      if (!currentContextId) return;
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<span class="material-symbols-rounded">hourglass_empty</span> Saving…';
+      const fd = new FormData();
+      fd.append('context_id', currentContextId);
+      fd.append('original_filename', currentFilename || '');
+      fd.append('extractor_model', extractorSelect.value);
+      try {
+        const r = await fetch('/saved-extractions', { method: 'POST', body: fd });
+        if (!r.ok) throw new Error((await r.json()).detail || 'Save failed');
+        const data = await r.json();
+        saveBtn.innerHTML = '<span class="material-symbols-rounded">bookmark_added</span> Saved!';
+        saveBtn.disabled = true;  // prevent double-save
+      } catch (e) {
+        alert('Failed to save extraction: ' + e.message);
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<span class="material-symbols-rounded">bookmark_add</span> Save extraction';
+      }
+    });
+
+    // ── Saved extractions library ──────────────────────────────────────────
+    async function loadSavedExtractionsList() {
+      const container = document.getElementById('saved-extractions-list');
+      if (!container) return;
+      try {
+        const r = await fetch('/saved-extractions');
+        const items = await r.json();
+        if (!items.length) {
+          container.innerHTML = '<div class="saved-empty">No saved extractions yet. After running a deep extraction, click "Save extraction" to add it to this library.</div>';
+          return;
+        }
+        container.innerHTML = '<div class="saved-list">' + items.map(it => {
+          const savedAt = it.saved_at ? it.saved_at.replace('T', ' ').slice(0, 16) : '—';
+          const model = it.extractor_model || '—';
+          const filename = it.original_filename ? ` · ${escape(it.original_filename)}` : '';
+
+          // ── Info popover content ──────────────────────────────────────────
+          const byCategory = it.claims_by_category || {};
+          const totalClaims = it.claims_count || 0;
+          const catOrder = ['financial','market','traction','projection','product','team','regulatory','other'];
+          const catLabel = { financial:'Financial', market:'Market', traction:'Traction',
+                             projection:'Projection', product:'Product', team:'Team',
+                             regulatory:'Regulatory', other:'Other' };
+
+          let popHtml = '';
+          if (it.stage) {
+            const stageLabel = it.stage.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            popHtml += `<div class="pop-stage"><strong>Stage:</strong> ${escape(stageLabel)}</div>`;
+          }
+          popHtml += '<div class="pop-title">Claims by category</div>';
+          const activeCats = catOrder.filter(c => byCategory[c]);
+          if (activeCats.length) {
+            activeCats.forEach(cat => {
+              popHtml += `<div class="pop-row"><span class="cat">${escape(catLabel[cat] || cat)}</span><span class="cnt">${byCategory[cat]}</span></div>`;
+            });
+          } else {
+            popHtml += '<div class="pop-row"><span class="cat">No claims extracted</span></div>';
+          }
+          popHtml += `<div class="pop-total"><span>Total</span><span>${totalClaims}</span></div>`;
+          if (it.key_metrics && it.key_metrics.length) {
+            popHtml += `<div class="pop-metrics"><strong>Key metrics:</strong> ${it.key_metrics.map(escape).join(', ')}</div>`;
+          }
+
+          return `<div class="saved-item">
+            <span class="material-symbols-rounded" style="color:var(--md-primary);flex-shrink:0;">picture_as_pdf</span>
+            <div class="saved-info">
+              <div class="saved-name">${escape(it.company_name)}</div>
+              <div class="saved-meta">${escape(savedAt)}${filename} · model: ${escape(model)}</div>
+            </div>
+            <div class="saved-actions">
+              <div class="info-wrap">
+                <button class="info-btn" aria-label="Extraction stats">
+                  <span class="material-symbols-rounded">info</span>
+                </button>
+                <div class="info-popup">${popHtml}</div>
+              </div>
+              <button class="btn btn-outlined" style="height:32px;padding:0 12px;font-size:0.8rem"
+                      onclick="loadSavedExtraction('${escape(it.save_id)}')">
+                <span class="material-symbols-rounded" style="font-size:16px">play_arrow</span> Load &amp; Analyze
+              </button>
+              <button class="btn btn-text" style="height:32px;padding:0 8px;color:var(--md-error)"
+                      onclick="deleteSavedExtraction('${escape(it.save_id)}')">
+                <span class="material-symbols-rounded" style="font-size:16px">delete</span>
+              </button>
+            </div>
+          </div>`;
+        }).join('') + '</div>';
+      } catch (e) {
+        container.innerHTML = `<div class="saved-empty" style="color:var(--md-error);">Could not load saved extractions: ${escape(e.message)}</div>`;
+      }
+    }
+
+    async function loadSavedExtraction(saveId) {
+      const container = document.getElementById('saved-extractions-list');
+      if (container) {
+        container.innerHTML = '<div style="text-align:center;color:var(--md-on-surface-variant);padding:16px;">' +
+          progressHTML('Loading saved extraction…') + '</div>';
+      }
+      try {
+        const r = await fetch(`/saved-extractions/${saveId}/load`, { method: 'POST' });
+        if (!r.ok) throw new Error((await r.json()).detail || 'Load failed');
+        const data = await r.json();
+        currentContextId = data.context_id;
+        currentFilename = data.meta?.original_filename || '';
+        showAnalysisView();
+        renderLoadedExtraction(data.extraction, data.meta);
+      } catch (e) {
+        alert('Failed to load extraction: ' + e.message);
+        loadSavedExtractionsList(); // restore the list
+      }
+    }
+
+    async function deleteSavedExtraction(saveId) {
+      if (!confirm('Delete this saved extraction?')) return;
+      try {
+        await fetch(`/saved-extractions/${saveId}`, { method: 'DELETE' });
+        loadSavedExtractionsList();
+      } catch (e) {
+        alert('Failed to delete: ' + e.message);
+      }
+    }
+
+    function renderLoadedExtraction(extraction, meta) {
+      // Compact dropzone to show "loaded from saved"
+      const filename = meta?.original_filename || '';
+      const modelUsed = meta?.extractor_model || '';
+      dropzone.classList.add('compact');
+      dzText.innerHTML = `
+        <span class="material-symbols-rounded icon" style="color:var(--md-primary)">bookmark</span>
+        <div><strong>${filename ? escape(filename) : escape(extraction.company?.name || 'Saved extraction')}</strong></div>
+        <div class="hint">Loaded from library${modelUsed ? ' · ' + escape(shortModel(modelUsed)) : ''}</div>`;
+
+      // Company identity
+      const c = extraction.company || {};
+      let html = `<div class="banner" style="margin-bottom:12px;">
+        <span class="material-symbols-rounded">info</span>
+        <div>Loaded from saved extraction${meta?.saved_at ? ' · ' + escape(meta.saved_at.replace('T',' ').slice(0,16)) : ''}. Pick your analyzer model and click <strong>Run compliance check</strong>.</div>
+      </div>`;
+
+      html += `<div class="acc-header open" onclick="toggleAccordion(this)">
+        <span class="material-symbols-rounded acc-chevron">expand_more</span>
+        Company identity
+      </div>
+      <div class="acc-body open"><dl class="kv">
+        <dt>Name</dt><dd>${escape(c.name || '—')}</dd>
+        <dt>Ticker</dt>${emptyOr(c.ticker)}
+        <dt>CIK</dt>${emptyOr(c.cik)}
+        <dt>Industry</dt>${emptyOr(c.industry)}
+        <dt>Website</dt>${emptyOr(c.website)}
+      </dl></div>`;
+
+      // Set stage
+      if (extraction.stage_assessment?.stage) {
+        document.getElementById('startup-stage').value = extraction.stage_assessment.stage;
+        updateModulesFromStage(extraction.stage_assessment.stage);
+      }
+
+      // Claims + notes via shared helper
+      html += buildClaimsAccordion(extraction.claims || [], extraction.extraction_notes);
+      extractionBody.innerHTML = html;
+
+      // UI state
+      document.getElementById('analysis-config').classList.add('hidden');
+      continueExtractBtn.classList.add('hidden');
+      verifyBtn.classList.remove('hidden');
+      document.getElementById('save-btn').classList.add('hidden');
+      document.getElementById('cancel-verify-btn').classList.add('hidden');
+
+      extractionPanel.classList.remove('hidden');
+      reportPanel.classList.add('hidden');
+      reportBody.innerHTML = '';
+      extractionPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function toggleResult(el) {
+      // Don't toggle when the user clicks a link inside the detail panel
+      el.classList.toggle('open');
+    }
+
     function renderResultEntry(r) {
       const verdict = r.verdict || 'INSUFFICIENT_EVIDENCE';
-      const isFlag = verdict === 'CONTRADICTS' && r.forward_looking;
+      const isContradicts = verdict === 'CONTRADICTS';
+      const isFlag = isContradicts && r.forward_looking;
+
+      // Base classes — CONTRADICTS starts open, others collapsed
       let cls = 'result';
       if (isFlag) cls += ' flag';
       else if (verdict === 'CONSISTENT') cls += ' consistent';
       else if (verdict === 'UNSUPPORTED' || verdict === 'INSUFFICIENT_EVIDENCE') cls += ' unsupported';
+      if (isContradicts) cls += ' open'; // expand flagged findings by default
 
-      let html = `<div class="${cls}">`;
-      html += `<div class="claim-text">${escape(r.claim)}</div>`;
-      html += '<div class="meta" style="display:flex;gap:6px;flex-wrap:wrap;">';
-      html += `<span class="chip ${verdictChipClass(verdict)}"><span class="material-symbols-rounded">${verdictIcon(verdict)}</span>${escape(verdict)}</span>`;
-      if (r.forward_looking) html += '<span class="chip chip-primary"><span class="material-symbols-rounded">trending_up</span>forward-looking</span>';
-      if (r.severity && r.severity !== 'NONE') html += `<span class="chip">severity: ${escape(r.severity)}</span>`;
-      if (r.analysis_method === 'web_search') html += '<span class="chip"><span class="material-symbols-rounded">travel_explore</span>web search</span>';
-      html += '</div>';
-      html += `<div class="explanation">${escape(r.explanation)}</div>`;
+      // ── Always-visible summary row ─────────────────────────────────────
+      let chips = `<span class="chip ${verdictChipClass(verdict)}"><span class="material-symbols-rounded">${verdictIcon(verdict)}</span>${escape(verdict)}</span>`;
+      if (r.forward_looking) chips += `<span class="chip chip-primary" style="height:20px;font-size:0.7rem;"><span class="material-symbols-rounded">trending_up</span>FLS</span>`;
+      if (r.severity && r.severity !== 'NONE') chips += `<span class="chip" style="height:20px;font-size:0.7rem;">${escape(r.severity)}</span>`;
+      if (r.analysis_method === 'web_search') chips += `<span class="chip" style="height:20px;font-size:0.7rem;"><span class="material-symbols-rounded">travel_explore</span>web</span>`;
+
+      let html = `<div class="${cls}" onclick="if(!event.target.closest('a'))toggleResult(this)">`;
+      html += `<div style="display:flex;align-items:flex-start;gap:8px;">`;
+      html += `<div style="flex:1;min-width:0;">`;
+      html += `<div class="claim-text" style="margin-bottom:6px;">${escape(r.claim)}</div>`;
+      html += `<div style="display:flex;gap:4px;flex-wrap:wrap;">${chips}</div>`;
+      html += `</div>`;
+      html += `<span class="material-symbols-rounded result-chevron">expand_more</span>`;
+      html += `</div>`;
+
+      // ── Collapsible detail panel ────────────────────────────────────────
+      let detail = '';
+      if (r.explanation) detail += `<div class="explanation">${escape(r.explanation)}</div>`;
       if (r.missing_information) {
-        html += `<div class="missing"><span class="material-symbols-rounded">info</span><div>Missing: ${escape(r.missing_information)}</div></div>`;
+        detail += `<div class="missing"><span class="material-symbols-rounded">info</span><div>Missing: ${escape(r.missing_information)}</div></div>`;
       }
-      // SEC filing citations
       for (const c of (r.cited_passages || [])) {
-        html += '<div class="cite">';
-        html += `<div><strong>P${c.passage_num}</strong> · ${escape(c.form)} filed ${escape(c.filing_date)} · <a href="${escape(c.url)}" target="_blank" rel="noopener">${escape(c.accession)}</a></div>`;
-        html += `<div class="excerpt">${escape(c.excerpt)}…</div>`;
-        html += '</div>';
+        detail += `<div class="cite" onclick="event.stopPropagation()">`;
+        detail += `<div><strong>P${c.passage_num}</strong> · ${escape(c.form)} filed ${escape(c.filing_date)} · <a href="${escape(c.url)}" target="_blank" rel="noopener">${escape(c.accession)}</a></div>`;
+        detail += `<div class="excerpt">${escape(c.excerpt)}…</div>`;
+        detail += `</div>`;
       }
-      // Web research sources (only present on market/industry claims)
       if ((r.web_sources || []).length > 0) {
-        html += '<div class="section-heading" style="margin-top:12px;margin-bottom:6px;">Web sources consulted</div>';
+        detail += `<div class="section-heading" style="margin-top:10px;margin-bottom:4px;">Web sources</div>`;
         for (const s of r.web_sources) {
-          html += `<div class="cite">`;
-          html += `<div><span class="material-symbols-rounded" style="font-size:14px;vertical-align:-2px;color:var(--md-primary)">open_in_new</span> `;
-          html += `<a href="${escape(s.url)}" target="_blank" rel="noopener">${escape(s.title || s.url)}</a>`;
-          if (s.page_age) html += ` <span style="color:var(--md-on-surface-variant);font-size:0.75rem">(${escape(s.page_age)})</span>`;
-          html += `</div><div class="excerpt">${escape(s.url)}</div>`;
-          html += `</div>`;
+          detail += `<div class="cite" onclick="event.stopPropagation()">`;
+          detail += `<div><span class="material-symbols-rounded" style="font-size:13px;vertical-align:-2px;color:var(--md-primary)">open_in_new</span> `;
+          detail += `<a href="${escape(s.url)}" target="_blank" rel="noopener">${escape(s.title || s.url)}</a>`;
+          if (s.page_age) detail += ` <span style="color:var(--md-on-surface-variant);font-size:0.75rem">(${escape(s.page_age)})</span>`;
+          detail += `</div></div>`;
         }
       }
-      html += '</div>';
+
+      if (detail) html += `<div class="result-detail">${detail}</div>`;
+      html += `</div>`;
       return html;
     }
   </script>

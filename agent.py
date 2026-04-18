@@ -112,14 +112,17 @@ def build_index(
 def _resolve_workers(model: str | None, requested: int | None) -> int:
     """How many parallel threads to use for claim analysis.
 
-    Local Ollama models: queue inference sequentially, but can parallelize
-    DuckDuckGo web searches across workers. Safe at 2-3 workers.
+    Local Ollama models run inference sequentially on a single GPU — sending
+    multiple requests simultaneously just queues them in Ollama, which burns
+    through the wall-clock timeout while idle. Use 1 worker so each claim gets
+    the full 300s budget and there's no queue contention.
+
     Cloud models can safely run 4 concurrent calls before hitting Anthropic's
     default rate limits — callers can raise this if they have higher-tier limits.
     """
     from llm_local import is_local_model
     if is_local_model(model):
-        return 3  # Parallel web searches; Ollama queues inference
+        return 1  # Sequential: Ollama is single-GPU; parallelism only wastes budget
     if requested is not None:
         return max(1, requested)
     return 4  # safe default for standard Anthropic API tier
@@ -157,7 +160,7 @@ def iter_compliance_report(
     load_dotenv()
     forms = forms or ["10-K", "10-Q", "S-1", "8-K"]
 
-    LOG_DIR.mkdir(exist_ok=True)
+    SAVED_REPORTS_DIR.mkdir(exist_ok=True)
     ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     cik_label = cik or "unknown"
 
