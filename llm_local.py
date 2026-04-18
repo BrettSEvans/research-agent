@@ -4,12 +4,19 @@ Wraps Ollama's /api/chat endpoint with `format=<JSON schema>` so the rest of
 the pipeline can keep using the same Pydantic output models it uses with
 Anthropic's `messages.parse()`.
 
-Local models have no vision (our Ollama targets are text-only) and no server-
-side web_search tool. Callers must handle those limitations explicitly —
-this module only dispatches structured text calls.
+Two model families:
+  - Text-only (qwen3.5:9b, llama3.1:8b, …): PDF text extracted with pypdf,
+    then sent as a plain user message.
+  - Vision (qwen2-vl:7b, llama3.2-vision:11b, …): PDF pages converted to PNG
+    images with pdf2image/poppler, sent as base64 image payloads.
+
+Neither family has a server-side web_search tool; callers inject DuckDuckGo
+results as text when needed.
 """
 from __future__ import annotations
 
+import base64
+import io
 import json
 import os
 import time
@@ -42,13 +49,35 @@ def is_local_model(model: str | None) -> bool:
     """True if the model name refers to an Ollama-served local model.
 
     Anthropic models start with 'claude-'; Inception models start with 'mercury-'.
-    Everything else (e.g. 'qwen3.5:9b', 'llama3.1:8b') is treated as a local
-    Ollama model.
+    Everything else (e.g. 'qwen3.5:9b', 'qwen2-vl:7b', 'llama3.1:8b') is
+    treated as a local Ollama model — including vision models.
     """
     if not model:
         return False
     m = model.lower()
     return not m.startswith("claude-") and not m.startswith("mercury-")
+
+
+# Vision-capable Ollama models. These accept base64 image payloads and can
+# read image-based PDFs that pypdf cannot extract text from.
+_VISION_PREFIXES = ("llama3.2-vision", "qwen2-vl", "gemma4", "minicpm-v", "moondream")
+
+def is_vision_local_model(model: str | None) -> bool:
+    """True if this Ollama model supports image inputs (multimodal/vision).
+
+    Must be checked BEFORE is_local_model() in routing logic because vision
+    models satisfy both predicates — callers need the more specific path.
+    """
+    if not model:
+        return False
+    m = model.lower()
+    return any(m.startswith(p) for p in _VISION_PREFIXES)
+
+
+# Resolution for rendered PDF pages sent to vision models.
+# 150 DPI balances legibility vs. payload size for typical slide decks.
+# Increase to 200 for decks with very small print. Override with env var.
+OLLAMA_VISION_DPI = int(os.environ.get("OLLAMA_VISION_DPI", "150"))
 
 
 MIN_EXTRACTABLE_CHARS = 300  # below this, deck is almost certainly image-based
@@ -89,6 +118,135 @@ def extract_pdf_text(pdf_path: str | Path) -> str:
         )
 
     return full_text
+
+
+def pdf_to_base64_images(
+    pdf_path: str | Path,
+    max_pages: int | None = None,
+) -> list[str]:
+    """Render PDF pages to PNG and return base64-encoded strings.
+
+    Used by vision Ollama models that accept image payloads instead of text.
+    Requires pdf2image and the poppler system library:
+        pip install pdf2image
+        brew install poppler          # macOS
+        apt-get install poppler-utils  # Debian/Ubuntu
+
+    Raises RuntimeError with install instructions if pdf2image is missing.
+    """
+    try:
+        from pdf2image import convert_from_path
+    except ImportError:
+        raise RuntimeError(
+            "pdf2image is required for vision model extraction but is not installed.\n"
+            "  pip install pdf2image\n"
+            "  brew install poppler          # macOS\n"
+            "  apt-get install poppler-utils  # Linux"
+        )
+
+    pages = convert_from_path(str(pdf_path), dpi=OLLAMA_VISION_DPI, fmt="png")
+    if max_pages is not None:
+        pages = pages[:max_pages]
+
+    result: list[str] = []
+    for page in pages:
+        buf = io.BytesIO()
+        page.save(buf, format="PNG")
+        result.append(base64.b64encode(buf.getvalue()).decode("utf-8"))
+
+    return result
+
+
+def call_structured_vision(
+    *,
+    model: str,
+    system: str,
+    user_text: str,
+    images_b64: list[str],
+    output_format: Type[T],
+    verbose: bool = True,
+) -> T:
+    """Structured-output vision chat completion against Ollama.
+
+    Sends one or more base64 PNG images alongside the user message. Uses the
+    same streaming + wall-clock deadline approach as call_structured().
+
+    The `images` field in the Ollama message payload is the standard way to
+    pass image data to multimodal models (LLaVA, Qwen2-VL, etc.).
+    """
+    schema = output_format.model_json_schema()
+    payload = {
+        "model": model,
+        "messages": [
+            {"role": "system", "content": system},
+            {
+                "role": "user",
+                "content": user_text,
+                "images": images_b64,
+            },
+        ],
+        "format": schema,
+        "stream": True,
+        "options": {
+            "temperature": 0,
+            "num_predict": OLLAMA_MAX_TOKENS,
+        },
+    }
+
+    if verbose:
+        print(f"[ollama-vision] Querying {model} with {len(images_b64)} slide(s)...")
+
+    deadline = time.monotonic() + OLLAMA_WALL_CLOCK_SECS
+    content_parts: list[str] = []
+
+    try:
+        with httpx.stream(
+            "POST",
+            f"{OLLAMA_URL}/api/chat",
+            json=payload,
+            timeout=OLLAMA_CONNECT_TIMEOUT,
+        ) as r:
+            if r.status_code == 404:
+                raise RuntimeError(
+                    f"Ollama model '{model}' not found locally. Pull it first: "
+                    f"`ollama pull {model}`."
+                )
+            r.raise_for_status()
+
+            for line in r.iter_lines():
+                if time.monotonic() > deadline:
+                    raise RuntimeError(
+                        f"Ollama vision inference exceeded {OLLAMA_WALL_CLOCK_SECS:.0f}s on {model}. "
+                        "Try a smaller deck or fewer pages, or restart Ollama: `ollama serve`"
+                    )
+                if not line:
+                    continue
+                try:
+                    chunk = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                token = chunk.get("message", {}).get("content", "")
+                if token:
+                    content_parts.append(token)
+                if chunk.get("done"):
+                    break
+
+    except httpx.TimeoutException as e:
+        raise RuntimeError(
+            f"Ollama connection timed out on {model}. "
+            "Is Ollama running? Start it with `ollama serve`."
+        ) from e
+    except httpx.ConnectError as e:
+        raise RuntimeError(
+            f"Could not reach Ollama at {OLLAMA_URL}. Is it running? "
+            "Start it with `ollama serve`."
+        ) from e
+
+    content = "".join(content_parts)
+    if verbose:
+        print(f"[ollama-vision] ✓ {model} completed ({len(content)} chars)")
+
+    return output_format.model_validate_json(content)
 
 
 def call_structured(

@@ -182,7 +182,30 @@ def extract_basics_and_infer_stage(
     """Pass 1: Extract only the company identity and infer the funding stage."""
     model = model or _resolve_model()
 
-    # Local (Ollama) and Inception models have no native PDF support — extract text first.
+    # Vision-capable local models: render first 6 pages as images.
+    # Check this BEFORE is_local_model() — vision models satisfy both predicates.
+    if llm_local.is_vision_local_model(model):
+        images = llm_local.pdf_to_base64_images(pdf_path, max_pages=6)
+        return llm_local.call_structured_vision(
+            model=model,
+            system=(
+                "You extract company identity information and infer the funding stage "
+                "from startup pitch deck slides.\n\n"
+                "RULES:\n"
+                "- Extract the company NAME exactly as written — never paraphrase or guess.\n"
+                "- TICKER and CIK: only if explicitly stated. NEVER guess.\n"
+                "- WEBSITE: extract the URL if it appears anywhere.\n"
+                "- INDUSTRY: infer conservatively from the product and market claims if not stated.\n"
+                "- FOUNDERS: list all founder names shown on team slides.\n"
+                "- STAGE: infer from raise amount, ARR, prior rounds, and traction signals.\n"
+                "- Do NOT extract detailed claims — that happens in the deep extraction pass."
+            ),
+            user_text="Extract the company identity fields and infer the funding stage from these slides.",
+            images_b64=images,
+            output_format=BasicExtraction,
+        )
+
+    # Text-only local (Ollama) and Inception models — extract text with pypdf first.
     if llm_local.is_local_model(model) or llm_inception.is_inception_model(model):
         page_text = llm_local.extract_pdf_text(pdf_path)
         caller = llm_inception.call_structured if llm_inception.is_inception_model(model) else llm_local.call_structured
@@ -260,7 +283,25 @@ def extract_from_pdf(
     if requested_metrics:
         metrics_str = "Please extract the following specific metrics if they exist in the deck: " + ", ".join(requested_metrics)
 
-    # --- Local (Ollama) and Inception: no native PDF vision; pre-extract text ---
+    # --- Vision-capable local models: render all pages as images ---
+    # Check BEFORE is_local_model() — vision models satisfy both predicates.
+    if llm_local.is_vision_local_model(model):
+        images = llm_local.pdf_to_base64_images(pdf_path)
+        user_text = (
+            "These are the slides of a startup pitch deck. Extract structured "
+            "pitch deck information. For each claim, set `slide` to the 1-indexed "
+            "slide number where it appears. Every claim must include a `verbatim` "
+            f"field with the exact quote from the deck. {metrics_str}"
+        )
+        return llm_local.call_structured_vision(
+            model=model,
+            system=SYSTEM_PROMPT,
+            user_text=user_text,
+            images_b64=images,
+            output_format=DeckExtraction,
+        )
+
+    # --- Text-only local (Ollama) and Inception: pre-extract text with pypdf ---
     if llm_local.is_local_model(model) or llm_inception.is_inception_model(model):
         page_text = llm_local.extract_pdf_text(pdf_path)
         user_content = (

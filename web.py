@@ -58,8 +58,12 @@ ALLOWED_MODELS = {
     # Inception Labs Mercury models
     "mercury-2",
     "mercury-coder-small",
-    # Local (Ollama) models
+    # Local (Ollama) text-only models
     "qwen3.5:9b",
+    # Local (Ollama) vision models — can read image-based PDFs
+    "llama3.2-vision:11b",
+    "gemma4:latest",
+    "gemma4:26b",
 }
 
 
