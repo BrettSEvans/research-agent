@@ -103,27 +103,45 @@ async def extract_deep(
     modules: Annotated[str | None, Form()] = None,
 ):
     pdf_paths = list(UPLOADS.glob(f"{context_id}_*.pdf"))
-    if not pdf_paths:
-        raise HTTPException(status_code=404, detail="PDF not found for this context.")
-    pdf_path = pdf_paths[0]
+    context_path = CONTEXT_DIR / f"deck_{context_id}.json"
 
+    # No PDF in uploads — this context was loaded from a saved extraction.
+    # The context file already exists, so skip re-extraction and return it as-is.
+    if not pdf_paths:
+        if context_path.exists():
+            extraction_data = json.loads(context_path.read_text())
+            return JSONResponse(
+                {
+                    "context_id": context_id,
+                    "context_path": str(context_path),
+                    "extraction": extraction_data,
+                    "extractor_version": EXTRACTOR_VERSION,
+                    "skipped": True,
+                    "skip_reason": "Deep extraction skipped: loaded from saved extraction (no PDF available). Using existing extraction.",
+                }
+            )
+        raise HTTPException(
+            status_code=404,
+            detail="PDF not found for this context and no saved extraction exists. Please upload the PDF again.",
+        )
+
+    pdf_path = pdf_paths[0]
     requested_metrics = modules.split(",") if modules else None
 
     try:
         client = anthropic.Anthropic()
         extraction = extract_from_pdf(
-            pdf_path, 
-            client=client, 
+            pdf_path,
+            client=client,
             model=extractor_model,
-            requested_metrics=requested_metrics
+            requested_metrics=requested_metrics,
         )
     except Exception as exc:
         pdf_path.unlink(missing_ok=True)
         raise HTTPException(status_code=500, detail=f"Deep extraction failed: {exc}") from exc
 
-    # Now save full context
+    # Save full context and clean up the uploaded PDF
     context = DeckContext(extraction)
-    context_path = CONTEXT_DIR / f"deck_{context_id}.json"
     context.save(context_path)
     pdf_path.unlink(missing_ok=True)
 
