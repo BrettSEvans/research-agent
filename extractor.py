@@ -159,14 +159,66 @@ truly no basis.
 You will also infer the startup's funding stage (Pre-Seed, Seed, Series A, Series B, Series C+) 
 and extract specific metrics if present (e.g. LTV, CAC, NRR, EBITDA, exit strategy). 
 Make sure you include the `stage_assessment` based on raise amounts, ARR, and traction metrics."""
+class BasicExtraction(BaseModel):
+    company: CompanyIdentity
+    stage_assessment: StageAssessment | None = Field(default=None, description="Inferred stage based on the deck.")
 
 
+def extract_basics_and_infer_stage(
+    pdf_path: str | Path,
+    client: anthropic.Anthropic | None = None,
+    model: str | None = None,
+) -> BasicExtraction:
+    """Pass 1: Extract only the company identity and infer the funding stage."""
+    model = model or _resolve_model()
+
+    if llm_local.is_local_model(model):
+        page_text = llm_local.extract_pdf_text(pdf_path)
+        return llm_local.call_structured(
+            model=model,
+            system="Extract the basic company identity and infer the startup's funding stage from the deck.",
+            user_content=f"Raw text of the pitch deck:\n\n{page_text}",
+            output_format=BasicExtraction,
+        )
+
+    client = client or anthropic.Anthropic()
+    pdf_bytes = Path(pdf_path).read_bytes()
+    b64 = base64.standard_b64encode(pdf_bytes).decode("utf-8")
+
+    response = client.messages.parse(
+        model=model,
+        max_tokens=4000,
+        system="Extract the basic company identity and infer the startup's funding stage from the deck. Do not extract detailed claims.",
+        **_thinking_kwargs(model),
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "document",
+                        "source": {
+                            "type": "base64",
+                            "media_type": "application/pdf",
+                            "data": b64,
+                        },
+                    },
+                    {
+                        "type": "text",
+                        "text": "Extract company identity and stage assessment.",
+                    },
+                ],
+            }
+        ],
+        output_format=BasicExtraction,
+    )
+    return response.parsed_output
 
 
 def extract_from_pdf(
     pdf_path: str | Path,
     client: anthropic.Anthropic | None = None,
     model: str | None = None,
+    requested_metrics: list[str] | None = None,
 ) -> DeckExtraction:
     """Extract structured deck information from a PDF file.
 
@@ -175,6 +227,10 @@ def extract_from_pdf(
     native PDF document block.
     """
     model = model or _resolve_model()
+    
+    metrics_str = "No specific metrics requested."
+    if requested_metrics:
+        metrics_str = "Please extract the following specific metrics if they exist in the deck: " + ", ".join(requested_metrics)
 
     # --- Local model path: no vision; use pypdf to pre-extract text ---
     if llm_local.is_local_model(model):
@@ -184,7 +240,7 @@ def extract_from_pdf(
             "slide. Extract structured pitch deck information. For each claim, "
             "set `slide` to the 1-indexed slide number where it appears. "
             "Every claim must include a `verbatim` field with the exact quote "
-            "from the deck.\n\n"
+            f"from the deck. {metrics_str}\n\n"
             f"{page_text}"
         )
         return llm_local.call_structured(
@@ -220,7 +276,8 @@ def extract_from_pdf(
                         "type": "text",
                         "text": (
                             "Extract the structured pitch deck information. "
-                            "Include every falsifiable claim with its slide number and verbatim quote."
+                            "Include every falsifiable claim with its slide number and verbatim quote. "
+                            f"{metrics_str}"
                         ),
                     },
                 ],
