@@ -51,11 +51,18 @@ def is_local_model(model: str | None) -> bool:
     return not m.startswith("claude-") and not m.startswith("mercury-")
 
 
+MIN_EXTRACTABLE_CHARS = 300  # below this, deck is almost certainly image-based
+
+
 def extract_pdf_text(pdf_path: str | Path) -> str:
     """Extract per-page text from a PDF for text-only local models.
 
     Pages are delimited so the extractor can populate the 1-indexed `slide`
     field on each ExtractedClaim.
+
+    Raises ValueError if the extracted text is too short to be useful — this
+    almost always means the deck is image-based (slides exported as PNGs or
+    scanned pages) and cannot be read by text-only models.
     """
     from pypdf import PdfReader
 
@@ -64,7 +71,24 @@ def extract_pdf_text(pdf_path: str | Path) -> str:
     for i, page in enumerate(reader.pages, start=1):
         text = (page.extract_text() or "").strip()
         parts.append(f"[Slide {i}]\n{text}")
-    return "\n\n".join(parts)
+    full_text = "\n\n".join(parts)
+
+    # Strip slide headers and whitespace to get the real content length
+    content_only = "\n".join(
+        line for line in full_text.splitlines()
+        if not line.startswith("[Slide ")
+    ).strip()
+
+    if len(content_only) < MIN_EXTRACTABLE_CHARS:
+        raise ValueError(
+            f"This PDF appears to be image-based — only {len(content_only)} characters of "
+            f"selectable text were found across {len(reader.pages)} slides. "
+            "Local models (Ollama) can only read PDFs with selectable text. "
+            "Please switch the Extractor model to Claude Haiku or Sonnet, which have "
+            "native vision and can read image-based pitch decks."
+        )
+
+    return full_text
 
 
 def call_structured(
