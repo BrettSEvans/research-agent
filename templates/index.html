@@ -1022,17 +1022,24 @@
         const data = await r.json();
         currentContextId = data.context_id;
         renderBasicExtraction(data.extraction);
-        restoreDropzone();
+        restoreDropzone(file.name);
       } catch (e) {
         dzText.innerHTML = `<span class="material-symbols-rounded icon" style="color: var(--md-error)">error</span><div><strong>Extraction failed</strong></div><div class="hint">${escape(e.message)}</div>`;
       }
     }
 
-    function restoreDropzone() {
-      dzText.innerHTML = `
-        <span class="material-symbols-rounded icon">upload_file</span>
-        <div><strong>Click or drop a PDF here</strong></div>
-        <div class="hint">Null fields indicate the deck did not state that value.</div>`;
+    function restoreDropzone(filename) {
+      if (filename) {
+        dzText.innerHTML = `
+          <span class="material-symbols-rounded icon" style="color: var(--md-primary)">picture_as_pdf</span>
+          <div><strong>${escape(filename)}</strong></div>
+          <div class="hint">Drop a different PDF to replace</div>`;
+      } else {
+        dzText.innerHTML = `
+          <span class="material-symbols-rounded icon">upload_file</span>
+          <div><strong>Click or drop a PDF here</strong></div>
+          <div class="hint">Null fields indicate the deck did not state that value.</div>`;
+      }
     }
 
     function emptyOr(v) {
