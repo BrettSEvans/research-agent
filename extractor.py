@@ -332,35 +332,53 @@ def extract_from_pdf(
     # Check BEFORE is_local_model() — vision models satisfy both predicates.
     if llm_local.is_vision_local_model(model):
         all_images = llm_local.pdf_to_base64_images(pdf_path)
-        batch_size = llm_local.OLLAMA_VISION_BATCH
-        batches_in = [
-            all_images[i : i + batch_size]
-            for i in range(0, len(all_images), batch_size)
-        ]
         total = len(all_images)
-        print(f"[ollama-vision] {total} slide(s) → {len(batches_in)} batch(es) of ≤{batch_size}")
+        initial_batch = llm_local.OLLAMA_VISION_BATCH
+
+        # Queue of (start_idx, images_slice) — auto-halved on 500 OOM.
+        # start_idx is 0-based; slide numbers in prompts are 1-based.
+        queue: list[tuple[int, list[str]]] = [
+            (i, all_images[i : i + initial_batch])
+            for i in range(0, total, initial_batch)
+        ]
+        print(f"[ollama-vision] {total} slide(s) → {len(queue)} batch(es) of ≤{initial_batch}")
 
         results: list[DeckExtraction] = []
-        for idx, batch_imgs in enumerate(batches_in):
-            start_slide = idx * batch_size + 1
-            end_slide = start_slide + len(batch_imgs) - 1
+        while queue:
+            start_idx, batch_imgs = queue.pop(0)
+            start_slide = start_idx + 1
+            end_slide = start_idx + len(batch_imgs)
+
             user_text = (
                 f"These are slides {start_slide}–{end_slide} of a {total}-slide "
                 "startup pitch deck. Extract structured pitch deck information. "
-                f"For each claim, set `slide` to the absolute slide number ({start_slide}–{end_slide}). "
-                "Every claim must include a `verbatim` field with the exact quote "
-                f"from the deck. {metrics_str}"
+                f"For each claim, set `slide` to the absolute slide number "
+                f"({start_slide}–{end_slide}). Every claim must include a `verbatim` "
+                f"field with the exact quote from the deck. {metrics_str}"
             )
-            result = llm_local.call_structured_vision(
-                model=model,
-                system=SYSTEM_PROMPT,
-                user_text=user_text,
-                images_b64=batch_imgs,
-                output_format=DeckExtraction,
-            )
-            results.append(result)
+            try:
+                result = llm_local.call_structured_vision(
+                    model=model,
+                    system=SYSTEM_PROMPT,
+                    user_text=user_text,
+                    images_b64=batch_imgs,
+                    output_format=DeckExtraction,
+                )
+                results.append(result)
+            except RuntimeError as exc:
+                if "ollama-vision-500" not in str(exc) or len(batch_imgs) <= 1:
+                    raise
+                # OOM — split this batch in half and re-queue both halves
+                mid = len(batch_imgs) // 2
+                print(
+                    f"[ollama-vision] ⚠ OOM on slides {start_slide}–{end_slide} "
+                    f"({len(batch_imgs)} images), retrying as "
+                    f"{start_slide}–{start_slide+mid-1} + {start_slide+mid}–{end_slide}"
+                )
+                queue.insert(0, (start_idx + mid, batch_imgs[mid:]))
+                queue.insert(0, (start_idx, batch_imgs[:mid]))
 
-        return _merge_deck_extractions(results, batch_size)
+        return _merge_deck_extractions(results, initial_batch)
 
     # --- Text-only local (Ollama) and Inception: pre-extract text with pypdf ---
     if llm_local.is_local_model(model) or llm_inception.is_inception_model(model):

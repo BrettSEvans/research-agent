@@ -75,17 +75,16 @@ def is_vision_local_model(model: str | None) -> bool:
 
 
 # Resolution for rendered PDF pages sent to vision models.
-# 100 DPI is the safe default: a 1920×1080 slide becomes ~1100×619px which is
-# sharp enough for Ollama to read text and numbers but ~2.5× smaller in memory
-# than 150 DPI. Raise to 150 only if the model misses small-print details.
+# 72 DPI keeps image payloads small (~500×380px per slide) while remaining
+# legible for OCR. Raise to 100–120 only if the model misses fine print.
 # Override with OLLAMA_VISION_DPI env var.
-OLLAMA_VISION_DPI = int(os.environ.get("OLLAMA_VISION_DPI", "100"))
+OLLAMA_VISION_DPI = int(os.environ.get("OLLAMA_VISION_DPI", "72"))
 
-# Maximum slides to include in a single Ollama vision request.
-# Sending too many images at once causes Ollama to return 500 (OOM/context overflow).
-# extractor.py batches longer decks automatically and merges the results.
+# Starting batch size for vision requests (slides per Ollama call).
+# The extractor auto-halves on 500 OOM, so this is the *initial* attempt size.
+# Lower values are safer on machines with limited VRAM/RAM.
 # Override with OLLAMA_VISION_BATCH env var.
-OLLAMA_VISION_BATCH = int(os.environ.get("OLLAMA_VISION_BATCH", "6"))
+OLLAMA_VISION_BATCH = int(os.environ.get("OLLAMA_VISION_BATCH", "3"))
 
 
 MIN_EXTRACTABLE_CHARS = 300  # below this, deck is almost certainly image-based
@@ -221,10 +220,7 @@ def call_structured_vision(
                 )
             if r.status_code == 500:
                 raise RuntimeError(
-                    f"Ollama returned 500 on {model} — likely out of memory or context overflow "
-                    f"with {len(images_b64)} image(s). "
-                    "The extractor will retry with smaller batches automatically. "
-                    "If this persists, set OLLAMA_VISION_DPI=72 or OLLAMA_VISION_BATCH=3."
+                    f"ollama-vision-500: {model} OOM with {len(images_b64)} image(s) at {OLLAMA_VISION_DPI} DPI"
                 )
             r.raise_for_status()
 
