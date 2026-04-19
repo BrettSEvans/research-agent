@@ -13,7 +13,9 @@ Run:
 """
 from __future__ import annotations
 
+import base64
 import json
+import os
 import tempfile
 import uuid
 from pathlib import Path
@@ -24,7 +26,7 @@ from dotenv import load_dotenv
 from datetime import datetime, timezone
 
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, JSONResponse, Response, StreamingResponse
 from fastapi.templating import Jinja2Templates
 
 from agent import iter_compliance_report, run_compliance_report, SAVED_REPORTS_DIR
@@ -44,6 +46,56 @@ SAVED_DIR.mkdir(exist_ok=True)
 
 app = FastAPI(title="VC Pitch Deck + Compliance")
 templates = Jinja2Templates(directory=str(BASE / "templates"))
+
+
+# ───────────────────────── auth + BYOK helpers ────────────────────────────
+
+@app.middleware("http")
+async def basic_auth_middleware(request: Request, call_next):
+    """HTTP Basic Auth gate.  Set BASIC_AUTH_USER + BASIC_AUTH_PASSWORD to enable."""
+    _user = os.environ.get("BASIC_AUTH_USER", "")
+    _pass = os.environ.get("BASIC_AUTH_PASSWORD", "")
+    if not _user or not _pass:          # Auth not configured → open access
+        return await call_next(request)
+    auth = request.headers.get("Authorization", "")
+    if auth.startswith("Basic "):
+        try:
+            decoded = base64.b64decode(auth[6:]).decode("utf-8")
+            u, p = decoded.split(":", 1)
+            if u == _user and p == _pass:
+                return await call_next(request)
+        except Exception:
+            pass
+    return Response(
+        status_code=401,
+        headers={"WWW-Authenticate": 'Basic realm="VC Compliance"'},
+        content="Unauthorized",
+    )
+
+
+def get_api_key(request: Request) -> str | None:
+    """Read Anthropic API key from X-Anthropic-API-Key header, falling back to env var."""
+    return request.headers.get("X-Anthropic-API-Key") or os.environ.get("ANTHROPIC_API_KEY")
+
+
+def _sanitize_session(raw: str) -> str:
+    safe = "".join(c for c in raw if c.isalnum() or c == "-")[:64]
+    return safe or "default"
+
+
+def get_session_dirs(request: Request) -> tuple[Path, Path]:
+    """Return (session_uploads_dir, session_context_dir) for the current session.
+
+    The X-Session-ID header value is sanitised to alphanumeric + hyphens and
+    used as a subdirectory under the global UPLOADS / CONTEXT_DIR roots so
+    that each browser session is fully isolated.
+    """
+    sid = _sanitize_session(request.headers.get("X-Session-ID", ""))
+    uploads = UPLOADS / sid
+    context = CONTEXT_DIR / sid
+    uploads.mkdir(parents=True, exist_ok=True)
+    context.mkdir(parents=True, exist_ok=True)
+    return uploads, context
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -66,9 +118,14 @@ ALLOWED_MODELS = {
     "gemma4:26b",
 }
 
+# Only real Anthropic models are valid for /extract/complete (which uses the
+# Anthropic SDK directly; local model names would cause a silent 500).
+CLOUD_MODELS = {"claude-haiku-4-5", "claude-sonnet-4-6", "claude-opus-4-6"}
+
 
 @app.post("/extract")
 async def extract(
+    request: Request,
     file: UploadFile = File(...),
     extractor_model: Annotated[str | None, Form()] = None,
 ):
@@ -77,16 +134,17 @@ async def extract(
     if extractor_model and extractor_model not in ALLOWED_MODELS:
         raise HTTPException(status_code=400, detail=f"Unknown model: {extractor_model}")
 
+    session_uploads, _ = get_session_dirs(request)
     content = await file.read()
     token = uuid.uuid4().hex[:12]
     with tempfile.NamedTemporaryFile(
-        delete=False, suffix=".pdf", dir=str(UPLOADS), prefix=f"{token}_"
+        delete=False, suffix=".pdf", dir=str(session_uploads), prefix=f"{token}_"
     ) as tmp:
         tmp.write(content)
         pdf_path = Path(tmp.name)
 
     try:
-        client = anthropic.Anthropic()
+        client = anthropic.Anthropic(api_key=get_api_key(request))
         from extractor import extract_basics_and_infer_stage
         extraction = extract_basics_and_infer_stage(pdf_path, client=client, model=extractor_model)
     except Exception as exc:
@@ -104,13 +162,15 @@ async def extract(
 
 @app.post("/extract/deep")
 async def extract_deep(
+    request: Request,
     context_id: Annotated[str, Form()],
     extractor_model: Annotated[str | None, Form()] = None,
     startup_stage: Annotated[str | None, Form()] = None,
     modules: Annotated[str | None, Form()] = None,
 ):
-    pdf_paths = list(UPLOADS.glob(f"{context_id}_*.pdf"))
-    context_path = CONTEXT_DIR / f"deck_{context_id}.json"
+    session_uploads, session_ctx = get_session_dirs(request)
+    pdf_paths = list(session_uploads.glob(f"{context_id}_*.pdf"))
+    context_path = session_ctx / f"deck_{context_id}.json"
 
     # No PDF in uploads — this context was loaded from a saved extraction.
     # The context file already exists, so skip re-extraction and return it as-is.
@@ -134,10 +194,10 @@ async def extract_deep(
 
     pdf_path = pdf_paths[0]
     requested_metrics = modules.split(",") if modules else None
-    failed_path = CONTEXT_DIR / f"deck_{context_id}_failed.json"
+    failed_path = session_ctx / f"deck_{context_id}_failed.json"
 
     try:
-        client = anthropic.Anthropic()
+        client = anthropic.Anthropic(api_key=get_api_key(request))
         extraction, failed_pages = extract_from_pdf(
             pdf_path,
             client=client,
@@ -173,6 +233,7 @@ async def extract_deep(
 
 @app.post("/extract/complete")
 async def extract_complete(
+    request: Request,
     context_id: Annotated[str, Form()],
     cloud_model: Annotated[str, Form()] = "claude-haiku-4-5",
     modules: Annotated[str | None, Form()] = None,
@@ -184,23 +245,24 @@ async def extract_complete(
     endpoint reads that sidecar, sends the failed pages to a Claude model, merges
     the results into the existing DeckExtraction, and saves the merged context.
     """
-    context_path = CONTEXT_DIR / f"deck_{context_id}.json"
-    failed_path = CONTEXT_DIR / f"deck_{context_id}_failed.json"
+    session_uploads, session_ctx = get_session_dirs(request)
+    context_path = session_ctx / f"deck_{context_id}.json"
+    failed_path = session_ctx / f"deck_{context_id}_failed.json"
 
     if not context_path.exists():
         raise HTTPException(status_code=404, detail=f"Unknown context_id: {context_id}")
     if not failed_path.exists():
         raise HTTPException(status_code=400, detail="No failed-page sidecar found for this context.")
 
-    pdf_paths = list(UPLOADS.glob(f"{context_id}_*.pdf"))
+    pdf_paths = list(session_uploads.glob(f"{context_id}_*.pdf"))
     if not pdf_paths:
         raise HTTPException(
             status_code=404,
             detail="PDF not found — it may have already been deleted. Re-upload the deck and try again.",
         )
 
-    if cloud_model not in ALLOWED_MODELS:
-        raise HTTPException(status_code=400, detail=f"Unknown model: {cloud_model}")
+    if cloud_model not in CLOUD_MODELS:
+        raise HTTPException(status_code=400, detail=f"Model must be a cloud model for completion: {cloud_model}")
 
     pdf_path = pdf_paths[0]
     failed_data = json.loads(failed_path.read_text())
@@ -213,7 +275,7 @@ async def extract_complete(
     requested_metrics = modules.split(",") if modules else None
 
     try:
-        client = anthropic.Anthropic()
+        client = anthropic.Anthropic(api_key=get_api_key(request))
         from extractor import extract_failed_pages_with_claude, DeckExtraction
 
         # Extract the failed pages with the cloud model
@@ -276,7 +338,8 @@ async def extract_complete(
 
 
 @app.post("/verify/stream")
-def verify_stream(
+async def verify_stream(
+    request: Request,
     context_id: Annotated[str, Form()],
     forms: Annotated[str, Form()] = "10-K,10-Q,S-1,8-K",
     filings_limit: Annotated[int, Form()] = 3,
@@ -290,7 +353,8 @@ def verify_stream(
     as soon as analysis finishes, so the browser can render incrementally."""
     if analyzer_model and analyzer_model not in ALLOWED_MODELS:
         raise HTTPException(status_code=400, detail=f"Unknown model: {analyzer_model}")
-    context_path = CONTEXT_DIR / f"deck_{context_id}.json"
+    _, session_ctx = get_session_dirs(request)
+    context_path = session_ctx / f"deck_{context_id}.json"
     if not context_path.exists():
         raise HTTPException(status_code=404, detail=f"Unknown context_id: {context_id}")
 
@@ -302,6 +366,8 @@ def verify_stream(
     key = deck.company_lookup_key()
     if key:
         cik = key.zfill(10) if (key.isdigit() and len(key) <= 10) else lookup_cik(key)
+
+    api_key = get_api_key(request)
 
     def event_stream():
         try:
@@ -317,6 +383,7 @@ def verify_stream(
                 extractor_model=extractor_model,
                 startup_stage=startup_stage,
                 modules=modules.split(",") if modules else None,
+                api_key=api_key,
             ):
                 yield f"data: {json.dumps(event)}\n\n"
         except Exception as exc:
@@ -373,12 +440,14 @@ async def list_saved_extractions():
 
 @app.post("/saved-extractions")
 async def save_extraction(
+    request: Request,
     context_id: Annotated[str, Form()],
     original_filename: Annotated[str, Form()] = "",
     extractor_model: Annotated[str, Form()] = "",
 ):
     """Persist a session extraction to the saved library."""
-    context_path = CONTEXT_DIR / f"deck_{context_id}.json"
+    _, session_ctx = get_session_dirs(request)
+    context_path = session_ctx / f"deck_{context_id}.json"
     if not context_path.exists():
         raise HTTPException(status_code=404, detail=f"Unknown context_id: {context_id}")
 
@@ -401,7 +470,7 @@ async def save_extraction(
 
 
 @app.post("/saved-extractions/{save_id}/load")
-async def load_saved_extraction(save_id: str):
+async def load_saved_extraction(request: Request, save_id: str):
     """Load a saved extraction back into a fresh session context."""
     saved_path = SAVED_DIR / f"{save_id}.json"
     if not saved_path.exists():
@@ -411,8 +480,9 @@ async def load_saved_extraction(save_id: str):
     extraction_data = data["extraction"]
 
     # Create a fresh session context so /verify/stream works normally
+    _, session_ctx = get_session_dirs(request)
     token = uuid.uuid4().hex[:12]
-    context_path = CONTEXT_DIR / f"deck_{token}.json"
+    context_path = session_ctx / f"deck_{token}.json"
     context_path.write_text(json.dumps(extraction_data, indent=2))
 
     return JSONResponse({
@@ -433,6 +503,7 @@ async def delete_saved_extraction(save_id: str):
 
 @app.post("/verify")
 async def verify(
+    request: Request,
     context_id: Annotated[str, Form()],
     forms: Annotated[str, Form()] = "10-K,10-Q,S-1,8-K",
     filings_limit: Annotated[int, Form()] = 3,
@@ -443,7 +514,8 @@ async def verify(
 ):
     if analyzer_model and analyzer_model not in ALLOWED_MODELS:
         raise HTTPException(status_code=400, detail=f"Unknown model: {analyzer_model}")
-    context_path = CONTEXT_DIR / f"deck_{context_id}.json"
+    _, session_ctx = get_session_dirs(request)
+    context_path = session_ctx / f"deck_{context_id}.json"
     if not context_path.exists():
         raise HTTPException(status_code=404, detail=f"Unknown context_id: {context_id}")
 
@@ -473,6 +545,7 @@ async def verify(
         analyzer_model=analyzer_model,
         startup_stage=startup_stage,
         modules=modules.split(",") if modules else None,
+        api_key=get_api_key(request),
     )
     return report
 

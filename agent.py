@@ -142,6 +142,7 @@ def iter_compliance_report(
     startup_stage: str | None = None,
     modules: list[str] | None = None,
     max_workers: int | None = None,
+    api_key: str | None = None,
 ):
     """Generator that yields events as each claim is analyzed.
 
@@ -222,7 +223,7 @@ def iter_compliance_report(
         yield {"event": "warning", "data": {"message": w}}
 
         claim_meta = {c.text: c for c in deck.extraction.claims} if deck else {}
-        client = anthropic.Anthropic(timeout=ANTHROPIC_TIMEOUT)
+        client = anthropic.Anthropic(api_key=api_key, timeout=ANTHROPIC_TIMEOUT)
         workers = _resolve_workers(analyzer_model, max_workers)
 
         def _analyze_one(args):
@@ -330,7 +331,7 @@ def iter_compliance_report(
         yield {"event": "done", "data": {"report": report}}
         return
 
-    client = anthropic.Anthropic(timeout=ANTHROPIC_TIMEOUT)
+    client = anthropic.Anthropic(api_key=api_key, timeout=ANTHROPIC_TIMEOUT)
     deck_ctx_str = deck.clarifying_context() if deck else None
     workers = _resolve_workers(analyzer_model, max_workers)
 
@@ -399,6 +400,7 @@ def run_compliance_report(
     startup_stage: str | None = None,
     modules: list[str] | None = None,
     max_workers: int | None = None,
+    api_key: str | None = None,
 ) -> dict:
     """Thin wrapper around iter_compliance_report — returns the final report dict.
 
@@ -417,6 +419,7 @@ def run_compliance_report(
         startup_stage=startup_stage,
         modules=modules,
         max_workers=max_workers,
+        api_key=api_key,
     ):
         if event["event"] == "done":
             report = event["data"]["report"]
