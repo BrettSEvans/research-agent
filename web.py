@@ -14,22 +14,39 @@ Run:
 from __future__ import annotations
 
 import json
+import os
 import tempfile
 import uuid
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Annotated
 
 import anthropic
 from dotenv import load_dotenv
-from datetime import datetime, timezone
 
-from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile, status
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from fastapi.templating import Jinja2Templates
 
 from agent import iter_compliance_report, run_compliance_report, SAVED_REPORTS_DIR
+from auth import (
+    authenticate_user,
+    create_user,
+    ensure_default_organization_and_user,
+    get_user_by_api_key,
+)
+from db import SessionLocal, init_db, migrate_existing_data
 from deck_context import DeckContext
-from extractor import extract_from_pdf
+from extractor import DeckExtraction as DeckExtractionSchema
+from extractor import extract_failed_pages_with_claude, extract_from_pdf
+from models import (
+    DeckContext as DeckContextModel,
+    Project as ProjectModel,
+    Report as ReportModel,
+    SavedExtraction as SavedExtractionModel,
+    Upload as UploadModel,
+)
 from version import ANALYZER_VERSION, EXTRACTOR_VERSION
 
 load_dotenv()
@@ -45,10 +62,254 @@ SAVED_DIR.mkdir(exist_ok=True)
 app = FastAPI(title="VC Pitch Deck + Compliance")
 templates = Jinja2Templates(directory=str(BASE / "templates"))
 
+auth_scheme = HTTPBearer()
+PUBLIC_PATHS = {
+    "/",
+    "/auth/login",
+    "/openapi.json",
+    "/docs",
+    "/redoc",
+    "/docs/oauth2-redirect",
+}
+
+
+def get_default_project_id(request: Request) -> int:
+    user = request.state.user
+    db = request.state.db
+    default_name = os.environ.get("DEFAULT_PROJECT_NAME", "default")
+    project = (
+        db.query(ProjectModel)
+        .filter(ProjectModel.name == default_name, ProjectModel.organization_id == user.organization_id)
+        .first()
+    )
+    if not project:
+        project = ProjectModel(
+            name=default_name,
+            organization_id=user.organization_id,
+            owner_id=user.id,
+        )
+        db.add(project)
+        db.commit()
+        db.refresh(project)
+    return project.id
+
+
+def require_context_ownership(request: Request, context_id: str) -> DeckContextModel:
+    db = request.state.db
+    context = (
+        db.query(DeckContextModel)
+        .filter(DeckContextModel.context_id == context_id)
+        .filter(DeckContextModel.organization_id == request.state.user.organization_id)
+        .first()
+    )
+    if not context:
+        raise HTTPException(status_code=404, detail="Unknown context_id or unauthorized")
+    return context
+
+
+def require_saved_extraction(request: Request, save_id: str) -> SavedExtractionModel:
+    db = request.state.db
+    saved = (
+        db.query(SavedExtractionModel)
+        .filter(SavedExtractionModel.save_id == save_id)
+        .filter(SavedExtractionModel.organization_id == request.state.user.organization_id)
+        .first()
+    )
+    if not saved:
+        raise HTTPException(status_code=404, detail="Unknown save_id or unauthorized")
+    return saved
+
+
+def require_report(request: Request, report_id: str) -> ReportModel:
+    db = request.state.db
+    report = (
+        db.query(ReportModel)
+        .filter(ReportModel.report_id == report_id)
+        .filter(ReportModel.organization_id == request.state.user.organization_id)
+        .first()
+    )
+    if not report:
+        raise HTTPException(status_code=404, detail="Unknown report_id or unauthorized")
+    return report
+
+
+@app.middleware("http")
+async def db_session_middleware(request: Request, call_next):
+    request.state.db = SessionLocal()
+    request.state.user = None
+    try:
+        response = await call_next(request)
+        request.state.db.commit()
+        return response
+    except Exception:
+        request.state.db.rollback()
+        raise
+    finally:
+        request.state.db.close()
+
+
+@app.middleware("http")
+async def auth_middleware(request: Request, call_next):
+    path = request.url.path
+    if path in PUBLIC_PATHS or request.method == "OPTIONS":
+        return await call_next(request)
+
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        return JSONResponse(
+            {"detail": "Missing Authorization header. Use Bearer token."},
+            status_code=status.HTTP_401_UNAUTHORIZED,
+        )
+
+    token = auth_header.split(" ", 1)[1].strip()
+    user = get_user_by_api_key(request.state.db, token)
+    if not user:
+        return JSONResponse(
+            {"detail": "Invalid or expired API token."},
+            status_code=status.HTTP_401_UNAUTHORIZED,
+        )
+
+    request.state.user = user
+    return await call_next(request)
+
+
+@app.on_event("startup")
+def startup():
+    init_db()
+    db = SessionLocal()
+    try:
+        organization, user, project = ensure_default_organization_and_user(db)
+    finally:
+        db.close()
+    migrate_existing_data(
+        default_user_email=os.environ.get("DEFAULT_ADMIN_EMAIL", "brettevanssf@gmail.com"),
+        default_org_name=os.environ.get("DEFAULT_ORG_NAME", "brettevanssf"),
+        default_project_name=os.environ.get("DEFAULT_PROJECT_NAME", "default"),
+    )
+
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     return templates.TemplateResponse(request=request, name="index.html")
+
+
+@app.post("/auth/login")
+async def auth_login(
+    request: Request,
+    email: Annotated[str, Form()],
+    password: Annotated[str, Form()],
+):
+    user = authenticate_user(request.state.db, email, password)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    return JSONResponse(
+        {
+            "email": user.email,
+            "display_name": user.display_name,
+            "organization": user.organization.name,
+            "api_key": user.api_key,
+        }
+    )
+
+
+@app.post("/auth/register")
+async def auth_register(
+    request: Request,
+    email: Annotated[str, Form()],
+    password: Annotated[str, Form()],
+    display_name: Annotated[str | None, Form()] = None,
+):
+    current_user = request.state.user
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    user = create_user(
+        request.state.db,
+        email=email,
+        password=password,
+        organization=current_user.organization,
+        display_name=display_name,
+    )
+    return JSONResponse(
+        {
+            "email": user.email,
+            "display_name": user.display_name,
+            "organization": user.organization.name,
+            "api_key": user.api_key,
+        }
+    )
+
+
+@app.get("/users/me")
+async def get_current_user(request: Request):
+    user = request.state.user
+    if not user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    return JSONResponse(
+        {
+            "email": user.email,
+            "display_name": user.display_name,
+            "organization": user.organization.name,
+            "is_admin": user.is_admin,
+            "created_at": user.created_at.isoformat(),
+        }
+    )
+
+
+@app.get("/projects")
+async def list_projects(request: Request):
+    user = request.state.user
+    projects = (
+        request.state.db.query(ProjectModel)
+        .filter(ProjectModel.organization_id == user.organization_id)
+        .order_by(ProjectModel.created_at.desc())
+        .all()
+    )
+    return JSONResponse(
+        [
+            {
+                "project_id": project.id,
+                "name": project.name,
+                "description": project.description,
+                "owner": project.owner.display_name if project.owner else None,
+                "created_at": project.created_at.isoformat(),
+            }
+            for project in projects
+        ]
+    )
+
+
+@app.post("/projects")
+async def create_project(
+    request: Request,
+    name: Annotated[str, Form()],
+    description: Annotated[str | None, Form()] = None,
+):
+    user = request.state.user
+    existing = (
+        request.state.db.query(ProjectModel)
+        .filter(ProjectModel.organization_id == user.organization_id, ProjectModel.name == name)
+        .first()
+    )
+    if existing:
+        raise HTTPException(status_code=400, detail="Project already exists")
+    project = ProjectModel(
+        name=name,
+        description=description,
+        organization_id=user.organization_id,
+        owner_id=user.id,
+    )
+    request.state.db.add(project)
+    request.state.db.commit()
+    request.state.db.refresh(project)
+    return JSONResponse(
+        {
+            "project_id": project.id,
+            "name": project.name,
+            "description": project.description,
+            "owner": user.display_name,
+            "created_at": project.created_at.isoformat(),
+        }
+    )
 
 
 ALLOWED_MODELS = {
@@ -66,9 +327,14 @@ ALLOWED_MODELS = {
     "gemma4:26b",
 }
 
+# Cloud-only models valid for /extract/complete. Local models must not be used
+# here because extract_failed_pages_with_claude() always calls the Anthropic SDK.
+CLOUD_MODELS = {"claude-haiku-4-5", "claude-sonnet-4-6", "claude-opus-4-6"}
+
 
 @app.post("/extract")
 async def extract(
+    request: Request,
     file: UploadFile = File(...),
     extractor_model: Annotated[str | None, Form()] = None,
 ):
@@ -76,6 +342,9 @@ async def extract(
         raise HTTPException(status_code=400, detail="Only PDF files are supported.")
     if extractor_model and extractor_model not in ALLOWED_MODELS:
         raise HTTPException(status_code=400, detail=f"Unknown model: {extractor_model}")
+
+    user = request.state.user
+    project_id = get_default_project_id(request)
 
     content = await file.read()
     token = uuid.uuid4().hex[:12]
@@ -85,15 +354,40 @@ async def extract(
         tmp.write(content)
         pdf_path = Path(tmp.name)
 
+    upload = UploadModel(
+        upload_token=token,
+        owner_id=user.id,
+        organization_id=user.organization_id,
+        project_id=project_id,
+        original_filename=file.filename,
+        stored_path=str(pdf_path),
+    )
+    request.state.db.add(upload)
+    request.state.db.commit()
+
+    deck_context = DeckContextModel(
+        context_id=token,
+        owner_id=user.id,
+        organization_id=user.organization_id,
+        project_id=project_id,
+        original_filename=file.filename,
+        extractor_model=extractor_model,
+        extractor_version=EXTRACTOR_VERSION,
+        status="uploaded",
+    )
+    request.state.db.add(deck_context)
+    request.state.db.commit()
+
     try:
         client = anthropic.Anthropic()
         from extractor import extract_basics_and_infer_stage
+
         extraction = extract_basics_and_infer_stage(pdf_path, client=client, model=extractor_model)
     except Exception as exc:
         pdf_path.unlink(missing_ok=True)
         raise HTTPException(status_code=500, detail=f"Extraction failed: {exc}") from exc
 
-    # Do not save DeckContext or unlink the PDF yet; we need it for /extract/deep
+    # Do not unlink the PDF yet; keep the upload until deep extraction completes.
     return JSONResponse(
         {
             "context_id": token,
@@ -104,18 +398,22 @@ async def extract(
 
 @app.post("/extract/deep")
 async def extract_deep(
+    request: Request,
     context_id: Annotated[str, Form()],
     extractor_model: Annotated[str | None, Form()] = None,
     startup_stage: Annotated[str | None, Form()] = None,
     modules: Annotated[str | None, Form()] = None,
 ):
+    deck_record = require_context_ownership(request, context_id)
     pdf_paths = list(UPLOADS.glob(f"{context_id}_*.pdf"))
     context_path = CONTEXT_DIR / f"deck_{context_id}.json"
 
     # No PDF in uploads — this context was loaded from a saved extraction.
     # The context file already exists, so skip re-extraction and return it as-is.
     if not pdf_paths:
-        if context_path.exists():
+        if context_path.exists() or deck_record.extraction_json:
+            if not context_path.exists() and deck_record.extraction_json:
+                context_path.write_text(deck_record.extraction_json)
             extraction_data = json.loads(context_path.read_text())
             return JSONResponse(
                 {
@@ -152,6 +450,12 @@ async def extract_deep(
     context = DeckContext(extraction)
     context.save(context_path)
 
+    deck_record.context_path = str(context_path)
+    deck_record.extraction_json = json.dumps(extraction.model_dump())
+    deck_record.status = "saved"
+    request.state.db.add(deck_record)
+    request.state.db.commit()
+
     if failed_pages:
         # Keep the PDF so /extract/complete can send failed pages to a cloud model
         failed_path.write_text(json.dumps({"failed_pages": failed_pages}))
@@ -173,6 +477,7 @@ async def extract_deep(
 
 @app.post("/extract/complete")
 async def extract_complete(
+    request: Request,
     context_id: Annotated[str, Form()],
     cloud_model: Annotated[str, Form()] = "claude-haiku-4-5",
     modules: Annotated[str | None, Form()] = None,
@@ -184,6 +489,7 @@ async def extract_complete(
     endpoint reads that sidecar, sends the failed pages to a Claude model, merges
     the results into the existing DeckExtraction, and saves the merged context.
     """
+    deck_record = require_context_ownership(request, context_id)
     context_path = CONTEXT_DIR / f"deck_{context_id}.json"
     failed_path = CONTEXT_DIR / f"deck_{context_id}_failed.json"
 
@@ -199,8 +505,12 @@ async def extract_complete(
             detail="PDF not found — it may have already been deleted. Re-upload the deck and try again.",
         )
 
-    if cloud_model not in ALLOWED_MODELS:
-        raise HTTPException(status_code=400, detail=f"Unknown model: {cloud_model}")
+    if cloud_model not in CLOUD_MODELS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cloud completion requires a Claude model. Got: {cloud_model!r}. "
+                   f"Valid options: {sorted(CLOUD_MODELS)}",
+        )
 
     pdf_path = pdf_paths[0]
     failed_data = json.loads(failed_path.read_text())
@@ -214,7 +524,6 @@ async def extract_complete(
 
     try:
         client = anthropic.Anthropic()
-        from extractor import extract_failed_pages_with_claude, DeckExtraction
 
         # Extract the failed pages with the cloud model
         cloud_extraction = extract_failed_pages_with_claude(
@@ -244,7 +553,7 @@ async def extract_complete(
             f"[Cloud completion · slides {pages_str} via {cloud_model}] {cloud_extraction.extraction_notes}",
         ]))
 
-        merged_extraction = DeckExtraction(
+        merged_extraction = DeckExtractionSchema(
             company=ex.company,
             claims=merged_claims,
             fiscal_year_end=ex.fiscal_year_end or cloud_extraction.fiscal_year_end,
@@ -257,6 +566,11 @@ async def extract_complete(
         # Persist merged context
         merged_context = DeckContext(merged_extraction)
         merged_context.save(context_path)
+        deck_record.context_path = str(context_path)
+        deck_record.extraction_json = json.dumps(merged_extraction.model_dump())
+        deck_record.status = "saved"
+        request.state.db.add(deck_record)
+        request.state.db.commit()
 
         # Clean up sidecar and PDF
         failed_path.unlink(missing_ok=True)
@@ -276,7 +590,8 @@ async def extract_complete(
 
 
 @app.post("/verify/stream")
-def verify_stream(
+async def verify_stream(
+    request: Request,
     context_id: Annotated[str, Form()],
     forms: Annotated[str, Form()] = "10-K,10-Q,S-1,8-K",
     filings_limit: Annotated[int, Form()] = 3,
@@ -290,6 +605,7 @@ def verify_stream(
     as soon as analysis finishes, so the browser can render incrementally."""
     if analyzer_model and analyzer_model not in ALLOWED_MODELS:
         raise HTTPException(status_code=400, detail=f"Unknown model: {analyzer_model}")
+    require_context_ownership(request, context_id)
     context_path = CONTEXT_DIR / f"deck_{context_id}.json"
     if not context_path.exists():
         raise HTTPException(status_code=404, detail=f"Unknown context_id: {context_id}")
@@ -317,6 +633,10 @@ def verify_stream(
                 extractor_model=extractor_model,
                 startup_stage=startup_stage,
                 modules=modules.split(",") if modules else None,
+                db=request.state.db,
+                owner_id=request.state.user.id,
+                organization_id=request.state.user.organization_id,
+                project_id=deck_record.project_id,
             ):
                 yield f"data: {json.dumps(event)}\n\n"
         except Exception as exc:
@@ -335,52 +655,60 @@ def verify_stream(
 # ───────────────────────── saved extractions ──────────────────────────────
 
 @app.get("/saved-extractions")
-async def list_saved_extractions():
+async def list_saved_extractions(request: Request):
     """Return all saved extractions, newest first, with per-category claim stats."""
     items = []
-    for p in sorted(SAVED_DIR.glob("*.json"), key=lambda f: f.stat().st_mtime, reverse=True):
+    rows = (
+        request.state.db.query(SavedExtractionModel)
+        .filter(SavedExtractionModel.organization_id == request.state.user.organization_id)
+        .order_by(SavedExtractionModel.saved_at.desc())
+        .all()
+    )
+    for row in rows:
         try:
-            data = json.loads(p.read_text())
-            extraction = data.get("extraction", {})
-
-            # Tally claims by category
-            claims = extraction.get("claims", [])
-            by_category: dict[str, int] = {}
-            for cl in claims:
-                cat = cl.get("category", "other")
-                by_category[cat] = by_category.get(cat, 0) + 1
-
-            # Key metrics names
-            metrics = [m.get("metric_name", "") for m in extraction.get("key_metrics", []) if m.get("metric_name")]
-
-            items.append({
-                "save_id": p.stem,
-                "company_name": data.get("meta", {}).get("company_name", "Unknown"),
-                "original_filename": data.get("meta", {}).get("original_filename", ""),
-                "extractor_model": data.get("meta", {}).get("extractor_model", ""),
-                "extractor_version": data.get("meta", {}).get("extractor_version", ""),
-                "saved_at": data.get("meta", {}).get("saved_at", ""),
-                # Stats for the info popover
+            extraction = json.loads(row.extraction_json)
+        except Exception:
+            extraction = {}
+        claims = extraction.get("claims", [])
+        by_category: dict[str, int] = {}
+        for cl in claims:
+            cat = cl.get("category", "other")
+            by_category[cat] = by_category.get(cat, 0) + 1
+        metrics = [m.get("metric_name", "") for m in extraction.get("key_metrics", []) if m.get("metric_name")]
+        items.append(
+            {
+                "save_id": row.save_id,
+                "company_name": row.company_name or "Unknown",
+                "original_filename": row.original_filename or "",
+                "extractor_model": row.extractor_model or "",
+                "extractor_version": row.extractor_version or "",
+                "saved_at": row.saved_at.isoformat(),
                 "claims_count": len(claims),
                 "claims_by_category": by_category,
                 "key_metrics": metrics,
                 "stage": extraction.get("stage_assessment", {}).get("stage") if extraction.get("stage_assessment") else None,
-            })
-        except Exception:
-            continue
+                "project_id": row.project_id,
+            }
+        )
     return JSONResponse(items)
 
 
 @app.post("/saved-extractions")
 async def save_extraction(
+    request: Request,
     context_id: Annotated[str, Form()],
     original_filename: Annotated[str, Form()] = "",
     extractor_model: Annotated[str, Form()] = "",
+    project_id: Annotated[int | None, Form()] = None,
 ):
     """Persist a session extraction to the saved library."""
+    deck_record = require_context_ownership(request, context_id)
     context_path = CONTEXT_DIR / f"deck_{context_id}.json"
-    if not context_path.exists():
+    if not context_path.exists() and not deck_record.extraction_json:
         raise HTTPException(status_code=404, detail=f"Unknown context_id: {context_id}")
+
+    if not context_path.exists() and deck_record.extraction_json:
+        context_path.write_text(deck_record.extraction_json)
 
     extraction_data = json.loads(context_path.read_text())
     company_name = extraction_data.get("company", {}).get("name", "Unknown")
@@ -397,42 +725,70 @@ async def save_extraction(
         "extraction": extraction_data,
     }
     (SAVED_DIR / f"{save_id}.json").write_text(json.dumps(saved, indent=2))
+
+    row = SavedExtractionModel(
+        save_id=save_id,
+        owner_id=request.state.user.id,
+        organization_id=request.state.user.organization_id,
+        project_id=project_id or deck_record.project_id,
+        company_name=company_name,
+        original_filename=original_filename,
+        extractor_model=extractor_model,
+        extractor_version=EXTRACTOR_VERSION,
+        meta_json=json.dumps(saved["meta"]),
+        extraction_json=json.dumps(extraction_data),
+    )
+    request.state.db.add(row)
+    request.state.db.commit()
     return JSONResponse({"save_id": save_id, "company_name": company_name})
 
 
 @app.post("/saved-extractions/{save_id}/load")
-async def load_saved_extraction(save_id: str):
+async def load_saved_extraction(request: Request, save_id: str):
     """Load a saved extraction back into a fresh session context."""
-    saved_path = SAVED_DIR / f"{save_id}.json"
-    if not saved_path.exists():
-        raise HTTPException(status_code=404, detail=f"Unknown save_id: {save_id}")
+    saved = require_saved_extraction(request, save_id)
+    extraction_data = json.loads(saved.extraction_json)
 
-    data = json.loads(saved_path.read_text())
-    extraction_data = data["extraction"]
-
-    # Create a fresh session context so /verify/stream works normally
     token = uuid.uuid4().hex[:12]
     context_path = CONTEXT_DIR / f"deck_{token}.json"
     context_path.write_text(json.dumps(extraction_data, indent=2))
 
+    new_context = DeckContextModel(
+        context_id=token,
+        owner_id=request.state.user.id,
+        organization_id=request.state.user.organization_id,
+        project_id=saved.project_id,
+        original_filename=saved.original_filename,
+        extractor_model=saved.extractor_model,
+        extractor_version=saved.extractor_version,
+        context_path=str(context_path),
+        extraction_json=saved.extraction_json,
+        status="saved",
+    )
+    request.state.db.add(new_context)
+    request.state.db.commit()
+
     return JSONResponse({
         "context_id": token,
         "extraction": extraction_data,
-        "meta": data.get("meta", {}),
+        "meta": json.loads(saved.meta_json or "{}"),
     })
 
 
 @app.delete("/saved-extractions/{save_id}")
-async def delete_saved_extraction(save_id: str):
+async def delete_saved_extraction(request: Request, save_id: str):
+    saved = require_saved_extraction(request, save_id)
     saved_path = SAVED_DIR / f"{save_id}.json"
-    if not saved_path.exists():
-        raise HTTPException(status_code=404, detail=f"Unknown save_id: {save_id}")
-    saved_path.unlink()
+    if saved_path.exists():
+        saved_path.unlink()
+    request.state.db.delete(saved)
+    request.state.db.commit()
     return JSONResponse({"deleted": save_id})
 
 
 @app.post("/verify")
 async def verify(
+    request: Request,
     context_id: Annotated[str, Form()],
     forms: Annotated[str, Form()] = "10-K,10-Q,S-1,8-K",
     filings_limit: Annotated[int, Form()] = 3,
@@ -443,6 +799,7 @@ async def verify(
 ):
     if analyzer_model and analyzer_model not in ALLOWED_MODELS:
         raise HTTPException(status_code=400, detail=f"Unknown model: {analyzer_model}")
+    require_context_ownership(request, context_id)
     context_path = CONTEXT_DIR / f"deck_{context_id}.json"
     if not context_path.exists():
         raise HTTPException(status_code=404, detail=f"Unknown context_id: {context_id}")
@@ -473,74 +830,78 @@ async def verify(
         analyzer_model=analyzer_model,
         startup_stage=startup_stage,
         modules=modules.split(",") if modules else None,
+        db=request.state.db,
+        owner_id=request.state.user.id,
+        organization_id=request.state.user.organization_id,
+        project_id=require_context_ownership(request, context_id).project_id,
     )
     return report
 
 # ───────────────────────── saved reports ──────────────────────────────
 
 @app.get("/reports")
-async def list_reports():
+async def list_reports(request: Request):
     """Return all saved compliance reports, newest first, with per-verdict counts."""
     items = []
-    if not SAVED_REPORTS_DIR.exists():
-        return JSONResponse(items)
-
-    for p in sorted(SAVED_REPORTS_DIR.glob("*.json"), key=lambda f: f.stat().st_mtime, reverse=True):
+    rows = (
+        request.state.db.query(ReportModel)
+        .filter(ReportModel.organization_id == request.state.user.organization_id)
+        .order_by(ReportModel.generated_at.desc())
+        .all()
+    )
+    for row in rows:
         try:
-            data = json.loads(p.read_text())
+            data = json.loads(row.report_json)
             results = data.get("results", [])
-
-            # Per-verdict counts (actual verdict names from analyzer.py)
-            consistent   = sum(1 for r in results if r.get("verdict") == "CONSISTENT")
-            contradicts  = sum(1 for r in results if r.get("verdict") == "CONTRADICTS")
-            unsupported  = sum(1 for r in results if r.get("verdict") == "UNSUPPORTED")
-            insufficient = sum(1 for r in results if r.get("verdict") == "INSUFFICIENT_EVIDENCE")
-            fls_flags    = sum(1 for r in results if r.get("verdict") == "CONTRADICTS" and r.get("forward_looking"))
-
-            # Top flagged findings for dashboard preview (up to 3)
-            top_flags = [
-                {"claim": r.get("claim", ""), "verdict": r.get("verdict", ""), "forward_looking": r.get("forward_looking", False)}
-                for r in results if r.get("verdict") == "CONTRADICTS"
-            ][:3]
-
-            items.append({
-                "report_id": data.get("report_id", p.stem.replace("report_", "")),
-                "company_name": data.get("company_name", "Unknown"),
-                "generated_at": data.get("generated_at", ""),
-                "assumed_industry": data.get("assumed_industry", ""),
-                "cik": data.get("cik", ""),
-                # Models + versions
-                "extractor_model": data.get("extractor_model", ""),
-                "extractor_version": data.get("extractor_version", ""),
-                "analyzer_model": data.get("analyzer_model", ""),
-                "analyzer_version": data.get("analyzer_version", ""),
-                # Verdict breakdown
-                "claims_analyzed": data.get("claims_analyzed", 0),
-                "consistent": consistent,
-                "contradicts": contradicts,
-                "unsupported": unsupported,
-                "insufficient": insufficient,
-                "fls_flags": fls_flags,
-                "top_flags": top_flags,
-            })
         except Exception:
-            continue
+            data = {}
+            results = []
+
+        consistent = sum(1 for r in results if r.get("verdict") == "CONSISTENT")
+        contradicts = sum(1 for r in results if r.get("verdict") == "CONTRADICTS")
+        unsupported = sum(1 for r in results if r.get("verdict") == "UNSUPPORTED")
+        insufficient = sum(1 for r in results if r.get("verdict") == "INSUFFICIENT_EVIDENCE")
+        fls_flags = sum(1 for r in results if r.get("verdict") == "CONTRADICTS" and r.get("forward_looking"))
+        top_flags = [
+            {"claim": r.get("claim", ""), "verdict": r.get("verdict", ""), "forward_looking": r.get("forward_looking", False)}
+            for r in results if r.get("verdict") == "CONTRADICTS"
+        ][:3]
+
+        items.append({
+            "report_id": row.report_id,
+            "company_name": row.company_name or "Unknown",
+            "generated_at": row.generated_at.isoformat(),
+            "assumed_industry": data.get("assumed_industry", ""),
+            "cik": row.cik or "",
+            "extractor_model": row.extractor_model or "",
+            "extractor_version": data.get("extractor_version", ""),
+            "analyzer_model": row.analyzer_model or "",
+            "analyzer_version": data.get("analyzer_version", ""),
+            "claims_analyzed": data.get("claims_analyzed", 0),
+            "consistent": consistent,
+            "contradicts": contradicts,
+            "unsupported": unsupported,
+            "insufficient": insufficient,
+            "fls_flags": fls_flags,
+            "top_flags": top_flags,
+            "project_id": row.project_id,
+        })
     return JSONResponse(items)
 
 @app.get("/reports/{report_id}")
-async def get_report(report_id: str):
+async def get_report(request: Request, report_id: str):
     """Retrieve a specific saved compliance report."""
-    report_path = SAVED_REPORTS_DIR / f"report_{report_id}.json"
-    if not report_path.exists():
-        raise HTTPException(status_code=404, detail=f"Unknown report_id: {report_id}")
-    return JSONResponse(json.loads(report_path.read_text()))
+    report = require_report(request, report_id)
+    try:
+        return JSONResponse(json.loads(report.report_json))
+    except Exception:
+        raise HTTPException(status_code=500, detail="Could not parse saved report data.")
 
 @app.delete("/reports/{report_id}")
-async def delete_report(report_id: str):
+async def delete_report(request: Request, report_id: str):
     """Delete a saved compliance report."""
-    report_path = SAVED_REPORTS_DIR / f"report_{report_id}.json"
-    if not report_path.exists():
-        raise HTTPException(status_code=404, detail=f"Unknown report_id: {report_id}")
-    report_path.unlink()
+    report = require_report(request, report_id)
+    request.state.db.delete(report)
+    request.state.db.commit()
     return JSONResponse({"deleted": report_id})
 

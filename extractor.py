@@ -331,11 +331,19 @@ def _merge_deck_extractions(
 
     notes_parts = []
     for i, ex in enumerate(batches):
-        start = i * batch_size + 1
-        end = start + batch_size - 1
         if ex.extraction_notes:
-            notes_parts.append(f"[Slides {start}–{end}] {ex.extraction_notes}")
-    combined_notes = "\n\n".join(notes_parts) if notes_parts else "Batched extraction — see individual slide ranges above."
+            # Derive header from actual claim slide numbers rather than batch_size
+            # math, which is wrong for the final (short) batch.
+            slides = sorted({cl.slide for cl in ex.claims}) if ex.claims else []
+            if slides:
+                header = f"[Slides {slides[0]}–{slides[-1]}]"
+            else:
+                header = f"[Batch {i + 1}]"
+            notes_parts.append(f"{header} {ex.extraction_notes}")
+    combined_notes = (
+        "\n\n".join(notes_parts) if notes_parts
+        else "Batched extraction — no per-batch notes available."
+    )
 
     return DeckExtraction(
         company=batches[0].company,
@@ -403,13 +411,15 @@ def extract_from_pdf(
                 f"field with the exact quote from the deck. {metrics_str}"
             )
             try:
-                result = _vision_call_with_retry(
+                # Call directly — the queue itself handles halving on OOM.
+                # Using _vision_call_with_retry here would double-halve, wasting
+                # Ollama calls on pages that will ultimately land in failed_pages.
+                result = llm_local.call_structured_vision(
                     model=model,
                     system=SYSTEM_PROMPT,
                     user_text=user_text,
                     images_b64=batch_imgs,
                     output_format=DeckExtraction,
-                    label=f"slides {start_slide}–{end_slide}",
                 )
                 results.append(result)
             except RuntimeError as exc:

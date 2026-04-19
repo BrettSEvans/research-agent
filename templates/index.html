@@ -1036,6 +1036,7 @@
 
     let currentContextId = null;
     let currentFailedPages = [];  // 1-indexed slides the local vision model couldn't process
+    let savedCompanyHtml = '';   // snapshot of extractionBody after basic extraction (no side-effects re-render)
     let currentFilename = '';
     let lastReport = null;  // accumulated report for download
 
@@ -1327,7 +1328,8 @@
       </dl></div>`;
 
       extractionBody.innerHTML = html;
-      
+      savedCompanyHtml = html;  // snapshot for clean re-render in completeWithClaude()
+
       if (ex.stage_assessment && ex.stage_assessment.stage) {
         document.getElementById('startup-stage').value = ex.stage_assessment.stage;
         updateModulesFromStage(ex.stage_assessment.stage);
@@ -1458,27 +1460,29 @@
         if (!r.ok) throw new Error((await r.json()).detail || 'Cloud completion failed');
         const data = await r.json();
 
-        // Re-render the extraction body with merged results, no failed pages
-        extractionBody.innerHTML = '';
-        renderBasicExtraction(data.extraction);  // re-render company block
-        renderDeepExtraction(data.extraction, []);  // merged claims, no failures
+        // Restore the company block without triggering scroll, button flashes, or
+        // report panel reset — then append the merged claims accordion on top.
+        extractionBody.innerHTML = savedCompanyHtml;
+        renderDeepExtraction(data.extraction, []);
 
-        // Show a success banner
-        const panel = document.getElementById('failed-pages-panel');
-        if (panel) panel.remove();
+        // Prepend a success banner above the company block
         const successBanner = document.createElement('div');
         successBanner.className = 'banner banner-info';
         successBanner.innerHTML = `<span class="material-symbols-rounded">check_circle</span>
-          <div>Cloud completion done — ${data.completed_pages.length} slide(s) merged using ${cloudModel}.</div>`;
+          <div>Cloud completion done — ${data.completed_pages.length} slide(s) merged using ${escape(cloudModel)}.</div>`;
         extractionBody.prepend(successBanner);
 
-        verifyBtn.classList.remove('hidden');
-        document.getElementById('save-btn').classList.remove('hidden');
         currentFailedPages = [];
       } catch (e) {
+        // Inline error — keep the failed-pages panel visible so the user can retry
         btn.disabled = false;
         btn.innerHTML = '<span class="material-symbols-rounded">cloud_sync</span> Complete with Claude';
-        alert('Cloud completion failed: ' + e.message);
+        const errBanner = document.createElement('div');
+        errBanner.className = 'banner banner-error';
+        errBanner.style.marginTop = '8px';
+        errBanner.innerHTML = `<span class="material-symbols-rounded">error</span>
+          <div>Cloud completion failed: ${escape(e.message)}</div>`;
+        document.getElementById('failed-pages-panel')?.append(errBanner);
       }
     }
 
