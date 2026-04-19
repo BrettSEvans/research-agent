@@ -434,6 +434,41 @@
     }
     .banner .material-symbols-rounded { font-size: 20px; flex-shrink: 0; }
     .banner-error { background: var(--md-error-container); color: var(--md-on-error-container); }
+    .banner-info  { background: var(--md-primary-container); color: var(--md-on-primary-container); }
+
+    /* Failed-pages cloud completion panel */
+    .failed-pages-panel {
+      background: var(--md-warning-container);
+      color: var(--md-on-warning-container);
+      border-radius: var(--md-shape-md);
+      padding: 16px;
+      margin: 16px 0 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .failed-pages-panel .fp-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 500;
+    }
+    .failed-pages-panel .fp-body {
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+    .failed-pages-panel .fp-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .failed-pages-panel .select-field {
+      background: rgba(255,255,255,0.6);
+      border-color: rgba(0,0,0,0.15);
+      flex: 1;
+      min-width: 220px;
+    }
 
     /* ============ Progress ============ */
     .progress {
@@ -1000,6 +1035,7 @@
     const analyzerSelect = document.getElementById('analyzer-model');
 
     let currentContextId = null;
+    let currentFailedPages = [];  // 1-indexed slides the local vision model couldn't process
     let currentFilename = '';
     let lastReport = null;  // accumulated report for download
 
@@ -1348,15 +1384,102 @@
       return html;
     }
 
-    function renderDeepExtraction(ex) {
+    function renderDeepExtraction(ex, failedPages) {
+      failedPages = failedPages || [];
+      currentFailedPages = failedPages;
+
       let html = extractionBody.innerHTML;
       html += buildClaimsAccordion(ex.claims, ex.extraction_notes);
+
+      if (failedPages.length > 0) {
+        const pagesStr = failedPages.join(', ');
+        html += `
+        <div class="failed-pages-panel" id="failed-pages-panel">
+          <div class="fp-header">
+            <span class="material-symbols-rounded">warning</span>
+            ${failedPages.length} slide${failedPages.length > 1 ? 's' : ''} skipped by local model (OOM)
+          </div>
+          <div class="fp-body">
+            Slide${failedPages.length > 1 ? 's' : ''} <strong>${pagesStr}</strong> exceeded the local
+            vision model's memory capacity and could not be processed. Select a cloud model below to
+            extract claims from those pages and merge the results.
+          </div>
+          <div class="fp-actions">
+            <div class="select-field">
+              <label>Complete with cloud model</label>
+              <select id="cloud-complete-model">
+                <option value="claude-haiku-4-5" selected>Claude Haiku 4.5 — fast &amp; cheap</option>
+                <option value="claude-sonnet-4-6">Claude Sonnet 4.6 — balanced</option>
+                <option value="claude-opus-4-6">Claude Opus 4.6 — highest quality</option>
+              </select>
+              <span class="material-symbols-rounded arrow">arrow_drop_down</span>
+            </div>
+            <button class="btn btn-filled" id="complete-with-claude-btn" onclick="completeWithClaude()">
+              <span class="material-symbols-rounded">cloud_sync</span>
+              Complete with Claude
+            </button>
+          </div>
+        </div>`;
+      }
+
       extractionBody.innerHTML = html;
 
       document.getElementById('analysis-config').classList.add('hidden');
       continueExtractBtn.classList.add('hidden');
-      verifyBtn.classList.remove('hidden');
-      document.getElementById('save-btn').classList.remove('hidden');
+
+      if (failedPages.length > 0) {
+        // Don't show compliance/save until the partial extraction is completed
+        verifyBtn.classList.add('hidden');
+        document.getElementById('save-btn').classList.add('hidden');
+      } else {
+        verifyBtn.classList.remove('hidden');
+        document.getElementById('save-btn').classList.remove('hidden');
+      }
+    }
+
+    async function completeWithClaude() {
+      if (!currentContextId || currentFailedPages.length === 0) return;
+
+      const btn = document.getElementById('complete-with-claude-btn');
+      const modelSel = document.getElementById('cloud-complete-model');
+      const cloudModel = modelSel ? modelSel.value : 'claude-haiku-4-5';
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="material-symbols-rounded">hourglass_empty</span> Completing…';
+
+      const fd = new FormData();
+      fd.append('context_id', currentContextId);
+      fd.append('cloud_model', cloudModel);
+      const modules = Array.from(document.querySelectorAll('.metric-cb:checked')).map(cb => cb.value);
+      fd.append('modules', modules.join(','));
+
+      try {
+        const r = await fetch('/extract/complete', { method: 'POST', body: fd });
+        if (!r.ok) throw new Error((await r.json()).detail || 'Cloud completion failed');
+        const data = await r.json();
+
+        // Re-render the extraction body with merged results, no failed pages
+        extractionBody.innerHTML = '';
+        renderBasicExtraction(data.extraction);  // re-render company block
+        renderDeepExtraction(data.extraction, []);  // merged claims, no failures
+
+        // Show a success banner
+        const panel = document.getElementById('failed-pages-panel');
+        if (panel) panel.remove();
+        const successBanner = document.createElement('div');
+        successBanner.className = 'banner banner-info';
+        successBanner.innerHTML = `<span class="material-symbols-rounded">check_circle</span>
+          <div>Cloud completion done — ${data.completed_pages.length} slide(s) merged using ${cloudModel}.</div>`;
+        extractionBody.prepend(successBanner);
+
+        verifyBtn.classList.remove('hidden');
+        document.getElementById('save-btn').classList.remove('hidden');
+        currentFailedPages = [];
+      } catch (e) {
+        btn.disabled = false;
+        btn.innerHTML = '<span class="material-symbols-rounded">cloud_sync</span> Complete with Claude';
+        alert('Cloud completion failed: ' + e.message);
+      }
     }
 
     function updateModulesFromStage(stage) {
@@ -1400,7 +1523,7 @@
         const r = await fetch('/extract/deep', { method: 'POST', body: fd });
         if (!r.ok) throw new Error((await r.json()).detail || 'Deep extraction failed');
         const data = await r.json();
-        renderDeepExtraction(data.extraction);
+        renderDeepExtraction(data.extraction, data.failed_pages || []);
       } catch (e) {
         alert("Deep Extraction Failed: " + e.message);
       } finally {

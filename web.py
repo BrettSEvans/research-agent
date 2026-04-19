@@ -134,10 +134,11 @@ async def extract_deep(
 
     pdf_path = pdf_paths[0]
     requested_metrics = modules.split(",") if modules else None
+    failed_path = CONTEXT_DIR / f"deck_{context_id}_failed.json"
 
     try:
         client = anthropic.Anthropic()
-        extraction = extract_from_pdf(
+        extraction, failed_pages = extract_from_pdf(
             pdf_path,
             client=client,
             model=extractor_model,
@@ -147,10 +148,17 @@ async def extract_deep(
         pdf_path.unlink(missing_ok=True)
         raise HTTPException(status_code=500, detail=f"Deep extraction failed: {exc}") from exc
 
-    # Save full context and clean up the uploaded PDF
+    # Save full context
     context = DeckContext(extraction)
     context.save(context_path)
-    pdf_path.unlink(missing_ok=True)
+
+    if failed_pages:
+        # Keep the PDF so /extract/complete can send failed pages to a cloud model
+        failed_path.write_text(json.dumps({"failed_pages": failed_pages}))
+    else:
+        # No failures — clean up the PDF and any stale sidecar
+        pdf_path.unlink(missing_ok=True)
+        failed_path.unlink(missing_ok=True)
 
     return JSONResponse(
         {
@@ -158,8 +166,113 @@ async def extract_deep(
             "context_path": str(context_path),
             "extraction": extraction.model_dump(),
             "extractor_version": EXTRACTOR_VERSION,
+            "failed_pages": failed_pages,
         }
     )
+
+
+@app.post("/extract/complete")
+async def extract_complete(
+    context_id: Annotated[str, Form()],
+    cloud_model: Annotated[str, Form()] = "claude-haiku-4-5",
+    modules: Annotated[str | None, Form()] = None,
+):
+    """Complete a partial vision extraction by sending failed pages to a cloud model.
+
+    When a local vision model (e.g. llama3.2-vision) cannot process certain slides
+    due to memory limits, those page numbers are recorded in a sidecar file. This
+    endpoint reads that sidecar, sends the failed pages to a Claude model, merges
+    the results into the existing DeckExtraction, and saves the merged context.
+    """
+    context_path = CONTEXT_DIR / f"deck_{context_id}.json"
+    failed_path = CONTEXT_DIR / f"deck_{context_id}_failed.json"
+
+    if not context_path.exists():
+        raise HTTPException(status_code=404, detail=f"Unknown context_id: {context_id}")
+    if not failed_path.exists():
+        raise HTTPException(status_code=400, detail="No failed-page sidecar found for this context.")
+
+    pdf_paths = list(UPLOADS.glob(f"{context_id}_*.pdf"))
+    if not pdf_paths:
+        raise HTTPException(
+            status_code=404,
+            detail="PDF not found — it may have already been deleted. Re-upload the deck and try again.",
+        )
+
+    if cloud_model not in ALLOWED_MODELS:
+        raise HTTPException(status_code=400, detail=f"Unknown model: {cloud_model}")
+
+    pdf_path = pdf_paths[0]
+    failed_data = json.loads(failed_path.read_text())
+    failed_pages: list[int] = failed_data.get("failed_pages", [])
+
+    if not failed_pages:
+        failed_path.unlink(missing_ok=True)
+        raise HTTPException(status_code=400, detail="Failed-page sidecar is empty — nothing to complete.")
+
+    requested_metrics = modules.split(",") if modules else None
+
+    try:
+        client = anthropic.Anthropic()
+        from extractor import extract_failed_pages_with_claude, DeckExtraction
+
+        # Extract the failed pages with the cloud model
+        cloud_extraction = extract_failed_pages_with_claude(
+            pdf_path=pdf_path,
+            page_indices=failed_pages,
+            client=client,
+            model=cloud_model,
+            requested_metrics=requested_metrics,
+        )
+
+        # Load and merge with the existing partial extraction
+        existing_context = DeckContext.load(context_path)
+        ex = existing_context.extraction
+
+        merged_claims = ex.claims + cloud_extraction.claims
+
+        seen_metrics: set[str] = {m.metric_name for m in ex.key_metrics}
+        merged_metrics = list(ex.key_metrics)
+        for m in cloud_extraction.key_metrics:
+            if m.metric_name not in seen_metrics:
+                seen_metrics.add(m.metric_name)
+                merged_metrics.append(m)
+
+        pages_str = ", ".join(str(p) for p in sorted(failed_pages))
+        merged_notes = "\n\n".join(filter(None, [
+            ex.extraction_notes,
+            f"[Cloud completion · slides {pages_str} via {cloud_model}] {cloud_extraction.extraction_notes}",
+        ]))
+
+        merged_extraction = DeckExtraction(
+            company=ex.company,
+            claims=merged_claims,
+            fiscal_year_end=ex.fiscal_year_end or cloud_extraction.fiscal_year_end,
+            currency=ex.currency or cloud_extraction.currency,
+            stage_assessment=ex.stage_assessment or cloud_extraction.stage_assessment,
+            key_metrics=merged_metrics,
+            extraction_notes=merged_notes,
+        )
+
+        # Persist merged context
+        merged_context = DeckContext(merged_extraction)
+        merged_context.save(context_path)
+
+        # Clean up sidecar and PDF
+        failed_path.unlink(missing_ok=True)
+        pdf_path.unlink(missing_ok=True)
+
+        return JSONResponse(
+            {
+                "context_id": context_id,
+                "extraction": merged_extraction.model_dump(),
+                "extractor_version": EXTRACTOR_VERSION,
+                "completed_pages": failed_pages,
+            }
+        )
+
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Cloud completion failed: {exc}") from exc
 
 
 @app.post("/verify/stream")

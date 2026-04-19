@@ -353,8 +353,13 @@ def extract_from_pdf(
     client: anthropic.Anthropic | None = None,
     model: str | None = None,
     requested_metrics: list[str] | None = None,
-) -> DeckExtraction:
+) -> tuple[DeckExtraction, list[int]]:
     """Extract structured deck information from a PDF file.
+
+    Returns a ``(DeckExtraction, failed_pages)`` tuple. ``failed_pages`` is a
+    list of 1-indexed slide numbers that the local vision model could not
+    process (OOM on a single-image batch). These pages should be sent to a
+    cloud model via ``extract_failed_pages_with_claude()``.
 
     Routes to Ollama for local (qwen/llama/...) models — which are text-only,
     so page text is extracted with pypdf first. Claude models receive the
@@ -383,6 +388,8 @@ def extract_from_pdf(
         print(f"[ollama-vision] {total} slide(s) → {len(queue)} batch(es) of ≤{initial_batch}")
 
         results: list[DeckExtraction] = []
+        failed_pages: list[int] = []
+
         while queue:
             start_idx, batch_imgs = queue.pop(0)
             start_slide = start_idx + 1
@@ -406,14 +413,35 @@ def extract_from_pdf(
                 )
                 results.append(result)
             except RuntimeError as exc:
-                if "ollama-vision-500" not in str(exc) or len(batch_imgs) <= 1:
+                if "ollama-vision-500" not in str(exc):
                     raise
-                # Still OOM after halving to 1 image — re-queue as two halves
-                mid = len(batch_imgs) // 2
-                queue.insert(0, (start_idx + mid, batch_imgs[mid:]))
-                queue.insert(0, (start_idx, batch_imgs[:mid]))
+                if len(batch_imgs) <= 1:
+                    # Single page OOM — skip gracefully; will be completed by cloud model
+                    failed_pages.append(start_slide)
+                    print(
+                        f"[ollama-vision] ⚠ Slide {start_slide} OOM on single page "
+                        "— skipped for cloud LLM fallback"
+                    )
+                else:
+                    # Multi-page OOM — split and re-queue as halves
+                    mid = len(batch_imgs) // 2
+                    queue.insert(0, (start_idx + mid, batch_imgs[mid:]))
+                    queue.insert(0, (start_idx, batch_imgs[:mid]))
 
-        return _merge_deck_extractions(results, initial_batch)
+        if not results:
+            raise RuntimeError(
+                f"Vision extraction failed: all {total} pages exceeded local model capacity. "
+                "Please use a Claude model (Haiku or Sonnet) which can read image-based PDFs natively."
+            )
+
+        if failed_pages:
+            pages_str = ", ".join(str(p) for p in failed_pages)
+            print(
+                f"[ollama-vision] ✓ Extraction complete — {len(failed_pages)} page(s) "
+                f"skipped for cloud fallback: slides {pages_str}"
+            )
+
+        return _merge_deck_extractions(results, initial_batch), failed_pages
 
     # --- Text-only local (Ollama) and Inception: pre-extract text with pypdf ---
     if llm_local.is_local_model(model) or llm_inception.is_inception_model(model):
@@ -432,7 +460,7 @@ def extract_from_pdf(
             system=SYSTEM_PROMPT,
             user_content=user_content,
             output_format=DeckExtraction,
-        )
+        ), []
 
     # --- Anthropic path: native PDF support ---
     client = client or anthropic.Anthropic()
@@ -461,6 +489,77 @@ def extract_from_pdf(
                         "text": (
                             "Extract the structured pitch deck information. "
                             "Include every falsifiable claim with its slide number and verbatim quote. "
+                            f"{metrics_str}"
+                        ),
+                    },
+                ],
+            }
+        ],
+        output_format=DeckExtraction,
+    )
+    return response.parsed_output, []
+
+
+def extract_failed_pages_with_claude(
+    pdf_path: str | Path,
+    page_indices: list[int],
+    client: anthropic.Anthropic | None = None,
+    model: str = "claude-haiku-4-5",
+    requested_metrics: list[str] | None = None,
+) -> DeckExtraction:
+    """Extract claims from specific pages using Claude's native PDF support.
+
+    Used to complete a partial vision extraction where some pages could not be
+    processed by the local model (OOM). Claude receives the full PDF but is
+    instructed to extract claims only from the listed pages.
+
+    Args:
+        pdf_path: Path to the PDF file (must still be on disk).
+        page_indices: 1-indexed slide numbers to extract from.
+        client: Anthropic client (created if None).
+        model: Claude model to use (Haiku recommended for cost).
+        requested_metrics: Optional list of specific metric names to extract.
+
+    Returns:
+        DeckExtraction with claims scoped to the requested pages.
+    """
+    client = client or anthropic.Anthropic()
+    pdf_bytes = Path(pdf_path).read_bytes()
+    b64 = base64.standard_b64encode(pdf_bytes).decode("utf-8")
+
+    metrics_str = "No specific metrics requested."
+    if requested_metrics:
+        metrics_str = (
+            "Please extract the following specific metrics if present: "
+            + ", ".join(requested_metrics)
+        )
+
+    pages_str = ", ".join(str(p) for p in sorted(page_indices))
+
+    response = client.messages.parse(
+        model=model,
+        max_tokens=8000,
+        system=SYSTEM_PROMPT,
+        **_thinking_kwargs(model),
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "document",
+                        "source": {
+                            "type": "base64",
+                            "media_type": "application/pdf",
+                            "data": b64,
+                        },
+                    },
+                    {
+                        "type": "text",
+                        "text": (
+                            f"Extract structured pitch deck information from pages {pages_str} ONLY. "
+                            "These specific pages could not be processed by the local vision model "
+                            "and need cloud-based extraction. "
+                            "For each claim, include the correct absolute slide number and a verbatim quote. "
                             f"{metrics_str}"
                         ),
                     },
