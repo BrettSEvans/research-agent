@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign in — VC Compliance Pipeline</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Rounded" rel="stylesheet">
+  <style>
+    :root {
+      --md-primary: #0B57D0;
+      --md-on-primary: #FFFFFF;
+      --md-surface: #FDFCFF;
+      --md-surface-container-low: #F7F6FA;
+      --md-surface-container: #F1F0F4;
+      --md-on-surface: #1A1C1E;
+      --md-on-surface-variant: #43474E;
+      --md-outline-variant: #C3C7CF;
+      --md-error: #BA1A1A;
+      --md-error-container: #FFDAD6;
+      --md-on-error-container: #410002;
+      --md-shape-sm: 8px;
+      --md-shape-lg: 16px;
+      --md-shape-xl: 28px;
+      --md-elev-1: 0 1px 2px 0 rgba(0,0,0,.05), 0 1px 3px 1px rgba(0,0,0,.08);
+      --md-elev-3: 0 4px 8px 3px rgba(0,0,0,.10), 0 1px 3px 0 rgba(0,0,0,.12);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      background: var(--md-surface-container-low);
+      font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 14px;
+      color: var(--md-on-surface);
+      -webkit-font-smoothing: antialiased;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--md-surface);
+      border-radius: var(--md-shape-xl);
+      box-shadow: var(--md-elev-3);
+      padding: 40px 48px 48px;
+      width: 100%;
+      max-width: 420px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+
+    /* ── Brand mark ── */
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .brand .material-symbols-rounded {
+      font-size: 36px;
+      color: var(--md-primary);
+    }
+    .brand-text h1 {
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: var(--md-on-surface);
+      line-height: 1.2;
+    }
+    .brand-text p {
+      font-size: 0.78rem;
+      color: var(--md-on-surface-variant);
+      margin-top: 2px;
+    }
+
+    /* ── Divider ── */
+    hr {
+      width: 100%;
+      border: none;
+      border-top: 1px solid var(--md-outline-variant);
+      margin-bottom: 28px;
+    }
+
+    /* ── Headline ── */
+    h2 {
+      font-size: 1.4rem;
+      font-weight: 400;
+      color: var(--md-on-surface);
+      margin-bottom: 6px;
+      text-align: center;
+    }
+    .subtitle {
+      font-size: 0.875rem;
+      color: var(--md-on-surface-variant);
+      text-align: center;
+      margin-bottom: 32px;
+      line-height: 1.5;
+    }
+
+    /* ── Google button ── */
+    .btn-google {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+      padding: 12px 24px;
+      border: 1.5px solid var(--md-outline-variant);
+      border-radius: var(--md-shape-sm);
+      background: var(--md-surface);
+      color: var(--md-on-surface);
+      font-family: inherit;
+      font-size: 0.9375rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s, box-shadow 0.15s;
+    }
+    .btn-google:hover {
+      background: var(--md-surface-container-low);
+      box-shadow: var(--md-elev-1);
+    }
+    .btn-google svg { flex-shrink: 0; }
+
+    /* ── Error banner ── */
+    .error-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      background: var(--md-error-container);
+      color: var(--md-on-error-container);
+      border-radius: var(--md-shape-sm);
+      padding: 12px 16px;
+      font-size: 0.875rem;
+      line-height: 1.5;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+    .error-banner .material-symbols-rounded { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+    /* ── Footer note ── */
+    .note {
+      margin-top: 28px;
+      font-size: 0.75rem;
+      color: var(--md-on-surface-variant);
+      text-align: center;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+
+    <div class="brand">
+      <span class="material-symbols-rounded">policy</span>
+      <div class="brand-text">
+        <h1>VC Compliance Pipeline</h1>
+        <p>Pitch deck extraction &amp; SEC cross-reference</p>
+      </div>
+    </div>
+
+    <hr>
+
+    <h2>Sign in</h2>
+    <p class="subtitle">Access is restricted to authorised users.</p>
+
+    {% set error_map = {
+      "domain_not_allowed": "Your email domain isn't on the allowed list. Contact the admin.",
+      "state_mismatch":     "Security check failed — please try signing in again.",
+      "access_denied":      "Sign-in was cancelled.",
+    } %}
+    {% set error_msg = request.query_params.get("error", "") %}
+    {% if error_msg %}
+    <div class="error-banner">
+      <span class="material-symbols-rounded">error</span>
+      <span>{{ error_map.get(error_msg, error_msg) }}</span>
+    </div>
+    {% endif %}
+
+    {% if google_enabled %}
+    <a class="btn-google" href="/auth/google">
+      <!-- Google "G" logo -->
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="20" height="20">
+        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+      </svg>
+      Continue with Google
+    </a>
+    {% else %}
+    <div class="error-banner">
+      <span class="material-symbols-rounded">settings</span>
+      <span>Google SSO is not configured on this server. Set <strong>GOOGLE_CLIENT_ID</strong> and <strong>GOOGLE_CLIENT_SECRET</strong> environment variables.</span>
+    </div>
+    {% endif %}
+
+    <p class="note">
+      By signing in you agree to use this tool<br>for authorised research purposes only.
+    </p>
+  </div>
+
+</body>
+</html>

@@ -14,19 +14,25 @@ Run:
 from __future__ import annotations
 
 import base64
+import hashlib
+import hmac
 import json
 import os
+import secrets
 import tempfile
+import time
+import urllib.parse
 import uuid
 from pathlib import Path
 from typing import Annotated
 
 import anthropic
+import httpx
 from dotenv import load_dotenv
 from datetime import datetime, timezone
 
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import HTMLResponse, JSONResponse, Response, StreamingResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response, StreamingResponse
 from fastapi.templating import Jinja2Templates
 
 from agent import iter_compliance_report, run_compliance_report, SAVED_REPORTS_DIR
@@ -48,24 +54,119 @@ app = FastAPI(title="VC Pitch Deck + Compliance")
 templates = Jinja2Templates(directory=str(BASE / "templates"))
 
 
-# ───────────────────────── auth + BYOK helpers ────────────────────────────
+# ───────────────────────── auth configuration ─────────────────────────────
+
+# Shared-password Basic Auth (fallback / API clients)
+_BASIC_USER = os.environ.get("BASIC_AUTH_USER", "")
+_BASIC_PASS = os.environ.get("BASIC_AUTH_PASSWORD", "")
+
+# Google OAuth2
+GOOGLE_CLIENT_ID     = os.environ.get("GOOGLE_CLIENT_ID", "")
+GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
+# Public URL of this deployment — used to build the OAuth callback URL.
+# Example: https://myapp.railway.app   (no trailing slash)
+BASE_URL = os.environ.get("BASE_URL", "http://localhost:8000").rstrip("/")
+# Optional comma-separated list of allowed email domains, e.g. "acme.com,partner.io"
+_ALLOWED_DOMAINS = {
+    d.strip().lower()
+    for d in os.environ.get("ALLOWED_EMAIL_DOMAINS", "").split(",")
+    if d.strip()
+}
+
+# Session cookie — HMAC-signed JSON, no extra dependencies
+SECRET_KEY       = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
+SESSION_COOKIE   = "vc_session"
+SESSION_MAX_AGE  = 86400 * 30   # 30 days
+_SECURE_COOKIES  = BASE_URL.startswith("https://")
+
+GOOGLE_AUTH_URL     = "https://accounts.google.com/o/oauth2/v2/auth"
+GOOGLE_TOKEN_URL    = "https://oauth2.googleapis.com/token"
+GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
+
+
+# ── Session helpers ────────────────────────────────────────────────────────
+
+def _sign_session(payload: dict) -> str:
+    """Return a compact, HMAC-signed token encoding *payload* + expiry."""
+    body = {**payload, "exp": int(time.time()) + SESSION_MAX_AGE}
+    data = base64.urlsafe_b64encode(
+        json.dumps(body, separators=(",", ":")).encode()
+    ).rstrip(b"=").decode()
+    sig = hmac.new(SECRET_KEY.encode(), data.encode(), hashlib.sha256).hexdigest()
+    return f"{data}.{sig}"
+
+
+def _load_session(token: str) -> dict | None:
+    """Verify and decode a session token; returns None if invalid / expired."""
+    try:
+        data, sig = token.rsplit(".", 1)
+        expected = hmac.new(SECRET_KEY.encode(), data.encode(), hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(sig, expected):
+            return None
+        # Restore padding before decoding
+        payload = json.loads(base64.urlsafe_b64decode(data + "=="))
+        if payload.get("exp", 0) < time.time():
+            return None
+        return payload
+    except Exception:
+        return None
+
+
+def _check_basic_auth(request: Request) -> bool:
+    """Return True when a valid Basic Auth header is present."""
+    if not (_BASIC_USER and _BASIC_PASS):
+        return False
+    auth = request.headers.get("Authorization", "")
+    if not auth.startswith("Basic "):
+        return False
+    try:
+        decoded = base64.b64decode(auth[6:]).decode("utf-8")
+        u, p = decoded.split(":", 1)
+        return u == _BASIC_USER and p == _BASIC_PASS
+    except Exception:
+        return False
+
+
+# ── Auth middleware ────────────────────────────────────────────────────────
 
 @app.middleware("http")
-async def basic_auth_middleware(request: Request, call_next):
-    """HTTP Basic Auth gate.  Set BASIC_AUTH_USER + BASIC_AUTH_PASSWORD to enable."""
-    _user = os.environ.get("BASIC_AUTH_USER", "")
-    _pass = os.environ.get("BASIC_AUTH_PASSWORD", "")
-    if not _user or not _pass:          # Auth not configured → open access
+async def auth_middleware(request: Request, call_next):
+    """Unified auth gate: Google session cookie OR HTTP Basic Auth.
+
+    Rules:
+    - If neither Google SSO nor Basic Auth is configured → open access.
+    - /auth/* routes are always allowed (login, callback, logout).
+    - Static assets (fonts, icons) are always allowed.
+    - Valid Google session cookie → allow.
+    - Valid Basic Auth header → allow (useful for API / curl access).
+    - Otherwise: browser → redirect to /auth/login; API → 401.
+    """
+    google_enabled = bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
+    auth_required  = google_enabled or bool(_BASIC_USER and _BASIC_PASS)
+
+    if not auth_required:
         return await call_next(request)
-    auth = request.headers.get("Authorization", "")
-    if auth.startswith("Basic "):
-        try:
-            decoded = base64.b64decode(auth[6:]).decode("utf-8")
-            u, p = decoded.split(":", 1)
-            if u == _user and p == _pass:
-                return await call_next(request)
-        except Exception:
-            pass
+
+    path = request.url.path
+    # Auth routes and health-check are always public
+    if path.startswith("/auth") or path in ("/favicon.ico",):
+        return await call_next(request)
+
+    # 1. Google session cookie
+    if google_enabled:
+        token = request.cookies.get(SESSION_COOKIE, "")
+        if token and _load_session(token):
+            return await call_next(request)
+
+    # 2. HTTP Basic Auth header (API clients / curl)
+    if _check_basic_auth(request):
+        return await call_next(request)
+
+    # 3. Not authenticated
+    accept = request.headers.get("Accept", "")
+    if google_enabled and "text/html" in accept:
+        return RedirectResponse(url="/auth/login", status_code=302)
+
     return Response(
         status_code=401,
         headers={"WWW-Authenticate": 'Basic realm="VC Compliance"'},
@@ -97,6 +198,107 @@ def get_session_dirs(request: Request) -> tuple[Path, Path]:
     context.mkdir(parents=True, exist_ok=True)
     return uploads, context
 
+
+# ───────────────────────── Google SSO routes ──────────────────────────────
+
+@app.get("/auth/login", response_class=HTMLResponse)
+async def login_page(request: Request):
+    return templates.TemplateResponse(request=request, name="login.html", context={
+        "google_enabled": bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET),
+    })
+
+
+@app.get("/auth/google")
+async def google_login(request: Request):
+    if not (GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET):
+        raise HTTPException(status_code=503, detail="Google SSO is not configured.")
+    state = secrets.token_urlsafe(20)
+    params = {
+        "client_id":     GOOGLE_CLIENT_ID,
+        "redirect_uri":  f"{BASE_URL}/auth/google/callback",
+        "response_type": "code",
+        "scope":         "openid email profile",
+        "state":         state,
+        "access_type":   "online",
+        "prompt":        "select_account",
+    }
+    url = GOOGLE_AUTH_URL + "?" + urllib.parse.urlencode(params)
+    resp = RedirectResponse(url=url, status_code=302)
+    resp.set_cookie("oauth_state", state, max_age=600, httponly=True,
+                    samesite="lax", secure=_SECURE_COOKIES)
+    return resp
+
+
+@app.get("/auth/google/callback")
+async def google_callback(request: Request, code: str = "", state: str = "", error: str = ""):
+    if error:
+        return RedirectResponse(url=f"/auth/login?error={urllib.parse.quote(error)}", status_code=302)
+
+    stored_state = request.cookies.get("oauth_state", "")
+    if not stored_state or not hmac.compare_digest(stored_state, state):
+        return RedirectResponse(url="/auth/login?error=state_mismatch", status_code=302)
+
+    try:
+        async with httpx.AsyncClient() as client:
+            tok = await client.post(GOOGLE_TOKEN_URL, data={
+                "client_id":     GOOGLE_CLIENT_ID,
+                "client_secret": GOOGLE_CLIENT_SECRET,
+                "code":          code,
+                "grant_type":    "authorization_code",
+                "redirect_uri":  f"{BASE_URL}/auth/google/callback",
+            }, headers={"Accept": "application/json"})
+            tok.raise_for_status()
+            access_token = tok.json().get("access_token", "")
+
+            info = await client.get(GOOGLE_USERINFO_URL,
+                                    headers={"Authorization": f"Bearer {access_token}"})
+            info.raise_for_status()
+            userinfo = info.json()
+    except Exception as exc:
+        return RedirectResponse(
+            url=f"/auth/login?error={urllib.parse.quote(str(exc))}", status_code=302
+        )
+
+    email: str = userinfo.get("email", "")
+    if _ALLOWED_DOMAINS and email.split("@")[-1].lower() not in _ALLOWED_DOMAINS:
+        return RedirectResponse(url="/auth/login?error=domain_not_allowed", status_code=302)
+
+    session_payload = {
+        "email":   email,
+        "name":    userinfo.get("name", email),
+        "picture": userinfo.get("picture", ""),
+    }
+    token = _sign_session(session_payload)
+    resp  = RedirectResponse(url="/", status_code=302)
+    resp.set_cookie(SESSION_COOKIE, token, max_age=SESSION_MAX_AGE,
+                    httponly=True, samesite="lax", secure=_SECURE_COOKIES)
+    resp.delete_cookie("oauth_state")
+    return resp
+
+
+@app.get("/auth/logout")
+async def logout():
+    resp = RedirectResponse(url="/auth/login", status_code=302)
+    resp.delete_cookie(SESSION_COOKIE)
+    return resp
+
+
+@app.get("/auth/me")
+async def auth_me(request: Request):
+    """Return the current user's info (or null) — polled by the frontend."""
+    token = request.cookies.get(SESSION_COOKIE, "")
+    if token:
+        session = _load_session(token)
+        if session:
+            return JSONResponse({
+                "email":   session.get("email"),
+                "name":    session.get("name"),
+                "picture": session.get("picture"),
+            })
+    return JSONResponse(None)
+
+
+# ───────────────────────── main app routes ────────────────────────────────
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):

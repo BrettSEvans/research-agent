@@ -777,9 +777,24 @@
 
   <header class="app-bar">
     <span class="material-symbols-rounded icon-big">policy</span>
-    <div>
+    <div style="flex:1;">
       <h1>VC Compliance Pipeline</h1>
       <div class="subtitle">Pitch deck extraction → SEC filing cross-reference → discrepancy report</div>
+    </div>
+    <!-- User widget — populated by fetchCurrentUser() on load -->
+    <div id="user-widget" style="display:none; align-items:center; gap:10px;">
+      <img id="user-avatar" src="" alt="" width="32" height="32"
+           style="border-radius:50%; object-fit:cover; border:2px solid var(--md-outline-variant);" />
+      <div style="display:flex; flex-direction:column; align-items:flex-end; line-height:1.3;">
+        <span id="user-name"  style="font-size:0.8rem; font-weight:500; color:var(--md-on-surface);"></span>
+        <span id="user-email" style="font-size:0.7rem; color:var(--md-on-surface-variant);"></span>
+      </div>
+      <a href="/auth/logout" title="Sign out"
+         style="display:flex; align-items:center; color:var(--md-on-surface-variant); text-decoration:none; padding:4px; border-radius:50%; transition:background .15s;"
+         onmouseover="this.style.background='var(--md-surface-container-high)'"
+         onmouseout="this.style.background='transparent'">
+        <span class="material-symbols-rounded" style="font-size:20px;">logout</span>
+      </a>
     </div>
   </header>
 
@@ -1085,11 +1100,35 @@
       return h;
     }
 
-    // Restore BYOK key input on page load
+    // Restore BYOK key input and fetch current user on page load
     document.addEventListener('DOMContentLoaded', () => {
       const k = getByokKey();
       if (k) document.getElementById('byok-key').value = k;
+      fetchCurrentUser();
     });
+
+    /** Populate the app-bar user widget if the user is logged in via Google SSO. */
+    async function fetchCurrentUser() {
+      try {
+        const resp = await fetch('/auth/me', { headers: apiHeaders() });
+        if (!resp.ok) return;
+        const user = await resp.json();
+        if (!user || !user.email) return;
+
+        const widget = document.getElementById('user-widget');
+        document.getElementById('user-name').textContent  = user.name  || user.email;
+        document.getElementById('user-email').textContent = user.email || '';
+
+        const avatar = document.getElementById('user-avatar');
+        if (user.picture) {
+          avatar.src = user.picture;
+          avatar.style.display = 'block';
+        } else {
+          avatar.style.display = 'none';
+        }
+        widget.style.display = 'flex';
+      } catch (_) { /* SSO not enabled or network error — silently skip */ }
+    }
 
     // ── Navigation ─────────────────────────────────────────────────────────
     function showDashboard() {
