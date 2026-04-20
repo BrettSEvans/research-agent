@@ -771,9 +771,53 @@
     .metric-badge.high { background: var(--md-success-container); color: var(--md-on-success-container); }
     .metric-badge.med { background: var(--md-warning-container); color: var(--md-on-warning-container); }
     .metric-badge.low { background: var(--md-error-container); color: var(--md-on-error-container); }
+
+    /* ── Toast / snackbar notifications ─────────────────────────────────── */
+    #toast-container {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+    .toast {
+      background: var(--md-error-container, #ffdad6);
+      color: var(--md-on-error-container, #410002);
+      padding: 12px 16px;
+      border-radius: var(--md-shape-sm, 8px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 280px;
+      max-width: 520px;
+      pointer-events: auto;
+      animation: toast-in 200ms ease-out;
+    }
+    .toast .toast-msg { flex: 1; font-size: 0.9rem; line-height: 1.4; }
+    .toast .close-btn {
+      background: transparent;
+      border: 0;
+      cursor: pointer;
+      color: inherit;
+      margin-left: auto;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+    }
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
   </style>
 </head>
 <body>
+
+  <div id="toast-container" aria-live="polite"></div>
 
   <header class="app-bar">
     <span class="material-symbols-rounded icon-big">policy</span>
@@ -848,76 +892,28 @@
         </button>
       </div>
 
-      <!-- Model selection -->
-      <section class="card elevated">
-        <div class="card-header">
-          <span class="material-symbols-rounded" style="color: var(--md-primary)">tune</span>
-          <h2>Model configuration</h2>
-        </div>
-        <div class="row">
-          <div class="select-field">
-            <label for="extractor-model">Extractor model</label>
-            <select id="extractor-model">
-              <option value="claude-haiku-4-5" selected>Claude Haiku 4.5 — fast, cheap, structured extraction</option>
-              <option value="claude-sonnet-4-6">Claude Sonnet 4.6 — balanced; better on image-heavy decks</option>
-              <option value="claude-opus-4-6">Claude Opus 4.6 — highest quality; slower and pricier</option>
-              <option disabled>── Inception Labs ──</option>
-              <option value="mercury-2">Mercury 2 — Inception dLLM; fast, 10M free tokens to start</option>
-              <option disabled>── Local (Ollama) · Vision ──</option>
-              <option value="llama3.2-vision:11b">Llama 3.2 Vision 11B — reads image-based PDFs</option>
-              <option value="gemma4:latest">Gemma 4 (local, Ollama) — vision; reads image-based PDFs</option>
-              <option disabled>── Local (Ollama) · Text-only ──</option>
-              <option value="qwen3.5:9b">Qwen 3.5 9B — text-only; PDF parsed via pypdf</option>
-            </select>
-            <span class="material-symbols-rounded arrow">arrow_drop_down</span>
-          </div>
-          <div class="select-field">
-            <label for="analyzer-model">Analyzer model</label>
-            <select id="analyzer-model">
-              <option value="claude-sonnet-4-6" selected>Claude Sonnet 4.6 — adaptive thinking, recommended</option>
-              <option value="claude-opus-4-6">Claude Opus 4.6 — deepest reasoning; best for subtle contradictions</option>
-              <option value="claude-haiku-4-5">Claude Haiku 4.5 — cheapest; may miss nuanced contradictions</option>
-              <option disabled>── Inception Labs ──</option>
-              <option value="mercury-2">Mercury 2 — Inception dLLM; web search via DuckDuckGo feed-in</option>
-              <option disabled>── Local (Ollama) ──</option>
-              <option value="qwen3.5:9b">Qwen 3.5 9B (local, Ollama) — web search via DuckDuckGo feed-in</option>
-            </select>
-            <span class="material-symbols-rounded arrow">arrow_drop_down</span>
-          </div>
-        </div>
-        <p class="field-help">
-          Extraction is mechanical — Haiku is usually enough. Analysis requires reasoning about contradictions and forward-looking statements — Sonnet or Opus recommended.
-        </p>
-        <div class="row" style="margin-top: 16px;">
-          <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
-            <label for="byok-key" style="font-size: 0.75rem; font-weight: 500; color: var(--md-on-surface-variant); text-transform: uppercase; letter-spacing: 0.5px;">
-              Anthropic API Key <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional — overrides server key)</span>
-            </label>
-            <input id="byok-key" type="password" placeholder="sk-ant-…"
-              style="font-family: 'Roboto Mono', monospace; font-size: 0.85rem; padding: 10px 12px; border: 1px solid var(--md-outline-variant); border-radius: var(--md-shape-sm); background: var(--md-surface-container-lowest); color: var(--md-on-surface); outline: none; width: 100%;"
-              oninput="saveByokKey(this.value)" />
-            <p style="margin: 2px 0 0; font-size: 0.75rem; color: var(--md-on-surface-variant);">
-              Your key is stored only in your browser (localStorage) and sent directly to this server — never shared.
-            </p>
-          </div>
-        </div>
-      </section>
-
     <!-- Step 1: Upload -->
     <section class="card elevated">
       <div class="card-header">
         <span class="step-badge">1</span>
         <h2>Upload pitch deck</h2>
       </div>
-      <p class="card-subtitle">PDF format. The extractor captures verbatim claims only — no analysis, no fabrication.</p>
+      <p class="card-subtitle">Supports PDF, PowerPoint (.ppt, .pptx), Word (.doc, .docx), and Excel (.xlsx). The extractor captures verbatim claims only — no analysis, no fabrication.</p>
       <label class="dropzone" id="dropzone">
-        <input type="file" id="file" accept="application/pdf" />
+        <input type="file" id="file" accept=".pdf,.ppt,.pptx,.doc,.docx,.xlsx" />
         <div id="dz-text">
           <span class="material-symbols-rounded icon">upload_file</span>
-          <div><strong>Click or drop a PDF here</strong></div>
-          <div class="hint">Null fields indicate the deck did not state that value.</div>
+          <div><strong>Click or drop a file here</strong></div>
+          <div class="hint">PDF, PowerPoint, Word, or Excel • Null fields indicate the deck did not state that value.</div>
         </div>
       </label>
+
+      <div style="margin-top: 16px;">
+        <button type="button" id="google-slides-btn" onclick="startGoogleSlidesAuth()" class="btn btn-secondary" style="gap: 8px; display: flex; align-items: center;">
+          <span class="material-symbols-rounded">language</span>
+          <span>Upload from Google Slides</span>
+        </button>
+      </div>
     </section>
 
     <!-- Step 2: Extraction -->
@@ -1059,8 +1055,10 @@
     const continueExtractBtn = document.getElementById('continue-extract-btn');
     const verifyBtn = document.getElementById('verify-btn');
     const cancelVerifyBtn = document.getElementById('cancel-verify-btn');
-    const extractorSelect = document.getElementById('extractor-model');
-    const analyzerSelect = document.getElementById('analyzer-model');
+    // Hardcoded models — BYOK + model dropdowns removed. All Anthropic usage
+    // runs on the server-side ANTHROPIC_API_KEY env var.
+    const EXTRACTOR_MODEL = 'claude-sonnet-4-6';
+    const ANALYZER_MODEL  = 'claude-sonnet-4-6';
 
     let currentContextId = null;
     let currentFailedPages = [];  // 1-indexed slides the local vision model couldn't process
@@ -1068,7 +1066,7 @@
     let currentFilename = '';
     let lastReport = null;  // accumulated report for download
 
-    // ── Session + BYOK helpers ──────────────────────────────────────────────
+    // ── Session helpers ─────────────────────────────────────────────────────
 
     /** Return (or create) a stable UUID for this browser session. */
     function getSessionId() {
@@ -1080,32 +1078,130 @@
       return sid;
     }
 
-    /** Persist the user's Anthropic key and pre-fill the input on load. */
-    function saveByokKey(val) {
-      if (val) localStorage.setItem('byok_anthropic_key', val);
-      else localStorage.removeItem('byok_anthropic_key');
+    /** Headers to attach to every fetch() call. The Anthropic API key is
+     *  server-side only — never passed through the browser. */
+    function apiHeaders() {
+      return { 'X-Session-ID': getSessionId() };
     }
 
-    function getByokKey() {
-      return localStorage.getItem('byok_anthropic_key') || '';
+    // ── Toast / snackbar helper ─────────────────────────────────────────────
+
+    /**
+     * Show a dismissable error snackbar at the bottom of the page.
+     * @param {string} message - text to show
+     * @param {{duration?: number, variant?: string}} [opts]
+     */
+    function showToast(message, { duration = 6000, variant = 'error' } = {}) {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${variant}`;
+      toast.innerHTML = `
+        <span class="material-symbols-rounded">error</span>
+        <span class="toast-msg"></span>
+        <button class="close-btn" aria-label="Dismiss">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+      `;
+      toast.querySelector('.toast-msg').textContent = message;
+      const remove = () => toast.remove();
+      toast.querySelector('.close-btn').onclick = remove;
+      container.appendChild(toast);
+      if (duration > 0) setTimeout(remove, duration);
+    }
+
+    // ── Google Slides OAuth2 integration ──────────────────────────────────
+
+    /**
+     * Start Google Slides OAuth2 flow.
+     * User is redirected to Google login, then back to /auth/google/slides-callback
+     */
+    function startGoogleSlidesAuth() {
+      window.location.href = '/auth/google/slides-auth';
     }
 
     /**
-     * Returns a headers object to attach to every fetch() call.
-     * Only sets X-Anthropic-API-Key when the user has provided a key.
+     * Handle OAuth2 callback: check for token in URL and save to localStorage
      */
-    function apiHeaders() {
-      const h = { 'X-Session-ID': getSessionId() };
-      const key = getByokKey();
-      if (key) h['X-Anthropic-API-Key'] = key;
-      return h;
+    function handleGoogleSlidesCallback() {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('google_slides_token');
+      if (token) {
+        localStorage.setItem('google_slides_token', token);
+        // Clean URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+        // Show modal to paste presentation ID
+        showGoogleSlidesModal();
+      }
     }
 
-    // Restore BYOK key input and fetch current user on page load
+    function showGoogleSlidesModal() {
+      // Create and show a simple modal for presentation ID input
+      const modal = document.createElement('div');
+      modal.innerHTML = `
+        <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+          <div style="background: white; padding: 24px; border-radius: 8px; max-width: 500px; box-shadow: 0 8px 32px rgba(0,0,0,0.15);">
+            <h3 style="margin: 0 0 12px; font-size: 18px;">Google Slides Authentication Successful</h3>
+            <p style="margin: 0 0 16px; color: var(--md-on-surface-variant); font-size: 14px;">
+              Now, paste your Google Slides presentation ID from the URL:
+              <br/><code style="background: var(--md-surface-container-lowest); padding: 4px 8px; border-radius: 4px;">docs.google.com/presentation/d/<strong>{ID}</strong>/edit</code>
+            </p>
+            <input type="text" id="presentation-id" placeholder="Paste ID here..."
+              style="width: 100%; padding: 12px; border: 1px solid var(--md-outline-variant); border-radius: 4px; margin-bottom: 16px; box-sizing: border-box;" />
+            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+              <button onclick="this.closest('div').parentElement.parentElement.remove()" style="padding: 8px 16px; border: 1px solid var(--md-outline-variant); background: transparent; border-radius: 4px; cursor: pointer;">Cancel</button>
+              <button onclick="uploadGoogleSlides()" style="padding: 8px 16px; background: var(--md-primary); color: white; border: none; border-radius: 4px; cursor: pointer;">Analyze</button>
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      document.getElementById('presentation-id').focus();
+    }
+
+    async function uploadGoogleSlides() {
+      const presentationId = document.getElementById('presentation-id')?.value;
+      const token = localStorage.getItem('google_slides_token');
+
+      if (!presentationId || !token) {
+        showToast('Missing presentation ID or authentication token');
+        return;
+      }
+
+      dzText.innerHTML = progressHTML('Downloading Google Slides presentation…');
+
+      try {
+        const fd = new FormData();
+        fd.append('presentation_id', presentationId);
+        fd.append('access_token', token);
+        fd.append('extractor_model', EXTRACTOR_MODEL);
+
+        const r = await fetch('/extract-from-google-slides', {
+          method: 'POST',
+          body: fd,
+          headers: apiHeaders()
+        });
+
+        if (!r.ok) {
+          const error = await r.json();
+          throw new Error(error.detail || 'Extraction failed');
+        }
+
+        const data = await r.json();
+        currentContextId = data.context_id;
+        renderBasicExtraction(data.extraction);
+        restoreDropzone(null);
+        document.querySelector('[style*="position: fixed"]')?.parentElement?.remove();
+      } catch (e) {
+        showToast(e.message || 'Failed to extract Google Slides');
+        restoreDropzone(null);
+      }
+    }
+
+    // Fetch current user on page load
     document.addEventListener('DOMContentLoaded', () => {
-      const k = getByokKey();
-      if (k) document.getElementById('byok-key').value = k;
       fetchCurrentUser();
+      handleGoogleSlidesCallback();
     });
 
     /** Populate the app-bar user widget if the user is logged in via Google SSO. */
@@ -1249,7 +1345,7 @@
         document.getElementById('drilldown-body').innerHTML = html;
         showDrilldownView();
       } catch (e) {
-        alert("Failed to load report: " + e.message);
+        showToast("Failed to load report: " + e.message);
       }
     }
 
@@ -1259,7 +1355,7 @@
         await fetch(`/reports/${reportId}`, { method: 'DELETE', headers: apiHeaders() });
         loadSavedReports();
       } catch (e) {
-        alert("Failed to delete report.");
+        showToast("Failed to delete report.");
       }
     }
 
@@ -1357,10 +1453,10 @@
     async function uploadFile(file) {
       if (!file) return;
       currentFilename = file.name;
-      dzText.innerHTML = progressHTML(`Analyzing stage and basic info with ${extractorSelect.value}...`);
+      dzText.innerHTML = progressHTML(`Analyzing stage and basic info with ${EXTRACTOR_MODEL}...`);
       const fd = new FormData();
       fd.append('file', file);
-      fd.append('extractor_model', extractorSelect.value);
+      fd.append('extractor_model', EXTRACTOR_MODEL);
       try {
         const r = await fetch('/extract', { method: 'POST', body: fd, headers: apiHeaders() });
         if (!r.ok) throw new Error((await r.json()).detail || 'Basic extraction failed');
@@ -1369,7 +1465,10 @@
         renderBasicExtraction(data.extraction);
         restoreDropzone(file.name);
       } catch (e) {
-        dzText.innerHTML = `<span class="material-symbols-rounded icon" style="color: var(--md-error)">error</span><div><strong>Extraction failed</strong></div><div class="hint">${escape(e.message)}</div>`;
+        // Surface errors as a dismissable toast and reset the dropzone so the
+        // user can immediately retry without a page refresh.
+        showToast(e.message || 'Extraction failed');
+        restoreDropzone(null);
       }
     }
 
@@ -1608,7 +1707,7 @@
       
       const fd = new FormData();
       fd.append('context_id', currentContextId);
-      fd.append('extractor_model', extractorSelect.value);
+      fd.append('extractor_model', EXTRACTOR_MODEL);
       fd.append('startup_stage', document.getElementById('startup-stage').value);
       
       const modules = Array.from(document.querySelectorAll('.metric-cb:checked')).map(cb => cb.value);
@@ -1620,7 +1719,7 @@
         const data = await r.json();
         renderDeepExtraction(data.extraction, data.failed_pages || []);
       } catch (e) {
-        alert("Deep Extraction Failed: " + e.message);
+        showToast("Deep Extraction Failed: " + e.message);
       } finally {
         continueExtractBtn.disabled = false;
         continueExtractBtn.innerHTML = '<span class="material-symbols-rounded">manage_search</span> Continue Extraction';
@@ -1633,7 +1732,7 @@
       verifyBtn.disabled = true;
       cancelVerifyBtn.classList.remove('hidden');
       reportPanel.classList.remove('hidden');
-      reportBody.innerHTML = progressHTML(`Connecting to compliance engine · ${analyzerSelect.value}…`);
+      reportBody.innerHTML = progressHTML(`Connecting to compliance engine · ${ANALYZER_MODEL}…`);
       reportPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
       // State accumulated while streaming
@@ -1644,8 +1743,8 @@
 
       const fd = new FormData();
       fd.append('context_id', currentContextId);
-      fd.append('analyzer_model', analyzerSelect.value);
-      fd.append('extractor_model', extractorSelect.value);
+      fd.append('analyzer_model', ANALYZER_MODEL);
+      fd.append('extractor_model', EXTRACTOR_MODEL);
       fd.append('startup_stage', document.getElementById('startup-stage').value);
       const modules = Array.from(document.querySelectorAll('.metric-cb:checked')).map(cb => cb.value);
       fd.append('modules', modules.join(','));
@@ -1850,7 +1949,7 @@
       const fd = new FormData();
       fd.append('context_id', currentContextId);
       fd.append('original_filename', currentFilename || '');
-      fd.append('extractor_model', extractorSelect.value);
+      fd.append('extractor_model', EXTRACTOR_MODEL);
       try {
         const r = await fetch('/saved-extractions', { method: 'POST', body: fd, headers: apiHeaders() });
         if (!r.ok) throw new Error((await r.json()).detail || 'Save failed');
@@ -1858,7 +1957,7 @@
         saveBtn.innerHTML = '<span class="material-symbols-rounded">bookmark_added</span> Saved!';
         saveBtn.disabled = true;  // prevent double-save
       } catch (e) {
-        alert('Failed to save extraction: ' + e.message);
+        showToast('Failed to save extraction: ' + e.message);
         saveBtn.disabled = false;
         saveBtn.innerHTML = '<span class="material-symbols-rounded">bookmark_add</span> Save extraction';
       }
@@ -1951,7 +2050,7 @@
         showAnalysisView();
         renderLoadedExtraction(data.extraction, data.meta);
       } catch (e) {
-        alert('Failed to load extraction: ' + e.message);
+        showToast('Failed to load extraction: ' + e.message);
         loadSavedExtractionsList(); // restore the list
       }
     }
@@ -1962,7 +2061,7 @@
         await fetch(`/saved-extractions/${saveId}`, { method: 'DELETE', headers: apiHeaders() });
         loadSavedExtractionsList();
       } catch (e) {
-        alert('Failed to delete: ' + e.message);
+        showToast('Failed to delete: ' + e.message);
       }
     }
 
@@ -1980,7 +2079,7 @@
       const c = extraction.company || {};
       let html = `<div class="banner" style="margin-bottom:12px;">
         <span class="material-symbols-rounded">info</span>
-        <div>Loaded from saved extraction${meta?.saved_at ? ' · ' + escape(meta.saved_at.replace('T',' ').slice(0,16)) : ''}. Pick your analyzer model and click <strong>Run compliance check</strong>.</div>
+        <div>Loaded from saved extraction${meta?.saved_at ? ' · ' + escape(meta.saved_at.replace('T',' ').slice(0,16)) : ''}. Click <strong>Run compliance check</strong> to analyze.</div>
       </div>`;
 
       html += `<div class="acc-header open" onclick="toggleAccordion(this)">

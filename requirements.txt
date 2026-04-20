@@ -14,3 +14,12 @@ psycopg[binary]>=3.0.0
 pypdf>=5.0.0
 ddgs>=4.0.0
 pdf2image
+python-pptx>=0.6.23
+python-docx>=0.8.11
+openpyxl>=3.10.0
+reportlab>=4.0.0
+google-auth>=2.26.0
+google-auth-oauthlib>=1.1.0
+google-auth-httplib2>=0.2.0
+google-api-python-client>=2.90.0
+Pillow>=10.0.0
