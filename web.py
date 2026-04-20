@@ -130,6 +130,14 @@ def _check_basic_auth(request: Request) -> bool:
 # ── Auth middleware ────────────────────────────────────────────────────────
 
 @app.middleware("http")
+async def frame_options_middleware(request: Request, call_next):
+    """Allow this app to be embedded in an iframe on saasless.ai."""
+    response = await call_next(request)
+    response.headers["Content-Security-Policy"] = "frame-ancestors 'self' https://saasless.ai"
+    return response
+
+
+@app.middleware("http")
 async def auth_middleware(request: Request, call_next):
     """Unified auth gate: Google session cookie OR HTTP Basic Auth.
 
