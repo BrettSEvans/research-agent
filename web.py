@@ -149,7 +149,7 @@ async def auth_middleware(request: Request, call_next):
 
     path = request.url.path
     # Auth routes and health-check are always public
-    if path.startswith("/auth") or path in ("/favicon.ico",):
+    if path.startswith("/auth") or path in ("/health", "/favicon.ico"):
         return await call_next(request)
 
     # 1. Google session cookie
@@ -200,6 +200,12 @@ def get_session_dirs(request: Request) -> tuple[Path, Path]:
 
 
 # ───────────────────────── Google SSO routes ──────────────────────────────
+
+@app.get("/health")
+async def health():
+    """Public health check endpoint — always returns 200 (used by Railway/Render)."""
+    return JSONResponse({"status": "ok"})
+
 
 @app.get("/auth/login", response_class=HTMLResponse)
 async def login_page(request: Request):
