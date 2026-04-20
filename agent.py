@@ -21,11 +21,9 @@ from pathlib import Path
 
 import anthropic
 from dotenv import load_dotenv
-from sqlalchemy.orm import Session
 
 from analyzer import analyze_claim, analyze_industry_claim
 from deck_context import DeckContext
-from models import Report as ReportModel
 from retriever import DenseRetriever
 from sec import Filing, chunk_text, fetch_text, list_filings, lookup_cik
 from version import ANALYZER_VERSION, EXTRACTOR_VERSION
@@ -144,10 +142,7 @@ def iter_compliance_report(
     startup_stage: str | None = None,
     modules: list[str] | None = None,
     max_workers: int | None = None,
-    db: Session | None = None,
-    owner_id: int | None = None,
-    organization_id: int | None = None,
-    project_id: int | None = None,
+    api_key: str | None = None,
 ):
     """Generator that yields events as each claim is analyzed.
 
@@ -228,7 +223,7 @@ def iter_compliance_report(
         yield {"event": "warning", "data": {"message": w}}
 
         claim_meta = {c.text: c for c in deck.extraction.claims} if deck else {}
-        client = anthropic.Anthropic(timeout=ANTHROPIC_TIMEOUT)
+        client = anthropic.Anthropic(api_key=api_key, timeout=ANTHROPIC_TIMEOUT)
         workers = _resolve_workers(analyzer_model, max_workers)
 
         def _analyze_one(args):
@@ -302,15 +297,7 @@ def iter_compliance_report(
             report["results"].append(results_map[i])
 
         report["claims_analyzed"] = len(claims)
-        _write_log(
-            report,
-            cik_label,
-            ts,
-            db=db,
-            owner_id=owner_id,
-            organization_id=organization_id,
-            project_id=project_id,
-        )
+        _write_log(report, cik_label, ts)
         yield {"event": "done", "data": {"report": report}}
         return
 
@@ -340,19 +327,11 @@ def iter_compliance_report(
             report["results"].append(entry)
             yield {"event": "claim_result", "data": {"index": i, "total": len(claims), "entry": entry}}
         report["claims_analyzed"] = len(claims)
-        _write_log(
-            report,
-            cik_label,
-            ts,
-            db=db,
-            owner_id=owner_id,
-            organization_id=organization_id,
-            project_id=project_id,
-        )
+        _write_log(report, cik_label, ts)
         yield {"event": "done", "data": {"report": report}}
         return
 
-    client = anthropic.Anthropic(timeout=ANTHROPIC_TIMEOUT)
+    client = anthropic.Anthropic(api_key=api_key, timeout=ANTHROPIC_TIMEOUT)
     deck_ctx_str = deck.clarifying_context() if deck else None
     workers = _resolve_workers(analyzer_model, max_workers)
 
@@ -404,15 +383,7 @@ def iter_compliance_report(
 
     report["claims_analyzed"] = len(claims)
     report["flagged_forward_looking_contradictions"] = flagged
-    _write_log(
-        report,
-        cik_label,
-        ts,
-        db=db,
-        owner_id=owner_id,
-        organization_id=organization_id,
-        project_id=project_id,
-    )
+    _write_log(report, cik_label, ts)
     yield {"event": "done", "data": {"report": report}}
 
 
@@ -429,10 +400,7 @@ def run_compliance_report(
     startup_stage: str | None = None,
     modules: list[str] | None = None,
     max_workers: int | None = None,
-    db: Session | None = None,
-    owner_id: int | None = None,
-    organization_id: int | None = None,
-    project_id: int | None = None,
+    api_key: str | None = None,
 ) -> dict:
     """Thin wrapper around iter_compliance_report — returns the final report dict.
 
@@ -451,49 +419,19 @@ def run_compliance_report(
         startup_stage=startup_stage,
         modules=modules,
         max_workers=max_workers,
-        db=db,
-        owner_id=owner_id,
-        organization_id=organization_id,
-        project_id=project_id,
+        api_key=api_key,
     ):
         if event["event"] == "done":
             report = event["data"]["report"]
     return report
 
 
-def _write_log(
-    report: dict,
-    cik_label: str,
-    ts: str,
-    db: Session | None = None,
-    owner_id: int | None = None,
-    organization_id: int | None = None,
-    project_id: int | None = None,
-) -> None:
+def _write_log(report: dict, cik_label: str, ts: str) -> None:
     SAVED_REPORTS_DIR.mkdir(exist_ok=True)
     report_id = report.get("report_id", uuid.uuid4().hex[:12])
     log_path = SAVED_REPORTS_DIR / f"report_{report_id}.json"
     log_path.write_text(json.dumps(report, indent=2))
     report["log_path"] = str(log_path)
-
-    if db is not None and owner_id is not None and organization_id is not None:
-        existing = db.query(ReportModel).filter(ReportModel.report_id == report_id).first()
-        if existing is None:
-            db_report = ReportModel(
-                report_id=report_id,
-                owner_id=owner_id,
-                organization_id=organization_id,
-                project_id=project_id,
-                company_name=report.get("company_name"),
-                cik=report.get("cik"),
-                extractor_model=report.get("extractor_model"),
-                analyzer_model=report.get("analyzer_model"),
-                report_json=json.dumps(report),
-                generated_at=datetime.fromisoformat(report.get("generated_at")) if report.get("generated_at") else datetime.now(timezone.utc),
-                log_path=str(log_path),
-            )
-            db.add(db_report)
-            db.commit()
 
 
 # ------------------------------------------------------------------- CLI

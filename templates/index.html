@@ -777,9 +777,24 @@
 
   <header class="app-bar">
     <span class="material-symbols-rounded icon-big">policy</span>
-    <div>
+    <div style="flex:1;">
       <h1>VC Compliance Pipeline</h1>
       <div class="subtitle">Pitch deck extraction → SEC filing cross-reference → discrepancy report</div>
+    </div>
+    <!-- User widget — populated by fetchCurrentUser() on load -->
+    <div id="user-widget" style="display:none; align-items:center; gap:10px;">
+      <img id="user-avatar" src="" alt="" width="32" height="32"
+           style="border-radius:50%; object-fit:cover; border:2px solid var(--md-outline-variant);" />
+      <div style="display:flex; flex-direction:column; align-items:flex-end; line-height:1.3;">
+        <span id="user-name"  style="font-size:0.8rem; font-weight:500; color:var(--md-on-surface);"></span>
+        <span id="user-email" style="font-size:0.7rem; color:var(--md-on-surface-variant);"></span>
+      </div>
+      <a href="/auth/logout" title="Sign out"
+         style="display:flex; align-items:center; color:var(--md-on-surface-variant); text-decoration:none; padding:4px; border-radius:50%; transition:background .15s;"
+         onmouseover="this.style.background='var(--md-surface-container-high)'"
+         onmouseout="this.style.background='transparent'">
+        <span class="material-symbols-rounded" style="font-size:20px;">logout</span>
+      </a>
     </div>
   </header>
 
@@ -873,6 +888,19 @@
         <p class="field-help">
           Extraction is mechanical — Haiku is usually enough. Analysis requires reasoning about contradictions and forward-looking statements — Sonnet or Opus recommended.
         </p>
+        <div class="row" style="margin-top: 16px;">
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+            <label for="byok-key" style="font-size: 0.75rem; font-weight: 500; color: var(--md-on-surface-variant); text-transform: uppercase; letter-spacing: 0.5px;">
+              Anthropic API Key <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional — overrides server key)</span>
+            </label>
+            <input id="byok-key" type="password" placeholder="sk-ant-…"
+              style="font-family: 'Roboto Mono', monospace; font-size: 0.85rem; padding: 10px 12px; border: 1px solid var(--md-outline-variant); border-radius: var(--md-shape-sm); background: var(--md-surface-container-lowest); color: var(--md-on-surface); outline: none; width: 100%;"
+              oninput="saveByokKey(this.value)" />
+            <p style="margin: 2px 0 0; font-size: 0.75rem; color: var(--md-on-surface-variant);">
+              Your key is stored only in your browser (localStorage) and sent directly to this server — never shared.
+            </p>
+          </div>
+        </div>
       </section>
 
     <!-- Step 1: Upload -->
@@ -1040,6 +1068,69 @@
     let currentFilename = '';
     let lastReport = null;  // accumulated report for download
 
+    // ── Session + BYOK helpers ──────────────────────────────────────────────
+
+    /** Return (or create) a stable UUID for this browser session. */
+    function getSessionId() {
+      let sid = localStorage.getItem('compliance_session_id');
+      if (!sid) {
+        sid = crypto.randomUUID();
+        localStorage.setItem('compliance_session_id', sid);
+      }
+      return sid;
+    }
+
+    /** Persist the user's Anthropic key and pre-fill the input on load. */
+    function saveByokKey(val) {
+      if (val) localStorage.setItem('byok_anthropic_key', val);
+      else localStorage.removeItem('byok_anthropic_key');
+    }
+
+    function getByokKey() {
+      return localStorage.getItem('byok_anthropic_key') || '';
+    }
+
+    /**
+     * Returns a headers object to attach to every fetch() call.
+     * Only sets X-Anthropic-API-Key when the user has provided a key.
+     */
+    function apiHeaders() {
+      const h = { 'X-Session-ID': getSessionId() };
+      const key = getByokKey();
+      if (key) h['X-Anthropic-API-Key'] = key;
+      return h;
+    }
+
+    // Restore BYOK key input and fetch current user on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      const k = getByokKey();
+      if (k) document.getElementById('byok-key').value = k;
+      fetchCurrentUser();
+    });
+
+    /** Populate the app-bar user widget if the user is logged in via Google SSO. */
+    async function fetchCurrentUser() {
+      try {
+        const resp = await fetch('/auth/me', { headers: apiHeaders() });
+        if (!resp.ok) return;
+        const user = await resp.json();
+        if (!user || !user.email) return;
+
+        const widget = document.getElementById('user-widget');
+        document.getElementById('user-name').textContent  = user.name  || user.email;
+        document.getElementById('user-email').textContent = user.email || '';
+
+        const avatar = document.getElementById('user-avatar');
+        if (user.picture) {
+          avatar.src = user.picture;
+          avatar.style.display = 'block';
+        } else {
+          avatar.style.display = 'none';
+        }
+        widget.style.display = 'flex';
+      } catch (_) { /* SSO not enabled or network error — silently skip */ }
+    }
+
     // ── Navigation ─────────────────────────────────────────────────────────
     function showDashboard() {
       document.getElementById('dashboard-view').classList.remove('hidden');
@@ -1077,7 +1168,7 @@
     async function loadSavedReports() {
       const tbody = document.getElementById('reports-table-body');
       try {
-        const r = await fetch('/reports');
+        const r = await fetch('/reports', { headers: apiHeaders() });
         const items = await r.json();
         if (!items.length) {
           tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--md-on-surface-variant);">No compliance reports yet. Click <strong>New Analysis</strong> to start.</td></tr>';
@@ -1144,7 +1235,7 @@
 
     async function loadReportDrilldown(reportId) {
       try {
-        const r = await fetch(`/reports/${reportId}`);
+        const r = await fetch(`/reports/${reportId}`, { headers: apiHeaders() });
         if (!r.ok) throw new Error("Report not found");
         const report = await r.json();
         
@@ -1165,7 +1256,7 @@
     async function deleteReport(reportId) {
       if (!confirm('Are you sure you want to delete this report?')) return;
       try {
-        await fetch(`/reports/${reportId}`, { method: 'DELETE' });
+        await fetch(`/reports/${reportId}`, { method: 'DELETE', headers: apiHeaders() });
         loadSavedReports();
       } catch (e) {
         alert("Failed to delete report.");
@@ -1271,7 +1362,7 @@
       fd.append('file', file);
       fd.append('extractor_model', extractorSelect.value);
       try {
-        const r = await fetch('/extract', { method: 'POST', body: fd });
+        const r = await fetch('/extract', { method: 'POST', body: fd, headers: apiHeaders() });
         if (!r.ok) throw new Error((await r.json()).detail || 'Basic extraction failed');
         const data = await r.json();
         currentContextId = data.context_id;
@@ -1456,7 +1547,7 @@
       fd.append('modules', modules.join(','));
 
       try {
-        const r = await fetch('/extract/complete', { method: 'POST', body: fd });
+        const r = await fetch('/extract/complete', { method: 'POST', body: fd, headers: apiHeaders() });
         if (!r.ok) throw new Error((await r.json()).detail || 'Cloud completion failed');
         const data = await r.json();
 
@@ -1524,7 +1615,7 @@
       fd.append('modules', modules.join(','));
 
       try {
-        const r = await fetch('/extract/deep', { method: 'POST', body: fd });
+        const r = await fetch('/extract/deep', { method: 'POST', body: fd, headers: apiHeaders() });
         if (!r.ok) throw new Error((await r.json()).detail || 'Deep extraction failed');
         const data = await r.json();
         renderDeepExtraction(data.extraction, data.failed_pages || []);
@@ -1560,10 +1651,11 @@
       fd.append('modules', modules.join(','));
 
       try {
-        const resp = await fetch('/verify/stream', { 
-          method: 'POST', 
+        const resp = await fetch('/verify/stream', {
+          method: 'POST',
           body: fd,
-          signal: activeAbortController.signal 
+          signal: activeAbortController.signal,
+          headers: apiHeaders(),
         });
         if (!resp.ok) {
           const err = await resp.json().catch(() => ({ detail: resp.statusText }));
@@ -1760,7 +1852,7 @@
       fd.append('original_filename', currentFilename || '');
       fd.append('extractor_model', extractorSelect.value);
       try {
-        const r = await fetch('/saved-extractions', { method: 'POST', body: fd });
+        const r = await fetch('/saved-extractions', { method: 'POST', body: fd, headers: apiHeaders() });
         if (!r.ok) throw new Error((await r.json()).detail || 'Save failed');
         const data = await r.json();
         saveBtn.innerHTML = '<span class="material-symbols-rounded">bookmark_added</span> Saved!';
@@ -1777,7 +1869,7 @@
       const container = document.getElementById('saved-extractions-list');
       if (!container) return;
       try {
-        const r = await fetch('/saved-extractions');
+        const r = await fetch('/saved-extractions', { headers: apiHeaders() });
         const items = await r.json();
         if (!items.length) {
           container.innerHTML = '<div class="saved-empty">No saved extractions yet. After running a deep extraction, click "Save extraction" to add it to this library.</div>';
@@ -1851,7 +1943,7 @@
           progressHTML('Loading saved extraction…') + '</div>';
       }
       try {
-        const r = await fetch(`/saved-extractions/${saveId}/load`, { method: 'POST' });
+        const r = await fetch(`/saved-extractions/${saveId}/load`, { method: 'POST', headers: apiHeaders() });
         if (!r.ok) throw new Error((await r.json()).detail || 'Load failed');
         const data = await r.json();
         currentContextId = data.context_id;
@@ -1867,7 +1959,7 @@
     async function deleteSavedExtraction(saveId) {
       if (!confirm('Delete this saved extraction?')) return;
       try {
-        await fetch(`/saved-extractions/${saveId}`, { method: 'DELETE' });
+        await fetch(`/saved-extractions/${saveId}`, { method: 'DELETE', headers: apiHeaders() });
         loadSavedExtractionsList();
       } catch (e) {
         alert('Failed to delete: ' + e.message);
