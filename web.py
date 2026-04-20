@@ -39,6 +39,15 @@ from agent import iter_compliance_report, run_compliance_report, SAVED_REPORTS_D
 from deck_context import DeckContext
 from extractor import extract_from_pdf
 from version import ANALYZER_VERSION, EXTRACTOR_VERSION
+from conversion import detect_file_type, convert_to_pdf, fetch_google_slides_pdf
+
+# Google OAuth2 imports
+try:
+    from google_auth_oauthlib.flow import Flow
+    from google.oauth2.credentials import Credentials
+    GOOGLE_AUTH_AVAILABLE = True
+except ImportError:
+    GOOGLE_AUTH_AVAILABLE = False
 
 load_dotenv()
 
@@ -82,6 +91,12 @@ _SECURE_COOKIES  = BASE_URL.startswith("https://")
 GOOGLE_AUTH_URL     = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL    = "https://oauth2.googleapis.com/token"
 GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
+
+# Google Slides OAuth2 configuration (subset of Google Drive access)
+GOOGLE_SLIDES_REDIRECT_URI = BASE_URL + "/auth/google/slides-callback"
+GOOGLE_SLIDES_SCOPES = [
+    "https://www.googleapis.com/auth/drive.readonly",  # Read-only access to files
+]
 
 
 # ── Session helpers ────────────────────────────────────────────────────────
@@ -183,8 +198,13 @@ async def auth_middleware(request: Request, call_next):
 
 
 def get_api_key(request: Request) -> str | None:
-    """Read Anthropic API key from X-Anthropic-API-Key header, falling back to env var."""
-    return request.headers.get("X-Anthropic-API-Key") or os.environ.get("ANTHROPIC_API_KEY")
+    """Return the server's Anthropic API key from env. Ignores request headers.
+
+    All Anthropic usage is billed to the operator's account — users no longer
+    supply their own key. The `request` param is kept for signature compatibility
+    with all existing callers.
+    """
+    return os.environ.get("ANTHROPIC_API_KEY")
 
 
 def _sanitize_session(raw: str) -> str:
@@ -312,6 +332,121 @@ async def auth_me(request: Request):
     return JSONResponse(None)
 
 
+# ───────────────────────── Google Slides OAuth2 ──────────────────────────────
+
+@app.get("/auth/google/slides-auth")
+async def google_slides_auth(request: Request):
+    """Initiate Google OAuth2 flow for Google Slides access."""
+    if not (GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET):
+        raise HTTPException(
+            status_code=400,
+            detail="Google OAuth2 credentials not configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET."
+        )
+
+    try:
+        flow = Flow.from_client_config(
+            {
+                "installed": {
+                    "client_id": GOOGLE_CLIENT_ID,
+                    "client_secret": GOOGLE_CLIENT_SECRET,
+                    "redirect_uris": [GOOGLE_SLIDES_REDIRECT_URI],
+                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                    "token_uri": "https://oauth2.googleapis.com/token",
+                }
+            },
+            scopes=GOOGLE_SLIDES_SCOPES,
+            redirect_uri=GOOGLE_SLIDES_REDIRECT_URI,
+        )
+        auth_url, state = flow.authorization_url(prompt="consent", access_type="offline")
+
+        # Store state in a cookie for validation on callback
+        resp = RedirectResponse(url=auth_url, status_code=302)
+        resp.set_cookie("google_slides_state", state, max_age=3600, httponly=True, samesite="lax")
+        return resp
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"OAuth flow init failed: {str(e)}")
+
+
+@app.get("/auth/google/slides-callback")
+async def google_slides_callback(request: Request, code: str = None, state: str = None):
+    """OAuth2 callback after user grants Google Slides access."""
+    if not code:
+        raise HTTPException(status_code=400, detail="Missing authorization code")
+
+    # Validate state cookie
+    stored_state = request.cookies.get("google_slides_state")
+    if not stored_state or stored_state != state:
+        raise HTTPException(status_code=400, detail="State mismatch — possible CSRF attack")
+
+    try:
+        flow = Flow.from_client_config(
+            {
+                "installed": {
+                    "client_id": GOOGLE_CLIENT_ID,
+                    "client_secret": GOOGLE_CLIENT_SECRET,
+                    "redirect_uris": [GOOGLE_SLIDES_REDIRECT_URI],
+                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                    "token_uri": "https://oauth2.googleapis.com/token",
+                }
+            },
+            scopes=GOOGLE_SLIDES_SCOPES,
+            redirect_uri=GOOGLE_SLIDES_REDIRECT_URI,
+        )
+        flow.fetch_token(code=code)
+        creds = flow.credentials
+
+        # Redirect back to dashboard with token in URL
+        # In production, you'd want to pass this securely (encrypted token, session, etc.)
+        resp = RedirectResponse(
+            url=f"/dashboard?google_slides_token={creds.token}",
+            status_code=302
+        )
+        resp.delete_cookie("google_slides_state")
+        return resp
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Token exchange failed: {str(e)}")
+
+
+@app.post("/extract-from-google-slides")
+async def extract_google_slides(
+    request: Request,
+    presentation_id: Annotated[str, Form()],
+    access_token: Annotated[str, Form()],
+    extractor_model: Annotated[str | None, Form()] = None,
+):
+    """Download a Google Slides presentation as PDF and run extraction."""
+    if extractor_model and extractor_model not in ALLOWED_MODELS:
+        raise HTTPException(status_code=400, detail=f"Unknown model: {extractor_model}")
+
+    session_uploads, _ = get_session_dirs(request)
+    token = uuid.uuid4().hex[:12]
+    pdf_path = session_uploads / f"slides-{token}.pdf"
+
+    try:
+        # Download Google Slides as PDF using OAuth2 token
+        await fetch_google_slides_pdf(access_token, presentation_id, pdf_path)
+    except ValueError as e:
+        pdf_path.unlink(missing_ok=True)
+        raise HTTPException(status_code=400, detail=f"Failed to download Google Slides: {str(e)}")
+
+    # Perform extraction on the downloaded PDF
+    try:
+        client = anthropic.Anthropic(api_key=get_api_key(request))
+        from extractor import extract_basics_and_infer_stage
+        extraction = extract_basics_and_infer_stage(pdf_path, client=client, model=extractor_model)
+    except Exception as exc:
+        pdf_path.unlink(missing_ok=True)
+        raise HTTPException(status_code=500, detail=f"Extraction failed: {exc}") from exc
+
+    return JSONResponse(
+        {
+            "context_id": token,
+            "extraction": extraction.model_dump(),
+            "extractor_version": EXTRACTOR_VERSION,
+        }
+    )
+
+
 # ───────────────────────── main app routes ────────────────────────────────
 
 @app.get("/", response_class=HTMLResponse)
@@ -323,20 +458,11 @@ ALLOWED_MODELS = {
     "claude-haiku-4-5",
     "claude-sonnet-4-6",
     "claude-opus-4-6",
-    # Inception Labs Mercury models
-    "mercury-2",
-    "mercury-coder-small",
-    # Local (Ollama) text-only models
-    "qwen3.5:9b",
-    # Local (Ollama) vision models — can read image-based PDFs
-    "llama3.2-vision:11b",
-    "gemma4:latest",
-    "gemma4:26b",
 }
 
-# Only real Anthropic models are valid for /extract/complete (which uses the
-# Anthropic SDK directly; local model names would cause a silent 500).
-CLOUD_MODELS = {"claude-haiku-4-5", "claude-sonnet-4-6", "claude-opus-4-6"}
+# All allowed models are Anthropic-cloud; local/Inception paths removed along
+# with the BYOK-era model dropdown.
+CLOUD_MODELS = ALLOWED_MODELS
 
 
 @app.post("/extract")
@@ -345,19 +471,41 @@ async def extract(
     file: UploadFile = File(...),
     extractor_model: Annotated[str | None, Form()] = None,
 ):
-    if not (file.filename or "").lower().endswith(".pdf"):
-        raise HTTPException(status_code=400, detail="Only PDF files are supported.")
+    # Detect and validate file type
+    try:
+        file_type = detect_file_type(file.filename or "")
+    except ValueError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file format. Supported: PDF, PowerPoint (.ppt/.pptx), Word (.doc/.docx), Excel (.xlsx). {str(e)}"
+        )
+
     if extractor_model and extractor_model not in ALLOWED_MODELS:
         raise HTTPException(status_code=400, detail=f"Unknown model: {extractor_model}")
 
     session_uploads, _ = get_session_dirs(request)
     content = await file.read()
     token = uuid.uuid4().hex[:12]
+
+    # Save file temporarily for conversion
+    temp_suffix = f".{file_type}" if file_type != "pdf" else ".pdf"
     with tempfile.NamedTemporaryFile(
-        delete=False, suffix=".pdf", dir=str(session_uploads), prefix=f"{token}_"
+        delete=False, suffix=temp_suffix, dir=str(session_uploads), prefix=f"{token}_"
     ) as tmp:
         tmp.write(content)
-        pdf_path = Path(tmp.name)
+        temp_path = Path(tmp.name)
+
+    # Convert to PDF if needed
+    try:
+        if file_type != "pdf":
+            pdf_path = await convert_to_pdf(temp_path, file_type)
+        else:
+            # Already PDF, just rename to standard naming
+            pdf_path = session_uploads / f"{token}_{uuid.uuid4().hex[:8]}.pdf"
+            temp_path.rename(pdf_path)
+    except ValueError as e:
+        temp_path.unlink(missing_ok=True)
+        raise HTTPException(status_code=400, detail=f"File conversion failed: {str(e)}")
 
     try:
         client = anthropic.Anthropic(api_key=get_api_key(request))
