@@ -2,6 +2,7 @@ import anthropic
 import os
 from enum import Enum
 from pydantic import BaseModel, Field
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception
 
 class FundingStage(str, Enum):
     PRE_SEED = "pre_seed"
@@ -28,11 +29,33 @@ Look for these signals:
 Provide your assessment, confidence score (0.0 to 1.0), the exact signals you found, and whether the user should manually confirm (set to True if confidence < 0.7).
 """
 
+
+def _call_anthropic_with_retry(fn, *args, **kwargs):
+    """Call Anthropic API with Tenacity retry on rate limits (429).
+
+    Retries with exponential backoff on RateLimitError (429 status).
+    Other exceptions propagate immediately.
+    """
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=1, max=30),  # 1s, 2s, 4s... up to 30s
+        retry=retry_if_exception(
+            lambda e: isinstance(e, anthropic.RateLimitError)
+        ),
+        reraise=True
+    )
+    def _call():
+        return fn(*args, **kwargs)
+
+    return _call()
+
+
 def infer_stage_from_text(text: str, client: anthropic.Anthropic | None = None, model: str | None = None) -> StageAssessment:
     client = client or anthropic.Anthropic()
     model = model or os.environ.get("EXTRACTOR_MODEL", "claude-haiku-4-5")
     
-    response = client.messages.parse(
+    response = _call_anthropic_with_retry(
+        client.messages.parse,
         model=model,
         max_tokens=1024,
         system=SYSTEM_PROMPT,

@@ -15,6 +15,7 @@ import os
 
 from pydantic import BaseModel, Field
 import anthropic
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception
 
 import llm_local
 import llm_inception
@@ -43,6 +44,27 @@ def _thinking_kwargs(model: str, budget_tokens: int = 4000) -> dict:
     if "haiku" in model or llm_local.is_local_model(model) or llm_inception.is_inception_model(model):
         return {}
     return {"thinking": {"type": "enabled", "budget_tokens": budget_tokens}}
+
+
+def _call_anthropic_with_retry(fn, *args, **kwargs):
+    """Call Anthropic API with Tenacity retry on rate limits (429).
+
+    Retries with exponential backoff on RateLimitError (429 status).
+    Other exceptions propagate immediately.
+    """
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=1, max=30),  # 1s, 2s, 4s... up to 30s
+        retry=retry_if_exception(
+            lambda e: isinstance(e, anthropic.RateLimitError)
+        ),
+        reraise=True
+    )
+    def _call():
+        return fn(*args, **kwargs)
+
+    return _call()
+
 
 SYSTEM_PROMPT = """You are a securities-compliance analyst assisting a venture capital firm.
 
@@ -227,7 +249,8 @@ def analyze_industry_claim(
         "claim, then assess. Cite URLs or publication names inline in your explanation."
     )
 
-    response = client.messages.parse(
+    response = _call_anthropic_with_retry(
+        client.messages.parse,
         model=model,
         max_tokens=16000,
         system=INDUSTRY_SYSTEM_PROMPT,
@@ -276,7 +299,8 @@ def analyze_claim(
             reasoning_effort="medium",
         )
 
-    response = client.messages.parse(
+    response = _call_anthropic_with_retry(
+        client.messages.parse,
         model=model,
         max_tokens=16000,
         system=SYSTEM_PROMPT,

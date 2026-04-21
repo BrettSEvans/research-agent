@@ -21,6 +21,7 @@ from typing import Literal
 
 import anthropic
 from pydantic import BaseModel, Field
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception
 
 import llm_local
 import llm_inception
@@ -49,6 +50,26 @@ def _thinking_kwargs(model: str, budget_tokens: int = 3000) -> dict:
     if "haiku" in model or llm_local.is_local_model(model) or llm_inception.is_inception_model(model):
         return {}
     return {"thinking": {"type": "enabled", "budget_tokens": budget_tokens}}
+
+
+def _call_anthropic_with_retry(fn, *args, **kwargs):
+    """Call Anthropic API with Tenacity retry on rate limits (429).
+
+    Retries with exponential backoff on RateLimitError (429 status).
+    Other exceptions propagate immediately.
+    """
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=1, max=30),  # 1s, 2s, 4s... up to 30s
+        retry=retry_if_exception(
+            lambda e: isinstance(e, anthropic.RateLimitError)
+        ),
+        reraise=True
+    )
+    def _call():
+        return fn(*args, **kwargs)
+
+    return _call()
 
 
 class CompanyIdentity(BaseModel):
@@ -239,7 +260,8 @@ def extract_basics_and_infer_stage(
         "- Do NOT extract detailed claims — that happens in the deep extraction pass."
     )
 
-    response = client.messages.parse(
+    response = _call_anthropic_with_retry(
+        client.messages.parse,
         model=model,
         max_tokens=4000,
         system=basic_system,
@@ -281,17 +303,31 @@ def _vision_call_with_retry(
 
     If the model OOMs on N images it retries with N//2, N//4, … down to 1.
     A 500 on a single image is a hard failure (model/hardware issue).
+
+    Uses Tenacity for exponential backoff + retry logic.
     """
+    @retry(
+        stop=stop_after_attempt(10),  # Allow up to ~10 halvings (2^10 = 1024 images down to 1)
+        wait=wait_exponential(multiplier=0.05, min=0, max=1),  # Exponential backoff: 50ms to 1s
+        retry=retry_if_exception(
+            lambda e: isinstance(e, RuntimeError) and "ollama-vision-500" in str(e)
+        ),
+        reraise=True
+    )
+    def _call_vision_once(imgs: list[str]):
+        return llm_local.call_structured_vision(
+            model=model,
+            system=system,
+            user_text=user_text,
+            images_b64=imgs,
+            output_format=output_format,
+        )
+
+    # Halve the image list on OOM until we reach 1 image (hard failure threshold)
     imgs = images_b64
     while imgs:
         try:
-            return llm_local.call_structured_vision(
-                model=model,
-                system=system,
-                user_text=user_text,
-                images_b64=imgs,
-                output_format=output_format,
-            )
+            return _call_vision_once(imgs)
         except RuntimeError as exc:
             if "ollama-vision-500" not in str(exc) or len(imgs) <= 1:
                 raise
@@ -477,7 +513,8 @@ def extract_from_pdf(
     pdf_bytes = Path(pdf_path).read_bytes()
     b64 = base64.standard_b64encode(pdf_bytes).decode("utf-8")
 
-    response = client.messages.parse(
+    response = _call_anthropic_with_retry(
+        client.messages.parse,
         model=model,
         max_tokens=16000,
         system=SYSTEM_PROMPT,
@@ -546,7 +583,8 @@ def extract_failed_pages_with_claude(
 
     pages_str = ", ".join(str(p) for p in sorted(page_indices))
 
-    response = client.messages.parse(
+    response = _call_anthropic_with_retry(
+        client.messages.parse,
         model=model,
         max_tokens=8000,
         system=SYSTEM_PROMPT,
