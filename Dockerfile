@@ -11,7 +11,9 @@ WORKDIR /app
 
 # Install Python deps first (layer-cached unless requirements.txt changes)
 COPY requirements.txt .
-RUN pip install -r requirements.txt
+RUN pip install --upgrade pip setuptools wheel && \
+    pip install -v -r requirements.txt && \
+    python -c "import anthropic, ddgs, fastapi, uvicorn; print('All critical packages imported successfully')"
 
 # Copy application code
 COPY . .
