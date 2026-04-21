@@ -1,0 +1,2179 @@
+{
+  "generated_at": "20260417T232212Z",
+  "cik": null,
+  "forms": [
+    "10-K",
+    "10-Q",
+    "S-1",
+    "8-K"
+  ],
+  "deck_context_used": true,
+  "assumed_industry": "Cannabis cultivation and retail (legal adult-use and medical marijuana)",
+  "company_name": "Canna Farm",
+  "extractor_model": "claude-haiku-4-5",
+  "extractor_version": "1.2.0",
+  "analyzer_model": "claude-sonnet-4-6",
+  "analyzer_version": "1.3.0",
+  "claims_analyzed": 33,
+  "flagged_forward_looking_contradictions": 0,
+  "results": [
+    {
+      "claim": "The national legal cannabis market is projected to reach $22.8 billion by 2029.",
+      "verdict": "CONTRADICTS",
+      "forward_looking": true,
+      "severity": "HIGH",
+      "explanation": "Multiple authoritative industry sources project the U.S. legal cannabis market far above $22.8 billion by 2029 \u2014 and well past that figure even today. Grand View Research (grandviewresearch.com) estimated the U.S. cannabis market at $38.50 billion in 2024 alone, already dwarfing the claimed 2029 figure. Cannabis Science and Technology (cannabissciencetech.com), citing BDSA, projects U.S. regulated cannabis sales (adult-use + medical) reaching $39.1 billion by 2029. Statista (statista.com) reports the U.S. is expected to generate $45.35 billion in 2025 with continued CAGR growth through 2029. MJBizDaily (mjbizdaily.com) projects retail cannabis sales upwards of $53.5 billion by 2027. No credible source corroborates the $22.8 billion by 2029 figure; it appears materially understated relative to current market size and industry consensus forecasts, making this a high-severity contradiction.",
+      "missing_information": null,
+      "cited_passages": [],
+      "web_sources": [
+        {
+          "url": "https://www.grandviewresearch.com/industry-analysis/us-cannabis-market",
+          "title": "U.S. Cannabis Market Size & Share | Industry Report, 2030",
+          "page_age": null
+        },
+        {
+          "url": "https://www.technavio.com/report/us-cannabis-market-analysis",
+          "title": "Cannabis Market in US Growth Analysis - Size and Forecast 2025-2029 | Technavio | Technavio",
+          "page_age": "February 14, 2025"
+        },
+        {
+          "url": "https://www.technavio.com/report/legal-cannabis-market-industry-analysis",
+          "title": "Legal Cannabis Market Growth Analysis - Size and Forecast 2026-2030 | Technavio",
+          "page_age": "March 12, 2026"
+        },
+        {
+          "url": "https://mjbizdaily.com/us-cannabis-sales-estimates/",
+          "title": "Projected US legal medical and recreational cannabis market size",
+          "page_age": "November 24, 2025"
+        },
+        {
+          "url": "https://cannabusinessplans.com/cannabis-legal-market-size-projections/",
+          "title": "North America Cannabis Legal Market: Stats and Projections",
+          "page_age": "March 6, 2026"
+        },
+        {
+          "url": "https://www.flowhub.com/cannabis-industry-statistics",
+          "title": "2026 Cannabis Industry Statistics",
+          "page_age": "February 19, 2026"
+        },
+        {
+          "url": "https://www.grandviewresearch.com/industry-analysis/legal-cannabis-market",
+          "title": "Legal Cannabis Market Size & Share | Industry Report, 2033",
+          "page_age": null
+        },
+        {
+          "url": "https://newfrontierdata.com/cannabis-insights/u-s-legal-cannabis-market-growth/",
+          "title": "New Frontier Data - Washington, DC - U.S. Legal Cannabis Market Growth",
+          "page_age": "May 12, 2024"
+        },
+        {
+          "url": "https://www.cannabissciencetech.com/view/2025-state-of-the-cannabis-industry-sales-trends-and-forecasts",
+          "title": "2025 State of the Cannabis Industry: Sales Trends and Forecasts | Cannabis Science and Technology - Cannabis Industry News, Insights",
+          "page_age": "2 weeks ago"
+        },
+        {
+          "url": "https://payboticfinancial.com/cannabis-industry-statistics-2025/",
+          "title": "2025 Cannabis Industry Statistics & Market Insights | Paybotic Financial",
+          "page_age": "October 2, 2025"
+        },
+        {
+          "url": "https://cannabismdtelemed.com/blog/30-cannabis-industry-statistics-growth-trends-in-2025",
+          "title": "37 Cannabis Industry Statistics 2026: Market Size, Jobs, Revenue & Growth \u2014 CannabisMD TeleMed",
+          "page_age": "February 19, 2026"
+        },
+        {
+          "url": "https://www.grandviewresearch.com/industry-analysis/legal-marijuana-market",
+          "title": "Legal Marijuana Market Size, Share & Growth Report, 2030",
+          "page_age": null
+        },
+        {
+          "url": "https://bizplanr.ai/blog/cannabis-industry-statistics",
+          "title": "30+ Cannabis Industry Statistics: Growth & Trends in 2025",
+          "page_age": "March 27, 2025"
+        },
+        {
+          "url": "https://www.statista.com/outlook/hmo/cannabis/worldwide",
+          "title": "Cannabis - Worldwide | Statista Market Forecast",
+          "page_age": null
+        },
+        {
+          "url": "https://www.researchdive.com/8717/legal-cannabis-market",
+          "title": "Legal Cannabis Market Size & Share Growth|2023 - 2032",
+          "page_age": null
+        }
+      ],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and retail (legal adult-use and medical marijuana)"
+    },
+    {
+      "claim": "The passage of initiatives in California, Nevada, Massachusetts, Maine, Florida, Arkansas, Montana and North Dakota will add $7.4 billion to the 2029 market forecast.",
+      "verdict": "CONTRADICTS",
+      "forward_looking": true,
+      "severity": "HIGH",
+      "explanation": "The claim attributes a $7.4 billion incremental addition to the 2029 cannabis market forecast from the passage of initiatives in the listed eight states. While those eight states are correctly identified as the ones that passed cannabis ballot measures in November 2016 \u2014 California, Nevada, Massachusetts, and Maine for adult-use; Florida, Arkansas, Montana, and North Dakota for medical (confirmed by CNN, NPR, and the American Chemical Society journal 'C&EN', November 2016) \u2014 the $7.4 billion figure appears materially understated and cannot be traced to any authoritative source. New Frontier Data's own post-election analysis, cited in CNN Money (money.cnn.com/2016/11/09/news/economy/marijuana-legalization-sales, Nov. 9 2016), projected California alone reaching $7.6 billion in annual cannabis sales by 2020 ($4.3B adult-use + $3.3B medical), which already exceeds the claim's total eight-state figure \u2014 nine years earlier than the 2029 horizon. Current forecasts from BDSA (cannabissciencetech.com, 2025) project total U.S. regulated cannabis sales at $39.1 billion by 2029, and Grand View Research (grandviewresearch.com) put the U.S. market at $38.5 billion in 2024 alone growing at 11.51% CAGR. No sourced report was found attributing the specific $7.4 billion incremental figure to these eight states for 2029, and the figure conflicts with California's known and projected scale alone.",
+      "missing_information": "A specific 2016-era industry report (e.g., from New Frontier Data or Arcview/BDS Analytics) quantifying the incremental 2029 market contribution of these exact eight state initiatives would be required to evaluate whether the $7.4 billion figure was ever a published estimate; no such report was found in available online sources.",
+      "cited_passages": [],
+      "web_sources": [
+        {
+          "url": "https://www.cannabissciencetech.com/view/2025-state-of-the-cannabis-industry-sales-trends-and-forecasts",
+          "title": "2025 State of the Cannabis Industry: Sales Trends and Forecasts | Cannabis Science and Technology - Cannabis Industry News, Insights",
+          "page_age": "2 weeks ago"
+        },
+        {
+          "url": "https://www.technavio.com/report/us-cannabis-market-analysis",
+          "title": "Cannabis Market in US Growth Analysis - Size and Forecast 2025-2029 | Technavio | Technavio",
+          "page_age": "February 14, 2025"
+        },
+        {
+          "url": "https://www.statista.com/outlook/hmo/cannabis/worldwide",
+          "title": "Cannabis - Worldwide | Statista Market Forecast",
+          "page_age": null
+        },
+        {
+          "url": "https://www.flowhub.com/cannabis-industry-statistics",
+          "title": "2026 Cannabis Industry Statistics",
+          "page_age": "February 19, 2026"
+        },
+        {
+          "url": "https://www.grandviewresearch.com/industry-analysis/us-cannabis-market",
+          "title": "U.S. Cannabis Market Size & Share | Industry Report, 2030",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabusinessplans.com/cannabis-legal-market-size-projections/",
+          "title": "North America Cannabis Legal Market: Stats and Projections",
+          "page_age": "March 6, 2026"
+        },
+        {
+          "url": "https://www.novaoneadvisor.com/report/us-cannabis-market",
+          "title": "U.S. Cannabis Market Size to Reach USD 65.26 Billion by 2035",
+          "page_age": "January 12, 2026"
+        },
+        {
+          "url": "https://www.statista.com/outlook/hmo/cannabis/united-states",
+          "title": "Cannabis - United States | Statista Market Forecast",
+          "page_age": null
+        },
+        {
+          "url": "https://www.fortunebusinessinsights.com/industry-reports/cannabis-marijuana-market-100219",
+          "title": "Cannabis Market Size & Growth | Forecast Report [2034]",
+          "page_age": null
+        },
+        {
+          "url": "https://www.grandviewresearch.com/press-release/global-legal-marijuana-market",
+          "title": "Legal Marijuana Market Size To Reach $102.2Bn By 2030",
+          "page_age": null
+        },
+        {
+          "url": "https://money.cnn.com/2016/11/09/news/economy/marijuana-legalization-sales/index.html?iid=EL",
+          "title": "Legal marijuana: Market could hit $20 billion a year after more states approve it",
+          "page_age": null
+        },
+        {
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9432746/",
+          "title": "U.S. cannabis laws projected to cost generic and brand pharmaceutical firms billions - PMC",
+          "page_age": null
+        },
+        {
+          "url": "https://cen.acs.org/articles/94/i45/2016-election-means-legal-marijuana.html",
+          "title": "What the 2016 election means for the legal marijuana industry",
+          "page_age": "November 16, 2016"
+        },
+        {
+          "url": "https://www.npr.org/2016/11/20/502577270/investors-marketers-line-up-to-tap-legal-marijuana-around-u-s",
+          "title": "As More States Legalize Marijuana, Investors And Marketers Line Up To Tap U.S. Pot Industry : NPR",
+          "page_age": "November 20, 2016"
+        },
+        {
+          "url": "https://cannabusinessplans.com/u-s-cannabis-market/",
+          "title": "U.S. Cannabis Market \u2013 Business Plan Templates",
+          "page_age": "March 1, 2026"
+        },
+        {
+          "url": "https://raimediainc.com/wp-content/uploads/2023/03/NFD-2023USCannabisReport.pdf",
+          "title": "2023 Market Updates & Projections U.S. Cannabis Report Sponsored by:",
+          "page_age": null
+        },
+        {
+          "url": "https://newfrontierdata.com/cannabis-insights/growth-of-the-u-s-legal-cannabis-industry/",
+          "title": "New Frontier Data - Washington, DC - Growth Of The U.S. Legal Cannabis Industry",
+          "page_age": "May 8, 2024"
+        },
+        {
+          "url": "https://finance.yahoo.com/news/frontier-data-u-cannabis-market-133832469.html",
+          "title": "New Frontier Data: U.S. Cannabis Market Creates 283,422 Jobs by 2020",
+          "page_age": "February 22, 2017"
+        },
+        {
+          "url": "https://bizplanr.ai/blog/cannabis-industry-statistics",
+          "title": "30+ Cannabis Industry Statistics: Growth & Trends in 2025",
+          "page_age": "March 27, 2025"
+        },
+        {
+          "url": "https://cannabismdtelemed.com/blog/30-cannabis-industry-statistics-growth-trends-in-2025",
+          "title": "37 Cannabis Industry Statistics 2026: Market Size, Jobs, Revenue & Growth \u2014 CannabisMD TeleMed",
+          "page_age": "February 19, 2026"
+        },
+        {
+          "url": "https://newfrontierdata.com/cannabis-insights/new-state-markets-could-boost-u-s-legal-cannabis-sales-to-72b-by-2030/",
+          "title": "New State Markets Could Boost U.S. Legal Cannabis Sales to $72B by 2030 - New Frontier Data",
+          "page_age": "March 22, 2022"
+        },
+        {
+          "url": "https://www.dopecfo.com/blog/Cannabis-2023-Review-2024-Outlook-Growth-Regulatory%20Shifts",
+          "title": "Cannabis 2023 Review & 2024 Outlook: Growth and Regulatory Shifts",
+          "page_age": "February 20, 2024"
+        },
+        {
+          "url": "https://newfrontierdata.com/cannabis-insights/new-state-markets-could-inject-an-additional-18-billion-annually/",
+          "title": "New state markets could inject an additional $18 billion annually into U.S. legal cannabis market by 2030 - New Frontier Data",
+          "page_age": "February 21, 2023"
+        },
+        {
+          "url": "https://info.newfrontierdata.com/2023-us-cannabis-report",
+          "title": "2023 US Cannabis Report",
+          "page_age": null
+        },
+        {
+          "url": "https://amp.cnn.com/cnn/2016/11/09/health/marijuana-legalization-election-results",
+          "title": "Maine recount concludes yes to recreational marijuana | CNN",
+          "page_age": "December 21, 2016"
+        },
+        {
+          "url": "https://edition.cnn.com/2016/11/09/health/marijuana-legalization-election-results",
+          "title": "Maine recount concludes yes to recreational marijuana, totaling four states that OK it | CNN",
+          "page_age": "December 21, 2016"
+        },
+        {
+          "url": "https://www.fool.com/research/marijuana-tax-revenue-by-state/",
+          "title": "Marijuana Tax Revenue by State | The Motley Fool",
+          "page_age": "3 days ago"
+        },
+        {
+          "url": "https://www.cnn.com/2016/11/07/health/marijuana-legalize-ballot",
+          "title": "Recreational marijuana on the ballot in five states | CNN",
+          "page_age": "November 9, 2016"
+        },
+        {
+          "url": "https://www.nepm.org/national-world-news/national-world-news/2023-03-08/states-rake-in-billions-from-taxes-on-weed-sales-heres-where-the-money-goes",
+          "title": "States rake in billions from taxes on weed sales. Here's where the money goes | New England Public Media",
+          "page_age": "March 8, 2023"
+        },
+        {
+          "url": "https://norml.org/election/",
+          "title": "NORML Election Central",
+          "page_age": "February 9, 2026"
+        },
+        {
+          "url": "https://ballotpedia.org/2020_marijuana_legalization_and_marijuana-related_ballot_measures",
+          "title": "2020 marijuana legalization and marijuana-related ballot measures - Ballotpedia",
+          "page_age": null
+        },
+        {
+          "url": "https://ballotpedia.org/Marijuana_on_the_ballot",
+          "title": "Marijuana laws ballot measures - Ballotpedia",
+          "page_age": null
+        },
+        {
+          "url": "https://en.wikipedia.org/wiki/Legality_of_cannabis_by_U.S._jurisdiction",
+          "title": "Legality of cannabis by U.S. jurisdiction - Wikipedia",
+          "page_age": "3 days ago"
+        },
+        {
+          "url": "https://money.cnn.com/2018/01/31/news/marijuana-state-of-the-union/",
+          "title": "The U.S. legal marijuana industry is booming - Business - CNN",
+          "page_age": "January 31, 2018"
+        },
+        {
+          "url": "https://money.cnn.com/2018/01/31/news/marijuana-state-of-the-union/index.html",
+          "title": "The U.S. legal marijuana industry is booming",
+          "page_age": "January 31, 2018"
+        },
+        {
+          "url": "https://money.cnn.com/2017/12/02/news/canada-cannabis",
+          "title": "Canada could make billions from legal pot",
+          "page_age": null
+        },
+        {
+          "url": "https://money.cnn.com/2018/04/20/technology/pacific-newsletter/index.html",
+          "title": "PACIFIC for April 20: The Future of Cannabis",
+          "page_age": "April 20, 2018"
+        },
+        {
+          "url": "https://money.cnn.com/quote/news/news.html?symb=CGC",
+          "title": "__symbol__ Stock Quote Price and Forecast | CNN",
+          "page_age": "June 26, 2023"
+        },
+        {
+          "url": "https://money.cnn.com/quote/forecast/forecast.html?symb=CBIS",
+          "title": "CBIS - Cannabis Science Inc Forecast - CNNMoney.com",
+          "page_age": null
+        },
+        {
+          "url": "https://money.cnn.com/2018/09/21/news/companies/canopy-growth-ceo-cannabis-marijuana/index.html",
+          "title": "Canopy Growth CEO expects US pot market to open up eventually",
+          "page_age": "September 24, 2018"
+        },
+        {
+          "url": "https://money.cnn.com/2018/01/18/smallbusiness/marijuana-industry-taxes-irs/index.html",
+          "title": "Marijuana legalization: US pot industry pays billions in taxes, much of it in cash",
+          "page_age": "January 18, 2018"
+        },
+        {
+          "url": "https://money.cnn.com/2014/01/07/investing/marijuana-stocks",
+          "title": "Shares of companies in the marijuana businesses have been giving investors a contact high",
+          "page_age": "January 7, 2014"
+        },
+        {
+          "url": "https://newfrontierdata.com/cannabis-insights/us-legal-cannabis-market-projected-to-double-by-2025/",
+          "title": "New Frontier Data - Washington, DC - U.S. Legal Cannabis Market Projected to Double to $41.5B by 2025",
+          "page_age": "December 18, 2023"
+        },
+        {
+          "url": "https://arcviewgroup.com/research/",
+          "title": "The #1 cited market research for the cannabis industry.",
+          "page_age": null
+        },
+        {
+          "url": "https://bdsa.com/",
+          "title": "BDSA | Cannabis Industry Data Analytics & Business Intelligence",
+          "page_age": "February 11, 2021"
+        },
+        {
+          "url": "https://www.bvresources.com/products/the-state-of-legal-marijuana-markets-7th-edition",
+          "title": "The State of Legal Cannabis Markets \u2013 7th Edition | Business Valuation Resources",
+          "page_age": null
+        },
+        {
+          "url": "https://arcviewgroup.com/reports/solcm8/",
+          "title": "State of Legal Cannabis Markets 8th edition \u2013 The Arcview Group",
+          "page_age": null
+        },
+        {
+          "url": "https://thecannabisindustry.org/tag/bds-analytics/",
+          "title": "BDS Analytics Archives | The National Cannabis Industry Association",
+          "page_age": null
+        },
+        {
+          "url": "https://www.prweb.com/releases/arcview_market_research_and_bdsa_agree_the_declaration_of_cannabis_as_an_essential_service_amid_covid_19_pandemic_is_historic_moment/prweb17249077.htm",
+          "title": "Arcview Market Research and BDSA Agree the Declaration of Cannabis as an 'Essential Service' Amid COVID-19 Pandemic Is Historic Moment",
+          "page_age": "September 8, 2023"
+        },
+        {
+          "url": "https://bdsa.com/wp-content/uploads/2020/01/SOLCM7_2020_Update_BDS_FR.pdf",
+          "title": "The State of Legal Cannabis Markets, 7th Edition \u2013 2020 ...",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabisbusinesstimes.com/business-issues-benchmarks/finance/news/15694781/cannabis-concentrate-sales-are-growing-but-consolidation-is-coming",
+          "title": "Cannabis Concentrate Sales Are Growing, But Consolidation Is Coming | Cannabis Business Times",
+          "page_age": null
+        },
+        {
+          "url": "https://bdsa.com/solutions/cannabis-market-forecasts/",
+          "title": "Cannabis Market Forecasts | BDSA",
+          "page_age": "December 13, 2024"
+        },
+        {
+          "url": "https://cannabusinessplans.com/cannabis-edibles-market/",
+          "title": "Cannabis Edibles Market Size and Projections",
+          "page_age": "October 6, 2025"
+        },
+        {
+          "url": "https://cannabusinessplans.com/massachusetts-cannabis-market/",
+          "title": "Massachusetts Cannabis Market \u2013 Business Plan Templates",
+          "page_age": "January 14, 2026"
+        },
+        {
+          "url": "https://cannabusinessplans.com/global-cannabis-market/",
+          "title": "Global Cannabis Market \u2013 Business Plan Templates",
+          "page_age": "March 5, 2026"
+        }
+      ],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and retail (legal adult-use and medical marijuana)"
+    },
+    {
+      "claim": "Cannabis market compound annual growth rate (CAGR) is projected at 28%.",
+      "verdict": "CONTRADICTS",
+      "forward_looking": true,
+      "severity": "MEDIUM",
+      "explanation": "A broad canvass of authoritative industry research firmly contradicts a 28% CAGR projection. Grand View Research (grandviewresearch.com) estimates the U.S. cannabis market at 11.51% CAGR (2025\u20132030) and the global legal cannabis market at 13.49% CAGR (2025\u20132033). Mordor Intelligence (mordorintelligence.com) projects a 14.0% CAGR through 2031. Market.us (market.us) reports 11.6% CAGR for the U.S. market to 2034, and 13.8% globally through 2035. Statista (statista.com) is even more conservative, citing a 2.33% CAGR for the worldwide cannabis market from 2025\u20132029. A small number of more aggressive forecasters approach or exceed 28%\u2014IMARC Group (imarcgroup.com) projects 32.74% for U.S. cannabis to 2034, and Fortune Business Insights (fortunebusinessinsights.com) cites 34.03% globally\u2014but these are significant outliers. Grand View Research's 'legal marijuana' sub-segment (grandviewresearch.com) comes closest at 25.4% (2024\u20132030), but still falls short of 28%. The preponderance of mainstream, widely-cited research from Mordor, Grand View, Statista, Market.us, and Data Bridge Market Research (databridgemarketresearch.com, 9% CAGR) places the consensus range at roughly 9\u201317%, making the 28% claim a material overstatement.",
+      "missing_information": null,
+      "cited_passages": [],
+      "web_sources": [
+        {
+          "url": "https://www.grandviewresearch.com/industry-analysis/us-cannabis-market",
+          "title": "U.S. Cannabis Market Size & Share | Industry Report, 2030",
+          "page_age": null
+        },
+        {
+          "url": "https://www.grandviewresearch.com/industry-analysis/legal-cannabis-market",
+          "title": "Legal Cannabis Market Size & Share | Industry Report, 2033",
+          "page_age": null
+        },
+        {
+          "url": "https://www.imarcgroup.com/us-cannabis-market",
+          "title": "US Cannabis Market Size, Share & Trends Report To 2034",
+          "page_age": null
+        },
+        {
+          "url": "https://payboticfinancial.com/cannabis-industry-statistics-2025/",
+          "title": "2025 Cannabis Industry Statistics & Market Insights | Paybotic Financial",
+          "page_age": "October 2, 2025"
+        },
+        {
+          "url": "https://www.skyquestt.com/report/cannabis-market",
+          "title": "Cannabis Market Size, Share, and Growth Analysis",
+          "page_age": "February 3, 2026"
+        },
+        {
+          "url": "https://market.us/report/us-cannabis-market/",
+          "title": "US Cannabis Market Share, Growth Analysis | CAGR of 11.6%",
+          "page_age": "December 8, 2025"
+        },
+        {
+          "url": "https://media.market.us/us-cannabis-market-news-2025/",
+          "title": "US Cannabis Market Size, Share, Growth | CAGR of 11.6%",
+          "page_age": "December 8, 2025"
+        },
+        {
+          "url": "https://www.databridgemarketresearch.com/reports/global-cannabis-market",
+          "title": "Cannabis Market \u2013 Global Market Size, Share, and Trends Analysis Report \u2013 Industry Overview and Forecast to 2032 | Data Bridge Market Research",
+          "page_age": "October 30, 2024"
+        },
+        {
+          "url": "https://www.marketresearchfuture.com/reports/cannabis-market-industry-950",
+          "title": "Cannabis Market Industry Size, Share, Analysis, Growth 2035",
+          "page_age": "January 13, 2026"
+        },
+        {
+          "url": "https://www.cognitivemarketresearch.com/cannabis-market-report",
+          "title": "The global Cannabis market size will be USD 58614.5 million in 2024.",
+          "page_age": "July 21, 2025"
+        },
+        {
+          "url": "https://www.statista.com/outlook/hmo/cannabis/worldwide",
+          "title": "Cannabis - Worldwide | Statista Market Forecast",
+          "page_age": null
+        },
+        {
+          "url": "https://www.mordorintelligence.com/industry-reports/cannabis-market",
+          "title": "Cannabis Market Size, Share & Industry Report 2031",
+          "page_age": "January 5, 2026"
+        },
+        {
+          "url": "https://www.hefestus-tech.com/blog/cannabis-industry-statistics/",
+          "title": "115+ Cannabis Industry Statistics 2026: Market Size & Growth",
+          "page_age": "1 month ago"
+        },
+        {
+          "url": "https://www.fortunebusinessinsights.com/industry-reports/cannabis-marijuana-market-100219",
+          "title": "Cannabis Market Size & Growth | Forecast Report [2034]",
+          "page_age": null
+        },
+        {
+          "url": "https://www.grandviewresearch.com/industry-analysis/legal-marijuana-market",
+          "title": "Legal Marijuana Market Size, Share & Growth Report, 2030",
+          "page_age": null
+        },
+        {
+          "url": "https://bizplanr.ai/blog/cannabis-industry-statistics",
+          "title": "30+ Cannabis Industry Statistics: Growth & Trends in 2025",
+          "page_age": "March 27, 2025"
+        },
+        {
+          "url": "https://market.us/report/global-cannabis-market/",
+          "title": "Cannabis Market Size, Share | CAGR of 13.8%",
+          "page_age": "3 weeks ago"
+        },
+        {
+          "url": "https://www.euromonitor.com/world-market-for-cannabis/report",
+          "title": "World Market for Cannabis | Market Research Report | Euromonitor",
+          "page_age": null
+        }
+      ],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and retail (legal adult-use and medical marijuana)"
+    },
+    {
+      "claim": "Recreational cannabis sales will account for more than 53% of the overall market by 2029.",
+      "verdict": "CONSISTENT",
+      "forward_looking": true,
+      "severity": "LOW",
+      "explanation": "Multiple authoritative sources corroborate that recreational/adult-use cannabis already exceeds \u2014 and will continue to exceed \u2014 the 53% threshold, though primarily for the U.S. market context. Grand View Research (grandviewresearch.com, U.S. Cannabis Market report) reports that recreational use already held a **66.9% revenue share in 2024** and is projected to grow at the fastest CAGR through 2030, making a >53% share by 2029 not only supported but conservative. Statista (statista.com) projects U.S. recreational cannabis revenue reaching $30.12bn by 2029 against a wider U.S. market trajectory well above that ratio. The claim is directionally well-supported for the U.S. context. One important caveat: for the **global** legal cannabis market, Grand View Research's global legal cannabis report (grandviewresearch.com) shows medical use **dominated** globally at 63.56% in 2024, meaning recreational was only ~36% globally \u2014 which would **contradict** a >53% claim in a global framing. Since Canna Farm appears to be a U.S.-focused operator, the U.S.-specific data clearly supports the claim, making it CONSISTENT, though the wording 'overall market' should be explicitly scoped to the U.S.",
+      "missing_information": "The claim does not specify whether 'overall market' refers to the U.S. market or the global market \u2014 the verdict differs significantly between the two. A clarification of geographic scope, or a specific industry report (e.g., MJBizDaily, BDSA, or Statista's U.S.-specific recreational outlook) benchmarked to 2029, would further validate the precise threshold.",
+      "cited_passages": [],
+      "web_sources": [
+        {
+          "url": "https://www.flowhub.com/cannabis-industry-statistics",
+          "title": "2026 Cannabis Industry Statistics",
+          "page_age": "February 19, 2026"
+        },
+        {
+          "url": "https://www.statista.com/outlook/hmo/cannabis/worldwide",
+          "title": "Cannabis - Worldwide | Statista Market Forecast",
+          "page_age": null
+        },
+        {
+          "url": "https://www.grandviewresearch.com/industry-analysis/us-cannabis-market",
+          "title": "U.S. Cannabis Market Size & Share | Industry Report, 2030",
+          "page_age": null
+        },
+        {
+          "url": "https://bizplanr.ai/blog/cannabis-industry-statistics",
+          "title": "30+ Cannabis Industry Statistics: Growth & Trends in 2025",
+          "page_age": "March 27, 2025"
+        },
+        {
+          "url": "https://www.statista.com/outlook/hmo/cannabis/recreational-cannabis/united-states",
+          "title": "Recreational Cannabis - US | Statista Market Forecast",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabissciencetech.com/view/2025-state-of-the-cannabis-industry-sales-trends-and-forecasts",
+          "title": "2025 State of the Cannabis Industry: Sales Trends and Forecasts | Cannabis Science and Technology - Cannabis Industry News, Insights",
+          "page_age": "2 weeks ago"
+        },
+        {
+          "url": "https://www.technavio.com/report/us-cannabis-market-analysis",
+          "title": "Cannabis Market in US Growth Analysis - Size and Forecast 2025-2029 | Technavio | Technavio",
+          "page_age": "February 14, 2025"
+        },
+        {
+          "url": "https://www.researchandmarkets.com/reports/4771910/cannabis-market-share-analysis-industry",
+          "title": "Cannabis - Market Share Analysis, Industry Trends & Statistics, Growth Forecasts (2024 - 2029)",
+          "page_age": null
+        },
+        {
+          "url": "https://www.grandviewresearch.com/industry-analysis/legal-marijuana-market",
+          "title": "Legal Marijuana Market Size, Share & Growth Report, 2030",
+          "page_age": null
+        },
+        {
+          "url": "https://www.databridgemarketresearch.com/reports/global-recreational-cannabis-market",
+          "title": "Recreational Cannabis Market \u2013 Global Market Size, Share, and Trends Analysis Report \u2013 Industry Overview and Forecast to 2032 | Data Bridge Market Research",
+          "page_age": "May 8, 2024"
+        },
+        {
+          "url": "https://cannabismdtelemed.com/blog/30-cannabis-industry-statistics-growth-trends-in-2025",
+          "title": "37 Cannabis Industry Statistics 2026: Market Size, Jobs, Revenue & Growth \u2014 CannabisMD TeleMed",
+          "page_age": "February 19, 2026"
+        },
+        {
+          "url": "https://www.fortunebusinessinsights.com/industry-reports/cannabis-marijuana-market-100219",
+          "title": "Cannabis Market Size & Growth | Forecast Report [2034]",
+          "page_age": null
+        },
+        {
+          "url": "https://www.statista.com/statistics/1039109/global-market-share-cannabis/",
+          "title": "Global medical and recreational cannabis market share 2027 | Statista",
+          "page_age": "August 15, 2019"
+        },
+        {
+          "url": "https://www.grandviewresearch.com/industry-analysis/medical-marijuana-market",
+          "title": "Medical Marijuana Market Size & Share Report, 2030",
+          "page_age": null
+        },
+        {
+          "url": "https://www.grandviewresearch.com/industry-analysis/legal-cannabis-market",
+          "title": "Legal Cannabis Market Size & Share | Industry Report, 2033",
+          "page_age": null
+        }
+      ],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and retail (legal adult-use and medical marijuana)"
+    },
+    {
+      "claim": "As of August 1, 2025, there are 440 licensed retail marijuana businesses in California.",
+      "verdict": "CONTRADICTS",
+      "forward_looking": false,
+      "severity": "HIGH",
+      "explanation": "Multiple authoritative sources place California's licensed retail cannabis count far above 440. The Los Angeles Medical Marijuana Lawyer Blog (May 2025, citing July 2024 DCC data at cannabis.ca.gov) reports \"approximately 1,100 dispensaries and 470 delivery providers statewide,\" totaling roughly 1,570 retail-type licensees \u2014 more than triple the claimed figure. The California DCC's own page (cannabis.ca.gov/cannabis-laws/where-cannabis-businesses-are-allowed/, updated Feb 2026) states there are 4.27 retail licenses per 100,000 Californians; applied to California's ~39 million population, this implies approximately 1,665 active retail licenses. MJBizDaily (mjbizdaily.com, early 2025) separately notes California holds 5,823 total active cannabis licenses across all license types. None of these sources come close to corroborating 440 as the retail license count; the true figure appears to be in the range of 1,100\u20131,700 retail licenses, making the claim of 440 a material understatement by a factor of roughly 3x or more.",
+      "missing_information": null,
+      "cited_passages": [],
+      "web_sources": [
+        {
+          "url": "https://cannabis.ca.gov/wp-content/uploads/sites/2/2025/03/California-Cannabis-Market-Outlook-FNL.pdf",
+          "title": "California Cannabis Market Outlook 2024 Report Prepared by: ERA Economics, LLC",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/resources/data-dashboard/",
+          "title": "Data dashboards - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabis.ca.gov/wp-content/uploads/sites/2/2025/03/Report-on-the-Condition-and-Health-of-the-Cannabis-Industry-FNL-03.06.25.pdf",
+          "title": "Condition and Health of the Cannabis Industry in California",
+          "page_age": null
+        },
+        {
+          "url": "https://www.los-angeles-marijuana-lawyer.com/blog/california-cannabis-license-update/",
+          "title": "California Cannabis License Update | Los Angeles Medical Marijuana Lawyer Blog | May 16, 2025",
+          "page_age": "July 23, 2025"
+        },
+        {
+          "url": "https://cdtfa.ca.gov/dataportal/dataset.htm?url=CannabisSalesByCounty",
+          "title": "Cannabis Sales by County, Grid View - CDTFA",
+          "page_age": null
+        },
+        {
+          "url": "https://canndelta.com/us/california/",
+          "title": "California Cannabis License Types: How to Apply | CannDelta",
+          "page_age": "December 30, 2025"
+        },
+        {
+          "url": "https://mjbizdaily.com/us-marijuana-business-licensing-stable-in-early-2025/",
+          "title": "US marijuana business licensing stable in early 2025",
+          "page_age": "June 12, 2025"
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/cannabis-laws/where-cannabis-businesses-are-allowed/",
+          "title": "Where cannabis businesses are allowed - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://www.higherorigins.com/articles/2025-california-cannabis-cultivation-insights-report",
+          "title": "2025 California Cannabis Cultivation Insights Report - Higher Origins",
+          "page_age": "February 17, 2026"
+        },
+        {
+          "url": "https://www.cloverdale.net/373/California-Cannabis-Portal",
+          "title": "California Cannabis Portal | Cloverdale, CA - Official Website",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/",
+          "title": "Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/resources/data-dashboard/license-report/",
+          "title": "Cannabis License Summary Report - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/licensees/retail/",
+          "title": "Retail - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/resources/search-for-licensed-business/",
+          "title": "Search for a licensed business - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://search.cannabis.ca.gov/",
+          "title": "Cannabis Unified License Search",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/cannabis-laws/dcc-regulations/",
+          "title": "DCC regulations - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/applicants/license-types/",
+          "title": "License types - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/cannabis-laws/laws-and-regulations/",
+          "title": "California\u2019s cannabis laws - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://www.higherorigins.com/license-search",
+          "title": "California Cannabis License Search - Higher Origins",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabis.lacity.gov/personal-activity/find-licensed-retailers",
+          "title": "Find Licensed Retailers - Department of Cannabis Regulation",
+          "page_age": null
+        },
+        {
+          "url": "https://www.distru.com/cannabis-blog/distrus-guide-to-california-cannabis-licenses",
+          "title": "Distru's Guide to California Cannabis Licenses | Distru",
+          "page_age": "February 13, 2026"
+        }
+      ],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and retail (legal adult-use and medical marijuana)"
+    },
+    {
+      "claim": "As of August 1, 2025, there are 583 licensed cultivation facilities for retail marijuana in California.",
+      "verdict": "CONTRADICTS",
+      "forward_looking": false,
+      "severity": "HIGH",
+      "explanation": "Multiple authoritative sources drawn from California's Department of Cannabis Control (DCC) data directly contradict the claim of only 583 licensed cultivation facilities. Cannabis Benchmarks, citing a January 31, 2024 query of the DCC's own Cannabis Unified License Search tool (cannabisbenchmarks.com), reported 5,498 active cultivation licenses statewide \u2014 nearly 10\u00d7 the claimed figure \u2014 and noted that number itself represented a ~35% decline from the 8,380 active at the start of 2022. Looking ahead, cannabusinessplans.com, citing DCC data as of January 2026, puts total active cultivators at 4,401. MJBizDaily (mjbizdaily.com) corroborates the trend, noting cultivation permits fell ~24% from Q3 2023 levels, but total counts remain in the thousands. Across all time points bracketing the claimed date of August 1, 2025, the actual number of active cultivation licenses in California is plausibly in the range of 4,000\u20135,500, not 583. California does not segregate cultivation licenses into separate 'retail marijuana' vs. 'medical' buckets \u2014 the DCC issues unified A-type (adult-use) and M-type (medical) cultivation licenses \u2014 so no reasonable sub-segmentation of the data arrives near 583.",
+      "missing_information": null,
+      "cited_passages": [],
+      "web_sources": [
+        {
+          "url": "https://californiacannabis.org/los-angeles",
+          "title": "Los Angeles County Cannabis \u2013 Is It Legal & Where To Buy 2025 | CaliforniaCannabis.org",
+          "page_age": null
+        },
+        {
+          "url": "https://www.los-angeles-marijuana-lawyer.com/blog/california-cannabis-license-update/",
+          "title": "California Cannabis License Update | Los Angeles Medical Marijuana Lawyer Blog | May 16, 2025",
+          "page_age": "July 23, 2025"
+        },
+        {
+          "url": "https://cannabis.lacity.gov/articles/january-2025-news-bulletin",
+          "title": "January 2025 News Bulletin | Cannabis Regulation",
+          "page_age": "January 6, 2025"
+        },
+        {
+          "url": "https://www.ci.oceanside.ca.us/government/medical-marijuana-regulations",
+          "title": "Cannabis Facilities | Oceanside, CA",
+          "page_age": null
+        },
+        {
+          "url": "https://canndelta.com/us/california/",
+          "title": "California Cannabis License Types: How to Apply | CannDelta",
+          "page_age": "December 30, 2025"
+        },
+        {
+          "url": "https://www.distru.com/cannabis-blog/distrus-guide-to-california-cannabis-licenses",
+          "title": "Distru's Guide to California Cannabis Licenses | Distru",
+          "page_age": "February 13, 2026"
+        },
+        {
+          "url": "https://cannabis.lacity.gov/licensing-compliance/licensing-information/general-information",
+          "title": "General Information - Department of Cannabis Regulation",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabis.ca.gov/wp-content/uploads/sites/2/2025/03/California-Cannabis-Market-Outlook-FNL.pdf",
+          "title": "California Cannabis Market Outlook 2024 Report Prepared by: ERA Economics, LLC",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabis.lacity.gov/articles/guide-cannabis-licenses-los-angeles",
+          "title": "A Guide to Cannabis Licenses in Los Angeles | Cannabis Regulation",
+          "page_age": null
+        },
+        {
+          "url": "https://californiacannabis.org/licensing",
+          "title": "California Marijuana Licensing | CaliforniaCannabis.org",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/resources/data-dashboard/",
+          "title": "Data dashboards - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/",
+          "title": "Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/resources/data-dashboard/license-report/",
+          "title": "Cannabis License Summary Report - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabis.ca.gov/2025/08/the-department-of-cannabis-controls-recent-efforts-continue-toprioritize-consumer-and-public-safety-and-support-the-legal-cannabismarket/",
+          "title": "The Department of Cannabis Control\u2019s recent efforts continue to prioritize consumer and public safety and support the legal cannabis market - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/posts/dcc-2025-focus-consumer-safety/",
+          "title": "Department of Cannabis Control Announces Q1 2025 Efforts Focusing on Consumer Safety and Bolstering the Legal Cannabis Market - Department of Cannabis Control",
+          "page_age": "May 12, 2025"
+        },
+        {
+          "url": "https://cannabisstudieslab.com/blog/california-cultivation-license-counts-and-maximum-canopy/",
+          "title": "California Cultivation: License Counts and Maximum Canopy \u2013 Cal Poly Humboldt Cannabis Studies Lab",
+          "page_age": "March 5, 2024"
+        },
+        {
+          "url": "https://search.cannabis.ca.gov/",
+          "title": "Cannabis Unified License Search",
+          "page_age": null
+        },
+        {
+          "url": "https://aca-prod.accela.com/CALCANNABIS/Default.aspx",
+          "title": "Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabisbusinesstimes.com/us-states/california/news/15738922/60-of-cannabis-consumed-in-california-comes-from-unregulated-market-as-licensed-production-grows",
+          "title": "60% of Cannabis Consumed in California Comes From Unregulated Market as Licensed Production Grows | Cannabis Business Times",
+          "page_age": "March 4, 2025"
+        },
+        {
+          "url": "https://www.ca.gov/departments/100/",
+          "title": "Department of Cannabis Control (DCC) | CA.gov",
+          "page_age": "December 18, 2025"
+        },
+        {
+          "url": "https://cannabusinessplans.com/california-cannabis-market/",
+          "title": "California Cannabis Market \u2013 Business Plan Templates",
+          "page_age": "March 7, 2026"
+        },
+        {
+          "url": "https://www.cannabisbenchmarks.com/wholesale-market-observer/licensed-cannabis-cultivators-in-california-declining-rapidly/",
+          "title": "Licensed Cannabis Cultivators in California Declining Rapidly - Cannabis Benchmarks\u00ae",
+          "page_age": "February 6, 2024"
+        },
+        {
+          "url": "https://calcannabis.cdfa.ca.gov/",
+          "title": "Redirecting to Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabisstudieslab.com/blog/california-licensed-geography-overview/",
+          "title": "California Licensed Geography Overview \u2013 Cal Poly Humboldt Cannabis Studies Lab",
+          "page_age": "March 4, 2024"
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/licensees/cultivation/",
+          "title": "Cultivation - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/licensees/cannaconnect-compliance-hub/",
+          "title": "CannaConnect Licensee Resources - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://mjbizdaily.com/news/cannabis-licensing-pullback-continues-through-third-quarter/613494",
+          "title": "Massive drop in cannabis cultivation permits behind licensing contraction",
+          "page_age": "December 18, 2025"
+        },
+        {
+          "url": "https://www.criminallawyersandiego.com/california-marijuana-business-lawyer/medical-marijuana/license-types/",
+          "title": "California Medical Marijuana License Types | McElfresh Law",
+          "page_age": "March 25, 2025"
+        },
+        {
+          "url": "https://www.lakecountyca.gov/492/License-Types",
+          "title": "License Types | Lake County, CA",
+          "page_age": null
+        },
+        {
+          "url": "https://alpharoot.com/insights/cannabis-license-in-california/",
+          "title": "How to Get a Cannabis License in California - 2024 Guide",
+          "page_age": "May 21, 2025"
+        },
+        {
+          "url": "https://www.criminallawyersandiego.com/california-marijuana-business-lawyer/laws-and-resources/large-cultivator-license/",
+          "title": "Large Marijuana Cultivator License | McElfresh Law",
+          "page_age": "March 25, 2025"
+        },
+        {
+          "url": "https://www.higherorigins.com/articles/california-cannabis-licensing-trends-q3-2024-overview",
+          "title": "California Cannabis Licensing Trends: Q3 2024 Overview - Higher Origins",
+          "page_age": "October 21, 2024"
+        }
+      ],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and retail (legal adult-use and medical marijuana)"
+    },
+    {
+      "claim": "As of August 1, 2025, there are 198 licensed product manufacturers for retail marijuana in California.",
+      "verdict": "CONTRADICTS",
+      "forward_looking": false,
+      "severity": "HIGH",
+      "explanation": "The claim of 198 licensed product manufacturers for retail marijuana in California as of August 1, 2025 is contradicted by available authoritative data. According to cannabusinessplans.com, which cites DCC licensing data, California had 513 active manufacturer licenses as of January 2026 \u2014 nearly 2.6\u00d7 the claimed figure. The DCC's own California Cannabis Market Outlook 2024 (commissioned from ERA Economics and published at cannabis.ca.gov) confirms active manufacturer licenses are measured in the hundreds and were on a declining trend, but no credible source places the count anywhere near 198. Additionally, California's regulatory framework (administered by the DCC) does not use the term 'retail marijuana' \u2014 that terminology is associated with Colorado's system; California distinguishes 'adult-use' and 'medicinal' activities, and manufacturer licenses (Types 6, 7, N, P, S) are not separately categorized as 'retail marijuana manufacturer' licenses. No source reviewed corroborates the 198 figure.",
+      "missing_information": "A point-in-time extract from the DCC's Cannabis License Summary Report dashboard (cannabis.ca.gov/resources/data-dashboard/license-report/) filtered to active manufacturing licenses as of August 1, 2025 would be the definitive primary source needed to resolve the exact count with precision.",
+      "cited_passages": [],
+      "web_sources": [
+        {
+          "url": "https://cdtfa.ca.gov/industry/cannabis/retailers.htm",
+          "title": "Cannabis Retailers with Cannabis Businesses - CDTFA",
+          "page_age": null
+        },
+        {
+          "url": "https://canndelta.com/us/california/",
+          "title": "California Cannabis License Types: How to Apply | CannDelta",
+          "page_age": "December 30, 2025"
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/resources/data-dashboard/",
+          "title": "Data dashboards - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/resources/data-dashboard/license-report/",
+          "title": "Cannabis License Summary Report - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/resources/search-for-licensed-business/",
+          "title": "Search for a licensed business - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabis.lacity.gov/personal-activity/find-licensed-retailers",
+          "title": "Find Licensed Retailers - Department of Cannabis Regulation",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabusinessplans.com/california-cannabis-market/",
+          "title": "California Cannabis Market \u2013 Business Plan Templates",
+          "page_age": "March 7, 2026"
+        },
+        {
+          "url": "https://www.higherorigins.com/license-search",
+          "title": "California Cannabis License Search - Higher Origins",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/licensees/retail/",
+          "title": "Retail - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://www.los-angeles-marijuana-lawyer.com/blog/california-cannabis-license-update/",
+          "title": "California Cannabis License Update | Los Angeles Medical Marijuana Lawyer Blog | May 16, 2025",
+          "page_age": "July 23, 2025"
+        },
+        {
+          "url": "https://search.cannabis.ca.gov/",
+          "title": "Cannabis Unified License Search",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabis.ca.gov/wp-content/uploads/sites/2/2025/03/California-Cannabis-Market-Outlook-FNL.pdf",
+          "title": "California Cannabis Market Outlook 2024 Report Prepared by: ERA Economics, LLC",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/licensees/cannaconnect-compliance-hub/",
+          "title": "CannaConnect Licensee Resources - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/",
+          "title": "Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabis.ca.gov/2025/03/dcc-annual-report-fiscal-year-2023-24/",
+          "title": "DCC Annual Report: Fiscal Year 2023-24 - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabis.ca.gov/wp-content/uploads/sites/2/2025/03/DCC-Annual-Report_Fiscal-Year-2023_24.pdf",
+          "title": "Department of Cannabis Control Annual Report 2025 Gavin Newsom, Governor",
+          "page_age": "March 3, 2025"
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/applicants/license-types/",
+          "title": "License types - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabisstudieslab.com/blog/california-licensed-geography-overview/",
+          "title": "California Licensed Geography Overview \u2013 Cal Poly Humboldt Cannabis Studies Lab",
+          "page_age": "March 4, 2024"
+        },
+        {
+          "url": "https://www.distru.com/cannabis-blog/distrus-guide-to-california-cannabis-licenses",
+          "title": "Distru's Guide to California Cannabis Licenses | Distru",
+          "page_age": "February 13, 2026"
+        },
+        {
+          "url": "https://cannabisstudieslab.com/blog/california-cultivation-license-counts-and-maximum-canopy/",
+          "title": "California Cultivation: License Counts and Maximum Canopy \u2013 Cal Poly Humboldt Cannabis Studies Lab",
+          "page_age": "March 5, 2024"
+        },
+        {
+          "url": "https://cannabis.ca.gov/2025/08/the-department-of-cannabis-controls-recent-efforts-continue-toprioritize-consumer-and-public-safety-and-support-the-legal-cannabismarket/",
+          "title": "The Department of Cannabis Control\u2019s recent efforts continue to prioritize consumer and public safety and support the legal cannabis market - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/posts/california-cannabis-market-outlook/",
+          "title": "California Cannabis Market Outlook - Department of Cannabis Control",
+          "page_age": "March 3, 2025"
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/posts/california-cannabis-market-2024-report-executive-summary/",
+          "title": "California Cannabis Market Outlook Executive Summary - Department of Cannabis Control",
+          "page_age": "March 3, 2025"
+        },
+        {
+          "url": "https://cannabis.ca.gov/2025/03/california-cannabis-market-2024-report-executive-summary/",
+          "title": "California Cannabis Market Outlook Executive Summary - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabisbusinesstimes.com/us-states/california/news/15738922/60-of-cannabis-consumed-in-california-comes-from-unregulated-market-as-licensed-production-grows",
+          "title": "60% of Cannabis Consumed in California Comes From Unregulated Market as Licensed Production Grows | Cannabis Business Times",
+          "page_age": "March 4, 2025"
+        },
+        {
+          "url": "https://greenblazer.com/blogs/news/2025-california-pre-roll-market-cannabis-industry",
+          "title": "California Cannabis & Pre-Roll Market Guide 2025 \u2013 Green Blazer",
+          "page_age": "August 15, 2025"
+        },
+        {
+          "url": "https://cannabis.ca.gov/2025/03/california-cannabis-market-outlook/",
+          "title": "California Cannabis Market Outlook - Department of Cannabis Control",
+          "page_age": "March 3, 2025"
+        },
+        {
+          "url": "https://mjbizdaily.com/legal-california-cannabis-production-grows-but-illicit-market-thrives/",
+          "title": "Report: California cannabis production increases by double digits",
+          "page_age": "March 4, 2025"
+        },
+        {
+          "url": "https://www.mmjdaily.com/article/9711939/2024-california-market-report-paints-a-picture-of-a-growing-industry-despite-price-compression/",
+          "title": "2024 California market report paints a picture of a growing industry, despite price compression",
+          "page_age": "March 7, 2025"
+        },
+        {
+          "url": "https://www.higherorigins.com/articles/california-cannabis-licensing-trends-q3-2024-overview",
+          "title": "California Cannabis Licensing Trends: Q3 2024 Overview - Higher Origins",
+          "page_age": "October 21, 2024"
+        },
+        {
+          "url": "https://manzurilaw.com/california-2025-legislative-update/",
+          "title": "California 2025 Legislative Update: Cannabis, Hemp, Psychedelics",
+          "page_age": "March 10, 2025"
+        },
+        {
+          "url": "https://cannabis.lacity.gov/articles/january-2025-news-bulletin",
+          "title": "January 2025 News Bulletin | Cannabis Regulation",
+          "page_age": "January 6, 2025"
+        },
+        {
+          "url": "https://cannabis.lacity.gov/licensing-compliance/licensing-information/general-information",
+          "title": "General Information - Department of Cannabis Regulation",
+          "page_age": null
+        },
+        {
+          "url": "https://legiscan.com/CA/text/AB8/id/3245305",
+          "title": "California AB8 | 2025-2026 | Regular Session",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabisregulations.ai/cannabis-and-hemp-regulations-compliance-ai-blog/california-ab-8-intoxicating-hemp-moved-into-cannabis-market-2025",
+          "title": "| California AB 8 Would Move Intoxicating Hemp Into the Cannabis Market\u2014Sunset Dates, Dispensary-Only Sales, and Compliance Timeline",
+          "page_age": "March 6, 2026"
+        },
+        {
+          "url": "https://californiacannabis.org/laws",
+          "title": "California Marijuana Laws 2026 | CaliforniaCannabis.org",
+          "page_age": null
+        }
+      ],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and retail (legal adult-use and medical marijuana)"
+    },
+    {
+      "claim": "As of August 1, 2025, there are 15 licensed testing facilities for retail marijuana in California.",
+      "verdict": "CONTRADICTS",
+      "forward_looking": false,
+      "severity": "HIGH",
+      "explanation": "Multiple authoritative sources place the number of licensed cannabis testing labs in California well above 15. CaliforniaCannabis.org states there are 'over 30 testing labs with active DCC-issued licenses' (https://californiacannabis.org/testing-lab). MJBizDaily, citing DCC data directly, reported that even after a notable 2024 regulatory crackdown that revoked several lab licenses, 'only 27 labs had active permits' as of early February 2024 (https://mjbizdaily.com/fourth-california-cannabis-testing-lab-loses-license-as-crackdown-continues/) \u2014 which itself represents a ~27% drop from ~37 at the start of 2024. California Cannabis Testing Labs (CCTL) independently references '29 labs approved to test potency' under the DCC's standardized validation method (https://californiacannabistestinglabs.com/). The DCC publishes a live license search tool and a Cannabis License Summary Report (https://www.cannabis.ca.gov/resources/data-dashboard/license-report/) to confirm current counts. All evidence consistently indicates the active total is in the range of 27\u201335+, making the claim of exactly 15 a material undercount as of the claimed date of August 1, 2025.",
+      "missing_information": null,
+      "cited_passages": [],
+      "web_sources": [
+        {
+          "url": "https://www.cannabis.ca.gov/licensees/testing-laboratories/",
+          "title": "Testing laboratories - Department of Cannabis Control - CA.gov",
+          "page_age": null
+        },
+        {
+          "url": "https://infinitecal.com/california/",
+          "title": "Infinite Chemical Analysis Lab | Cannabinoid Testing",
+          "page_age": "May 28, 2025"
+        },
+        {
+          "url": "https://www.cdfa.ca.gov/plant/industrialhemp/docs/Public_List_of_Testing_Laboratories.pdf",
+          "title": "List of Approved Hemp Testing Laboratories",
+          "page_age": null
+        },
+        {
+          "url": "https://www.jennifermcgrath.com/cannabis-regulations-california/",
+          "title": "Cannabis Regulations",
+          "page_age": "December 27, 2025"
+        },
+        {
+          "url": "https://bcc.ca.gov/licensees/testing_labs.html",
+          "title": "Testing Laboratories - BCC",
+          "page_age": null
+        },
+        {
+          "url": "https://www.sclabs.com/cannabis/california-cannabis-compliance-testing/",
+          "title": "California Cannabis Compliance Testing | SC Labs",
+          "page_age": "December 22, 2025"
+        },
+        {
+          "url": "https://californiacannabis.org/testing-lab",
+          "title": "California Cannabis Testing Labs | CaliforniaCannabis.org",
+          "page_age": null
+        },
+        {
+          "url": "https://www.lighthouselabservices.com/analytical-lab-testing-requirements-for-cannabis-labs-in-california/",
+          "title": "Lab Testing Requirements for California Cannabis Labs",
+          "page_age": "December 4, 2025"
+        },
+        {
+          "url": "https://wiki.openthc.org/USA/CA",
+          "title": "California - OpenTHC Wiki",
+          "page_age": null
+        },
+        {
+          "url": "https://aca-prod.accela.com/CALCANNABIS/Default.aspx",
+          "title": "Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://www.higherorigins.com/license-search",
+          "title": "California Cannabis License Search - Higher Origins",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabisstudieslab.com/blog/california-licensed-geography-overview/",
+          "title": "California Licensed Geography Overview \u2013 Cal Poly Humboldt Cannabis Studies Lab",
+          "page_age": "March 4, 2024"
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/resources/data-dashboard/license-report/",
+          "title": "Cannabis License Summary Report - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabis.ca.gov/wp-content/uploads/sites/2/2025/03/California-Cannabis-Market-Outlook-FNL.pdf",
+          "title": "California Cannabis Market Outlook 2024 Report Prepared by: ERA Economics, LLC",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/resources/search-for-licensed-business/",
+          "title": "Search for a licensed business - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://mjbizdaily.com/fourth-california-cannabis-testing-lab-loses-license-as-crackdown-continues/",
+          "title": "4th cannabis testing lab loses license in California crackdown",
+          "page_age": "September 23, 2024"
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/licensees/cannaconnect-compliance-hub/",
+          "title": "CannaConnect Licensee Resources - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://californiacannabistestinglabs.com/",
+          "title": "California Cannabis Testing Labs (CCTL): Reliable Testing Laboratory for Cannabis",
+          "page_age": "February 13, 2025"
+        }
+      ],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and retail (legal adult-use and medical marijuana)"
+    },
+    {
+      "claim": "As of August 1, 2025, there are 531 licensed medical marijuana centres in California.",
+      "verdict": "CONTRADICTS",
+      "forward_looking": false,
+      "severity": "HIGH",
+      "explanation": "Multiple authoritative sources indicate the total number of licensed cannabis retail dispensaries in California is far higher than 531, and no source supports a figure of exactly 531 'medical marijuana centres.' Leafly (leafly.com) states California has 'over 800 licensed recreational cannabis dispensaries,' californiacannabis.org cites approximately 1,453 dispensaries, and Cannabiz Media (via cure8.tech) puts the figure at around 700 licensed dispensaries. A Los Angeles cannabis law blog (los-angeles-marijuana-lawyer.com, May 16, 2025) citing July 2024 data reports approximately 1,100 dispensaries statewide. Furthermore, California's regulatory framework under Prop 64 and the Department of Cannabis Control (cannabis.ca.gov) does not maintain a separate 'medical marijuana centre' license class \u2014 retail storefronts (Type 10 license) are authorised to serve both adult-use and medical patients, making the claim's framing structurally inaccurate. No source returned a count of 531 for any category of California cannabis licence.",
+      "missing_information": null,
+      "cited_passages": [],
+      "web_sources": [
+        {
+          "url": "https://cdtfa.ca.gov/dataportal/dataset.htm?url=CannabisSalesByCounty",
+          "title": "Cannabis Sales by County, Grid View - CDTFA",
+          "page_age": null
+        },
+        {
+          "url": "https://real.cannabis.ca.gov/licensed-retailers/",
+          "title": "Find Licensed Dispensaries - Real CA Cannabis - Real CA Cannabis",
+          "page_age": null
+        },
+        {
+          "url": "https://www.leafly.com/dispensaries/california",
+          "title": "The Best Dispensaries Near Me in California | Updated 2026 | Leafly",
+          "page_age": null
+        },
+        {
+          "url": "https://cure8.tech/how-to-open-a-dispensary-in-california/",
+          "title": "How to Open a Dispensary in California 2025 - Cure8",
+          "page_age": "January 21, 2026"
+        },
+        {
+          "url": "https://ballotpedia.org/Marijuana_dispensaries_in_California",
+          "title": "Marijuana dispensaries in California - Ballotpedia",
+          "page_age": null
+        },
+        {
+          "url": "https://www.los-angeles-marijuana-lawyer.com/blog/california-cannabis-license-update/",
+          "title": "California Cannabis License Update | Los Angeles Medical Marijuana Lawyer Blog | May 16, 2025",
+          "page_age": "July 23, 2025"
+        },
+        {
+          "url": "https://norml.org/laws/medical-laws/california-medical-marijuana-law/",
+          "title": "California Medical Marijuana Law - NORML",
+          "page_age": "February 11, 2025"
+        },
+        {
+          "url": "https://californiacannabis.org/dispensaries",
+          "title": "Dispensaries Near Me in California | CaliforniaCannabis.org",
+          "page_age": null
+        },
+        {
+          "url": "https://www.quora.com/How-can-I-find-a-comprehensive-list-of-legal-medical-marijuana-dispensaries-in-California",
+          "title": "How to find a comprehensive list of legal medical marijuana dispensaries in California - Quora",
+          "page_age": null
+        },
+        {
+          "url": "https://www.statista.com/statistics/754751/medical-marijuana-dispensaries-number-by-state/",
+          "title": "Number of cannabis dispensaries in the U.S. 2024, by state",
+          "page_age": "February 19, 2026"
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/",
+          "title": "Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/resources/search-for-licensed-business/",
+          "title": "Search for a licensed business - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/resources/data-dashboard/license-report/",
+          "title": "Cannabis License Summary Report - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://search.cannabis.ca.gov/",
+          "title": "Cannabis Unified License Search",
+          "page_age": null
+        },
+        {
+          "url": "https://aca-prod.accela.com/CALCANNABIS/Default.aspx",
+          "title": "Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/applicants/license-types/",
+          "title": "License types - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabis.lacity.gov/personal-activity/find-licensed-retailers",
+          "title": "Find Licensed Retailers - Department of Cannabis Regulation",
+          "page_age": null
+        },
+        {
+          "url": "https://californiacannabis.org/los-angeles",
+          "title": "Los Angeles County Cannabis \u2013 Is It Legal & Where To Buy 2025 | CaliforniaCannabis.org",
+          "page_age": null
+        },
+        {
+          "url": "https://catalyst-bc.com/california-cannabis-lounge-license-guide-what-every-operator-needs-to-know/",
+          "title": "California Cannabis Lounge License Guide: What Every Operator Needs to Know",
+          "page_age": "September 2, 2025"
+        },
+        {
+          "url": "https://www.canorml.org/cannabis-resource-directory/dispensaries-and-delivery/",
+          "title": "Map of California Cannabis Dispensaries and Marijuana Delivery",
+          "page_age": "May 14, 2025"
+        },
+        {
+          "url": "https://www.srcity.org/3918/State-Cannabis-License",
+          "title": "State Cannabis License | Santa Rosa, CA",
+          "page_age": null
+        },
+        {
+          "url": "https://goldenstatepatientcare.com/",
+          "title": "RETAIL CANNABIS DISPENSARY",
+          "page_age": null
+        }
+      ],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and retail (legal adult-use and medical marijuana)"
+    },
+    {
+      "claim": "As of August 1, 2025, there are 801 licensed medical marijuana cultivations in California.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "MEDIUM",
+      "explanation": "No authoritative web source corroborates or directly contradicts the specific figure of 801 licensed medical marijuana cultivations in California as of August 1, 2025. The most relevant data point found is from Cannabis Business Times (citing DCC data), which reported 4,805 total active cultivation licenses statewide as of January 1, 2025 \u2014 a figure encompassing all designations (adult-use, medicinal, and dual). California's DCC does track a 'medicinal designation' sub-category within its License Summary Report (cannabis.ca.gov/resources/data-dashboard/license-report/), but the live dashboard's filtered breakdown for medicinal-only cultivation licenses as of the August 1, 2025 date is not surfaced in any indexed web result. Furthermore, since MAUCRSA (2017), California operates a single unified licensing framework \u2014 there is no purely separate 'medical marijuana cultivation' track, only a 'medicinal designation' applied to otherwise standard cultivation licenses \u2014 making the claim's framing slightly imprecise.",
+      "missing_information": "The primary source required is the California DCC Cannabis License Summary Report (cannabis.ca.gov/resources/data-dashboard/license-report/) filtered to License Category = 'Cultivation,' License Designation = 'Medicinal,' and License Status = 'Active,' queried as of August 1, 2025. No publicly indexed web source provides this specific filtered count.",
+      "cited_passages": [],
+      "web_sources": [
+        {
+          "url": "https://www.cannabis.ca.gov/applicants/license-types/",
+          "title": "License types - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://www.los-angeles-marijuana-lawyer.com/blog/california-cannabis-license-update/",
+          "title": "California Cannabis License Update | Los Angeles Medical Marijuana Lawyer Blog | May 16, 2025",
+          "page_age": "July 23, 2025"
+        },
+        {
+          "url": "https://www.criminallawyersandiego.com/california-marijuana-business-lawyer/medical-marijuana/license-types/",
+          "title": "California Medical Marijuana License Types | McElfresh Law",
+          "page_age": "March 25, 2025"
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/licensees/cultivation/",
+          "title": "Cultivation - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://californiacannabis.org/licensing/cultivation",
+          "title": "California Marijuana Cultivation License | CaliforniaCannabis.org",
+          "page_age": null
+        },
+        {
+          "url": "https://aca-prod.accela.com/CALCANNABIS/Default.aspx",
+          "title": "Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://www.frontierrisk.com/insights/cannabis-license-in-california",
+          "title": "How to Get a Cannabis License in California in 2025 | Insights | Frontier Risk Cannabis Insurance",
+          "page_age": null
+        },
+        {
+          "url": "https://happymd.org/cultivation-license-grow-99-marijuana-plants-in-california",
+          "title": "Cultivation License: Grow 99 Plants in California | Cannabis Grower\u2019s License HappyMD",
+          "page_age": "2 weeks ago"
+        },
+        {
+          "url": "https://www.srcity.org/3918/State-Cannabis-License",
+          "title": "State Cannabis License | Santa Rosa, CA",
+          "page_age": null
+        },
+        {
+          "url": "https://www.criminallawyersandiego.com/california-marijuana-business-lawyer/laws-and-resources/large-cultivator-license/",
+          "title": "Large Marijuana Cultivator License | McElfresh Law",
+          "page_age": "March 25, 2025"
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/resources/data-dashboard/license-report/",
+          "title": "Cannabis License Summary Report - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/",
+          "title": "Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/posts/dcc-2025-focus-consumer-safety/",
+          "title": "Department of Cannabis Control Announces Q1 2025 Efforts Focusing on Consumer Safety and Bolstering the Legal Cannabis Market - Department of Cannabis Control",
+          "page_age": "May 12, 2025"
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/licensees/cannaconnect-compliance-hub/",
+          "title": "CannaConnect Licensee Resources - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabisstudieslab.com/blog/california-cultivation-license-counts-and-maximum-canopy/",
+          "title": "California Cultivation: License Counts and Maximum Canopy \u2013 Cal Poly Humboldt Cannabis Studies Lab",
+          "page_age": "March 5, 2024"
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/resources/data-dashboard/",
+          "title": "Data dashboards - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabis.ca.gov/2025/08/the-department-of-cannabis-controls-recent-efforts-continue-toprioritize-consumer-and-public-safety-and-support-the-legal-cannabismarket/",
+          "title": "The Department of Cannabis Control\u2019s recent efforts continue to prioritize consumer and public safety and support the legal cannabis market - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://canndelta.com/us/california/",
+          "title": "California Cannabis License Types: How to Apply | CannDelta",
+          "page_age": "December 30, 2025"
+        },
+        {
+          "url": "https://www.higherorigins.com/license-search",
+          "title": "California Cannabis License Search - Higher Origins",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/cannabis-laws/dcc-regulations/",
+          "title": "DCC regulations - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabis.ca.gov/wp-content/uploads/sites/2/2025/03/DCC-Annual-Report_Fiscal-Year-2023_24.pdf",
+          "title": "Department of Cannabis Control Annual Report 2025 Gavin Newsom, Governor",
+          "page_age": "March 3, 2025"
+        },
+        {
+          "url": "https://www.distru.com/cannabis-blog/distrus-guide-to-california-cannabis-licenses",
+          "title": "Distru's Guide to California Cannabis Licenses | Distru",
+          "page_age": "February 13, 2026"
+        },
+        {
+          "url": "https://mrcannabislaw.com/california/",
+          "title": "California Cannabis License | Mr. Cannabis Law",
+          "page_age": "July 12, 2024"
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/resources/data-dashboard/data-dashboard-glossary/",
+          "title": "Data Dashboard Glossary and Notes - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://cdn.cannabis.ca.gov/wp-content/uploads/sites/2/2024/02/dcc_hemp_report_2023.pdf",
+          "title": "The Hemp Report Page 1 of 22 The Hemp Report Steps and Considerations for",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabis.ca.gov/wp-content/uploads/sites/2/2025/03/California-Cannabis-Market-Outlook-FNL.pdf",
+          "title": "California Cannabis Market Outlook 2024 Report Prepared by: ERA Economics, LLC",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabis.ca.gov/2017/09/licensing-authorities-announce-withdrawal-of-proposed-medical-cannabis-regulations/",
+          "title": "Licensing Authorities Announce Withdrawal of Proposed Medical Cannabis Regulations - Department of Cannabis Control",
+          "page_age": "September 29, 2017"
+        },
+        {
+          "url": "https://cannabis.ca.gov/wp-content/uploads/sites/2/2022/07/DCC_Modifications-to-Proposed-Text-of-Consolidated-Cannabis-Regulations_2022-0706.pdf",
+          "title": "Department of Cannabis Control Medicinal and Adult-Use ...",
+          "page_age": null
+        },
+        {
+          "url": "https://cdn.cannabis.ca.gov/wp-content/uploads/sites/2/2023/09/cac_annual_report_2020.pdf",
+          "title": "CALIFORNIA CANNABIS ADVISORY COMMITTEE 20 20 A N N U A L R E P O R T",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabis.ca.gov/2023/09/renew-your-cannabis-cultivation-license/",
+          "title": "Renew Your Cannabis Cultivation License - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabisbusinesstimes.com/us-states/california/news/15738922/60-of-cannabis-consumed-in-california-comes-from-unregulated-market-as-licensed-production-grows",
+          "title": "60% of Cannabis Consumed in California Comes From Unregulated Market as Licensed Production Grows | Cannabis Business Times",
+          "page_age": "March 4, 2025"
+        },
+        {
+          "url": "https://www.cannabisbusinesstimes.com/top-stories/news/15711213/california-cannabis-operators-face-new-obstacles-in-2025-as-governor-touts-seizures",
+          "title": "California Cannabis Operators Face New Obstacles in 2025 as Governor Touts Seizures | Cannabis Business Times",
+          "page_age": "January 2, 2025"
+        },
+        {
+          "url": "https://search.cannabis.ca.gov/",
+          "title": "Cannabis Unified License Search",
+          "page_age": null
+        },
+        {
+          "url": "https://www.higherorigins.com/articles/2025-california-cannabis-cultivation-insights-report",
+          "title": "2025 California Cannabis Cultivation Insights Report - Higher Origins",
+          "page_age": "February 17, 2026"
+        },
+        {
+          "url": "https://cannabisstudieslab.com/blog/california-licensed-geography-overview/",
+          "title": "California Licensed Geography Overview \u2013 Cal Poly Humboldt Cannabis Studies Lab",
+          "page_age": "March 4, 2024"
+        },
+        {
+          "url": "https://www.ca.gov/departments/100/services/1281/",
+          "title": "Applying for a cannabis license | CA.gov",
+          "page_age": "May 8, 2025"
+        }
+      ],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and retail (legal adult-use and medical marijuana)"
+    },
+    {
+      "claim": "As of August 1, 2025, there are 242 licensed medical infused product manufacturers in California.",
+      "verdict": "UNSUPPORTED",
+      "forward_looking": false,
+      "severity": "MEDIUM",
+      "explanation": "No authoritative web source corroborates the specific figure of 242 licensed medical infused product manufacturers in California as of August 1, 2025. The California Department of Cannabis Control (DCC) publishes a Cannabis License Summary Report and a searchable license database (search.cannabis.ca.gov and cannabis.ca.gov/resources/data-dashboard/license-report/) that are the definitive sources for this type of breakdown, but their detailed per-license-type, medical-vs-adult-use counts were not surfaced in search results. The closest available data comes from cannabusinessplans.com (citing DCC figures), which reports approximately 513 total active manufacturing licenses of all types as of January 2026, and from New Cannabis Ventures (via Cannabiz Media), which reported only ~55 infusion-specific licenses and ~342 total medical manufacturing licenses \u2014 neither figure aligns with 242 medical infused product manufacturers specifically. The term 'medical infused product manufacturer' may reference an older CDPH/MCRSA license classification, but no current source validates the 242 count for any date in 2025.",
+      "missing_information": "The DCC Cannabis License Summary Report (cannabis.ca.gov/resources/data-dashboard/license-report/) filtered specifically by license subtype 'Medical Infused Product Manufacturer' and dated on or around August 1, 2025 would be required to verify or refute this figure. Direct query of the DCC Unified License Search tool (search.cannabis.ca.gov) by license type and medical designation would also be definitive.",
+      "cited_passages": [],
+      "web_sources": [
+        {
+          "url": "https://harris-sliwoski.com/cannalawblog/california-cannabis-manufacturing/",
+          "title": "California Cannabis Manufacturing Rules - Canna Law Blog\u2122",
+          "page_age": "September 25, 2025"
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/licensees/manufacturing/",
+          "title": "Manufacturing - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabusinessplans.com/california-cannabis-market/",
+          "title": "California Cannabis Market \u2013 Business Plan Templates",
+          "page_age": "March 7, 2026"
+        },
+        {
+          "url": "https://californiacannabis.org/licensing/manufacturing",
+          "title": "California Marijuana Manufacturing License | CaliforniaCannabis.org",
+          "page_age": null
+        },
+        {
+          "url": "https://canndelta.com/us/california/",
+          "title": "California Cannabis License Types: How to Apply | CannDelta",
+          "page_age": "December 30, 2025"
+        },
+        {
+          "url": "https://www.criminallawyersandiego.com/california-marijuana-business-lawyer/laws-and-resources/manufacturing/",
+          "title": "Marijuana Products Manufacturing License | McElfresh Law",
+          "page_age": "March 25, 2025"
+        },
+        {
+          "url": "https://www.distru.com/cannabis-blog/distrus-guide-to-california-cannabis-licenses",
+          "title": "Distru's Guide to California Cannabis Licenses | Distru",
+          "page_age": "February 13, 2026"
+        },
+        {
+          "url": "https://www.newcannabisventures.com/detailed-look-at-599-california-cannabis-manufacturing-licenses/",
+          "title": "Detailed Look at 599 California Cannabis Manufacturing Licenses \u2013 New Cannabis Ventures",
+          "page_age": "March 20, 2018"
+        },
+        {
+          "url": "https://www.builtinsf.com/companies/type/cannabis-companies",
+          "title": "Top San Francisco Bay Area, CA Cannabis Companies 2025 | Built In",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/resources/search-for-licensed-business/",
+          "title": "Search for a licensed business - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/resources/data-dashboard/",
+          "title": "Data dashboards - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/resources/data-dashboard/license-report/",
+          "title": "Cannabis License Summary Report - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://www.los-angeles-marijuana-lawyer.com/blog/california-cannabis-license-update/",
+          "title": "California Cannabis License Update | Los Angeles Medical Marijuana Lawyer Blog | May 16, 2025",
+          "page_age": "July 23, 2025"
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/",
+          "title": "Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://mrcannabislaw.com/california/",
+          "title": "California Cannabis License | Mr. Cannabis Law",
+          "page_age": "July 12, 2024"
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/cannabis-laws/dcc-regulations/",
+          "title": "DCC regulations - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/licensees/cannaconnect-compliance-hub/labeling/manufactured-final-form/",
+          "title": "Labeling requirements: Manufactured cannabis products in final form checklist - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/resources/data-dashboard/data-dashboard-glossary/",
+          "title": "Data Dashboard Glossary and Notes - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabis.ca.gov/wp-content/uploads/sites/2/2025/03/California-Cannabis-Market-Outlook-FNL.pdf",
+          "title": "California Cannabis Market Outlook 2024 Report Prepared by: ERA Economics, LLC",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/applicants/license-types/manufacturing-license-types/",
+          "title": "Manufacturing: License types - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabis.ca.gov/wp-content/uploads/sites/2/2025/03/DCC-Annual-Report_Fiscal-Year-2023_24.pdf",
+          "title": "Department of Cannabis Control Annual Report 2025 Gavin Newsom, Governor",
+          "page_age": "March 3, 2025"
+        },
+        {
+          "url": "https://cdn.cannabis.ca.gov/wp-content/uploads/sites/2/2024/06/labeling-checklist-manufactured-products.pdf",
+          "title": "Labeling Requirements: Manufactured Cannabis Products ...",
+          "page_age": "June 6, 2024"
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/applicants/application-resources/application-checklist/application-checklist-manufacturers/",
+          "title": "Application checklist: manufacturers - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://globalgo.consulting/blog/overview-of-dccs-adopted-cannabis-regulations-in-california",
+          "title": "Overview of DCC\u2019s adopted cannabis regulations in California \u2014 Global Go",
+          "page_age": "November 17, 2025"
+        },
+        {
+          "url": "https://www.americanbar.org/groups/business_law/resources/business-law-today/2025-august/recent-developments-cannabis-law/",
+          "title": "Cannabis Law: An Update on Recent Developments Related to the Cannabis Industry, 2025",
+          "page_age": "August 11, 2025"
+        },
+        {
+          "url": "https://legiscan.com/CA/text/SB1064/id/2964637",
+          "title": "California SB1064 | 2023-2024 | Regular Session",
+          "page_age": "March 20, 2024"
+        },
+        {
+          "url": "https://www.higherorigins.com/license-search",
+          "title": "California Cannabis License Search - Higher Origins",
+          "page_age": null
+        },
+        {
+          "url": "https://search.cannabis.ca.gov/",
+          "title": "Cannabis Unified License Search",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/applicants/license-types/",
+          "title": "License types - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://www.calicopack.com/articles/cannabis-manufacturing-licenses-in-california",
+          "title": "Cannabis Manufacturing Licenses in California - Cali Co-Pack | Wholesale Prerolls and Gummies On-Demand",
+          "page_age": null
+        },
+        {
+          "url": "https://www.criminallawyersandiego.com/california-marijuana-business-lawyer/medical-marijuana/license-types/",
+          "title": "California Medical Marijuana License Types | McElfresh Law",
+          "page_age": "March 25, 2025"
+        }
+      ],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and retail (legal adult-use and medical marijuana)"
+    },
+    {
+      "claim": "As of August 1, 2025, there are 13 licensed medical testing facilities in California.",
+      "verdict": "CONTRADICTS",
+      "forward_looking": false,
+      "severity": "HIGH",
+      "explanation": "Multiple authoritative sources materially conflict with the claim of 13 licensed medical testing facilities in California. Cannabis Business Times and SFist both reported 38 labs holding active DCC testing licenses as of January 2024. After a 2024 enforcement crackdown, MJBizDaily (mjbizdaily.com) reported that number fell to 27 active permits. The most current available figure from californiacannabis.org states there are 'over 30 testing labs with active DCC-issued licenses,' and californiacannabistestinglabs.com notes 29 labs were approved under DCC's new potency validation method. No source corroborates a figure as low as 13. Additionally, California's DCC does not issue a separate 'medical testing facility' license \u2014 the relevant license type is the Type 8 Testing Laboratory, which covers compliance testing for all cannabis goods (both adult-use and medical). The claim's figure of 13 is therefore both numerically contradicted by available data and categorically misaligned with California's licensing terminology.",
+      "missing_information": null,
+      "cited_passages": [],
+      "web_sources": [
+        {
+          "url": "https://www.cannabis.ca.gov/licensees/testing-laboratories/",
+          "title": "Testing laboratories - Department of Cannabis Control - CA.gov",
+          "page_age": null
+        },
+        {
+          "url": "https://bcc.ca.gov/licensees/testing_labs.html",
+          "title": "Testing Laboratories - BCC",
+          "page_age": null
+        },
+        {
+          "url": "https://californiacannabis.org/testing-lab",
+          "title": "California Cannabis Testing Labs | CaliforniaCannabis.org",
+          "page_age": null
+        },
+        {
+          "url": "https://www.lighthouselabservices.com/analytical-lab-testing-requirements-for-cannabis-labs-in-california/",
+          "title": "Lab Testing Requirements for California Cannabis Labs",
+          "page_age": "December 4, 2025"
+        },
+        {
+          "url": "https://cen.acs.org/biological-chemistry/natural-products/Shopping-around-favorable-cannabis-testing/102/i28",
+          "title": "Shopping around for favorable cannabis testing labs - C&EN",
+          "page_age": "July 22, 2025"
+        },
+        {
+          "url": "https://www.ams.usda.gov/rules-regulations/hemp/dea-laboratories",
+          "title": "Hemp Analytical Testing Laboratories | Agricultural Marketing Service",
+          "page_age": null
+        },
+        {
+          "url": "https://www.sclabs.com/cannabis/california-cannabis-compliance-testing/",
+          "title": "California Cannabis Compliance Testing | SC Labs",
+          "page_age": "December 22, 2025"
+        },
+        {
+          "url": "https://mjbizdaily.com/more-california-licensed-marijuana-labs-approved-to-test-flower/",
+          "title": "California licensed cannabis labs approved to test flower",
+          "page_age": "January 10, 2024"
+        },
+        {
+          "url": "https://www.linkedin.com/company/cctestinglabs",
+          "title": "California Cannabis Testing Labs | LinkedIn",
+          "page_age": null
+        },
+        {
+          "url": "https://encorelabs.com/california-cannabis-compliance-guide/",
+          "title": "California Cannabis Compliance 2025 Guide | Encore Labs",
+          "page_age": "May 29, 2025"
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/posts/notifications-and-requests-regarding-testing-laboratories/",
+          "title": "Form 29: Notifications and Requests Regarding Testing Laboratories - Department of Cannabis Control",
+          "page_age": "November 14, 2025"
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/licensees/cannaconnect-compliance-hub/",
+          "title": "CannaConnect Licensee Resources - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://headless.cannabis.ca.gov/licensees/testing-laboratories/",
+          "title": "Ca",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabis.ca.gov/wp-content/uploads/sites/2/2023/04/what_we_do.pdf",
+          "title": "What We Do The Department of Cannabis Control (DCC) licenses and",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabis.ca.gov/2024/01/notifications-and-requests-regarding-testing-laboratories/",
+          "title": "Form 29: Notifications and Requests Regarding Testing Laboratories - Department of Cannabis Control",
+          "page_age": "January 1, 2024"
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/applicants/license-types/testing-laboratory-license-types/",
+          "title": "Testing laboratory: License types - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabis.ca.gov/licensees/testing-laboratories/faq-standard-cannabinoid-test-method/",
+          "title": "Standard cannabinoid test method and operating procedures: FAQ - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://api.cannabis.ca.gov/licensees/testing-laboratories/",
+          "title": "Ca",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabis.ca.gov/wp-content/uploads/sites/2/2022/06/DCC_Cannabinoids-Test-Method_ISOR_2022-0603_CD.pdf",
+          "title": "DCC Cannabinoids Test Method ISOR 2022-0603 CD",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabisbusinesstimes.com/us-states/california/news/15687043/only-18-of-38-labs-compliant-to-test-californias-cannabis-flower-under-new-rule",
+          "title": "Only 18 of 38 Labs Compliant to Test California\u2019s Cannabis Flower Under New Rule | Cannabis Business Times",
+          "page_age": "January 11, 2024"
+        },
+        {
+          "url": "https://californiacannabistestinglabs.com/",
+          "title": "California Cannabis Testing Labs (CCTL): Reliable Testing Laboratory for Cannabis",
+          "page_age": "February 13, 2025"
+        },
+        {
+          "url": "https://mjbizdaily.com/fourth-california-cannabis-testing-lab-loses-license-as-crackdown-continues/",
+          "title": "4th cannabis testing lab loses license in California crackdown",
+          "page_age": "September 23, 2024"
+        },
+        {
+          "url": "https://www.alignable.com/los-angeles-ca/caligreen-laboratory/cannabis-testing-2024-dcc-new-potency-method-approved",
+          "title": "Cannabis Testing 2024 DCC New Potency Method Approved by Caligreen Laboratory in Los Angeles, CA - Alignable",
+          "page_age": null
+        },
+        {
+          "url": "https://www.alignable.com/north-hollywood-los-angeles-ca/caligreen-laboratory/cannabis-testing-2024-dcc-new-potency-method-approved",
+          "title": "Cannabis Testing 2024 DCC New Potency Method Approved by Caligreen Laboratory in North Hollywood Los Angeles, CA - Alignable",
+          "page_age": null
+        },
+        {
+          "url": "https://sfist.com/2024/01/03/two-thirds-of-states-cannabis-testing-labs-cant-test-marijuana-right-now-over-bogus-results-scandal/",
+          "title": "Two-Thirds of State's Cannabis Testing Labs Can\u2019t Test Marijuana Right Now Over Bogus Results Scandal",
+          "page_age": "January 4, 2024"
+        },
+        {
+          "url": "https://www.los-angeles-marijuana-lawyer.com/blog/california-cannabis-license-update/",
+          "title": "California Cannabis License Update | Los Angeles Medical Marijuana Lawyer Blog | May 16, 2025",
+          "page_age": "July 23, 2025"
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/posts/department-of-cannabis-control-improves-consumer-protection-in-2024-by-aggressively-investigating-products-that-do-not-follow-californias-regulations/",
+          "title": "Department of Cannabis Control improves consumer protection in 2024 by aggressively investigating products that do not follow California\u2019s regulations - Department of Cannabis Control",
+          "page_age": "February 5, 2025"
+        },
+        {
+          "url": "https://cannabis.ca.gov/2025/08/the-department-of-cannabis-controls-recent-efforts-continue-toprioritize-consumer-and-public-safety-and-support-the-legal-cannabismarket/",
+          "title": "The Department of Cannabis Control\u2019s recent efforts continue to prioritize consumer and public safety and support the legal cannabis market - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://cure8.tech/california-cannabis-security-compliance-whats-new-in-2025/",
+          "title": "California Cannabis Security Compliance Guide (2026Updates)",
+          "page_age": "February 10, 2026"
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/resources/data-dashboard/license-report/",
+          "title": "Cannabis License Summary Report - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabisstudieslab.com/blog/california-licensed-geography-overview/",
+          "title": "California Licensed Geography Overview \u2013 Cal Poly Humboldt Cannabis Studies Lab",
+          "page_age": "March 4, 2024"
+        },
+        {
+          "url": "https://canndelta.com/us/california/",
+          "title": "California Cannabis License Types: How to Apply | CannDelta",
+          "page_age": "December 30, 2025"
+        }
+      ],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and retail (legal adult-use and medical marijuana)"
+    },
+    {
+      "claim": "Canna Farm's goals are to own and operate a marijuana cultivation facility in California.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": true,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (product) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and retail (legal adult-use and medical marijuana)"
+    },
+    {
+      "claim": "Canna Farm's vision is to own and operate a marijuana cultivation facility in the state of California.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": true,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (product) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and retail (legal adult-use and medical marijuana)"
+    },
+    {
+      "claim": "Canna Farm's mission is to establish an innovative marijuana growing brand with affordable prices in California cities.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": true,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (product) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and retail (legal adult-use and medical marijuana)"
+    },
+    {
+      "claim": "Deal sizes for indoor flower range from 0.5 to 100 pounds.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (product) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and retail (legal adult-use and medical marijuana)"
+    },
+    {
+      "claim": "Deal sizes for greenhouse flower range from 1 to 320 pounds.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (product) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and retail (legal adult-use and medical marijuana)"
+    },
+    {
+      "claim": "Deal sizes for outdoor flower range from 1 to 200 pounds.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (product) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and retail (legal adult-use and medical marijuana)"
+    },
+    {
+      "claim": "Year 1 projected yearly revenue is about $200,000.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": true,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (projection) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and retail (legal adult-use and medical marijuana)"
+    },
+    {
+      "claim": "Year 2 projected yearly revenue is about $1,000,000.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": true,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (projection) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and retail (legal adult-use and medical marijuana)"
+    },
+    {
+      "claim": "Year 3 projected yearly revenue is about $1,500,000.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": true,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (projection) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and retail (legal adult-use and medical marijuana)"
+    },
+    {
+      "claim": "Total investments needed are $330,000 in US dollars.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (financial) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and retail (legal adult-use and medical marijuana)"
+    },
+    {
+      "claim": "Investment breakdown includes $3,000 for administrative expenses.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (financial) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and retail (legal adult-use and medical marijuana)"
+    },
+    {
+      "claim": "Investment breakdown includes $20,000 for sales and marketing.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (financial) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and retail (legal adult-use and medical marijuana)"
+    },
+    {
+      "claim": "Investment breakdown includes $30,000 for legal fees and licensing.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (financial) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and retail (legal adult-use and medical marijuana)"
+    },
+    {
+      "claim": "Investment breakdown includes $30,000 for security equipment.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (financial) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and retail (legal adult-use and medical marijuana)"
+    },
+    {
+      "claim": "Investment breakdown includes $70,000 for land and development.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (financial) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and retail (legal adult-use and medical marijuana)"
+    },
+    {
+      "claim": "Investment breakdown includes $100,000 for greenhouses.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (financial) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and retail (legal adult-use and medical marijuana)"
+    },
+    {
+      "claim": "California weather conditions are ideal for cultivating cannabis outdoors.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (product) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and retail (legal adult-use and medical marijuana)"
+    },
+    {
+      "claim": "Greenhouses will allow significantly decreased electricity bills.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": true,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (product) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and retail (legal adult-use and medical marijuana)"
+    },
+    {
+      "claim": "Diversification of greenhouse cultivation and outdoor cultivation is a strength.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (product) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and retail (legal adult-use and medical marijuana)"
+    },
+    {
+      "claim": "Main customers are dispensaries and manufacturers of edible products and whole buyers in California.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (traction) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and retail (legal adult-use and medical marijuana)"
+    },
+    {
+      "claim": "Direct competitors include marijuana growers and whole sellers in California and oil and concentrate manufacturers.",
+      "verdict": "CONSISTENT",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "The claim that direct competitors include California marijuana growers/wholesalers and oil/concentrate manufacturers is well-supported by authoritative industry sources. The California Department of Cannabis Control (cannabis.ca.gov) explicitly recognizes cultivators, distributors, and manufacturers as distinct licensed segments that overlap competitively in the supply chain. The California Department of Cannabis Control's 2024 Market Outlook Report (cannabis.ca.gov/2025/03/california-cannabis-market-2024-report-executive-summary), produced by ERA Economics, LLC, confirms an active wholesale market with thousands of cultivation licensees \u2014 dropping from 8,493 in 2021 to 4,805 by end of 2024 \u2014 all competing for the same wholesale demand. Grand View Research's California Legal Cannabis Market report (grandviewresearch.com) specifically names concentrate/extract brands (e.g., Jetty Extracts) and cultivators (e.g., THC Design) as key competitive players in the same space. Cannabis Science and Technology (cannabissciencetech.com) further notes operators are competing by 'expanding into edibles and extracts,' confirming concentrates and oil manufacturers are direct competitive pressures for cultivation-and-retail businesses like Canna Farm. The competitive segments identified in the claim accurately reflect the standard California licensed market structure.",
+      "missing_information": null,
+      "cited_passages": [],
+      "web_sources": [
+        {
+          "url": "https://downunderindustries.com/top-sonoma-california-cannabis-brands/",
+          "title": "Top California Cannabis Brands in 2025",
+          "page_age": "December 20, 2025"
+        },
+        {
+          "url": "https://globalgo.consulting/blog/californias-cannabis-industry-market-update-targeted-growth-opportunities",
+          "title": "California\u2019s Cannabis Industry Market Update - Targeted Growth Opportunities \u2014 Global Go",
+          "page_age": "October 17, 2024"
+        },
+        {
+          "url": "https://www.ciliconplus.com/learn/top-20-american-cannabis-companies/",
+          "title": "Top 20 American Cannabis Companies in 2024",
+          "page_age": "July 18, 2025"
+        },
+        {
+          "url": "https://weedmaps.com/best-of-wm/california-brands",
+          "title": "Best Cannabis Brands in California 2024 | Best of Weedmaps",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabissciencetech.com/view/cannabis-pricing-crisis-market-forces-shaping-2025-trends",
+          "title": "Cannabis Pricing Crisis: Market Forces Shaping 2025 Trends | Cannabis Science and Technology - Cannabis Industry News, Insights",
+          "page_age": "3 days ago"
+        },
+        {
+          "url": "https://cdtfa.ca.gov/industry/cannabis/distributors-manufacturers-cultivators.htm",
+          "title": "Distributors, Manufacturers, and Cultivators for Cannabis Businesses",
+          "page_age": null
+        },
+        {
+          "url": "https://vallejoreliefcenter.com/the-great-eight-californias-top-cannabis-brands-in-2025/",
+          "title": "The Great Eight: California\u2019s Best Cannabis Brands in 2025",
+          "page_age": "November 20, 2025"
+        },
+        {
+          "url": "https://www.vibebycalifornia.com/top-california-cannabis-growers-a-look-at-the-states-leading-cultivators/",
+          "title": "\"Top California Cannabis Growers: A Look At The State's Leading Cultivators\" - Vibe By California",
+          "page_age": "April 21, 2024"
+        },
+        {
+          "url": "https://cannabis.ca.gov/wp-content/uploads/sites/2/2025/03/California-Cannabis-Market-Outlook-FNL.pdf",
+          "title": "California Cannabis Market Outlook 2024 Report Prepared by: ERA Economics, LLC",
+          "page_age": null
+        },
+        {
+          "url": "https://www.mygreennetwork.com/cannabis-manufacturing-companies-in-california/",
+          "title": "Cannabis Manufacturing Companies in California: Top 4 Trends",
+          "page_age": "October 10, 2023"
+        },
+        {
+          "url": "https://www.grandviewresearch.com/industry-analysis/california-legal-cannabis-market-report",
+          "title": "California Legal Cannabis Market Size & Share Report, 2030",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabusinessplans.com/california-cannabis-market/",
+          "title": "California Cannabis Market \u2013 Business Plan Templates",
+          "page_age": "March 7, 2026"
+        },
+        {
+          "url": "https://www.grandviewresearch.com/industry-analysis/us-cannabis-market",
+          "title": "U.S. Cannabis Market Size & Share | Industry Report, 2030",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabisbusinesstimes.com/us-states/california/news/15738922/60-of-cannabis-consumed-in-california-comes-from-unregulated-market-as-licensed-production-grows",
+          "title": "60% of Cannabis Consumed in California Comes From Unregulated Market as Licensed Production Grows | Cannabis Business Times",
+          "page_age": "March 4, 2025"
+        },
+        {
+          "url": "https://kindgreenbuds.com/blog/california-cannabis-industry-2026-survival-consolidation-and-the-fight-for-a-functional-market/",
+          "title": "California Cannabis Industry in 2026: Survival, Consolidation, and the Fight for a Functional Market - Kind Green Buds",
+          "page_age": "2 weeks ago"
+        },
+        {
+          "url": "https://cannabis.ca.gov/2025/03/california-cannabis-market-2024-report-executive-summary/",
+          "title": "California Cannabis Market Outlook Executive Summary - Department of Cannabis Control",
+          "page_age": null
+        },
+        {
+          "url": "https://www.higherorigins.com/articles/2025-california-cannabis-cultivation-insights-report",
+          "title": "2025 California Cannabis Cultivation Insights Report - Higher Origins",
+          "page_age": "February 17, 2026"
+        },
+        {
+          "url": "https://www.researchandmarkets.com/report/cannabis-cultivation",
+          "title": "Cannabis Cultivation Market Size, Share & Forecast to 2032",
+          "page_age": null
+        }
+      ],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and retail (legal adult-use and medical marijuana)"
+    }
+  ],
+  "warnings": [
+    "Could not resolve company to an SEC CIK (common for private / early-stage startups). Assumed industry: Cannabis cultivation and retail (legal adult-use and medical marijuana). Market/industry claims will be assessed via web search; company-specific claims remain INSUFFICIENT_EVIDENCE."
+  ],
+  "report_id": "f649256d5439"
+}

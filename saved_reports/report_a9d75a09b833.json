@@ -1,0 +1,537 @@
+{
+  "generated_at": "20260417T192734Z",
+  "cik": null,
+  "forms": [
+    "10-K",
+    "10-Q",
+    "S-1",
+    "8-K"
+  ],
+  "deck_context_used": true,
+  "assumed_industry": "Cannabis cultivation and wholesale (marijuana grow operations, California)",
+  "company_name": "Canna Farm",
+  "claims_analyzed": 16,
+  "flagged_forward_looking_contradictions": 0,
+  "results": [
+    {
+      "claim": "The overall U.S. market projection for legal adult-use and medical cannabis sales is expected to reach $22.8 billion by 2029, with a CAGR of 28%.",
+      "verdict": "CONTRADICTS",
+      "forward_looking": true,
+      "severity": "HIGH",
+      "explanation": "Multiple authoritative industry sources materially contradict both the $22.8 billion endpoint and the 28% CAGR. Grand View Research (grandviewresearch.com/industry-analysis/us-cannabis-market) estimates the U.S. cannabis market was already $38.50 billion in 2024 \u2014 meaning a 2029 projection of $22.8 billion would actually imply severe market contraction, not growth. BDSA data cited by Cannabis Science and Technology (cannabissciencetech.com) projects U.S. regulated adult-use and medical combined sales to reach $39.1 billion by 2029, with 2025 adult-use alone at $23.9 billion. MJ Biz Daily (mjbizdaily.com) reported combined U.S. medical and recreational sales could reach $33.6 billion as far back as end-of-2023. On the CAGR, no U.S.-specific forecast aligns with 28%: Grand View Research puts it at 11.51% (2025\u20132030), Statista (statista.com) at 3.36% (2025\u20132030), and Technavio (technavio.com) at 37.1% (2024\u20132029). The $22.8 billion figure is closest to Statista's global medical-cannabis-only projection of $22.46 billion by 2029 \u2014 a much narrower scope than total U.S. adult-use plus medical \u2014 suggesting possible scope or geographic confusion in the original claim.",
+      "missing_information": null,
+      "cited_passages": [],
+      "web_sources": [
+        {
+          "url": "https://www.technavio.com/report/us-cannabis-market-analysis",
+          "title": "Cannabis Market in US Growth Analysis - Size and Forecast 2025-2029 | Technavio | Technavio",
+          "page_age": "February 14, 2025"
+        },
+        {
+          "url": "https://bizplanr.ai/blog/cannabis-industry-statistics",
+          "title": "30+ Cannabis Industry Statistics: Growth & Trends in 2025",
+          "page_age": "March 27, 2025"
+        },
+        {
+          "url": "https://www.grandviewresearch.com/industry-analysis/us-cannabis-market",
+          "title": "U.S. Cannabis Market Size & Share | Industry Report, 2030",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabissciencetech.com/view/2025-state-of-the-cannabis-industry-sales-trends-and-forecasts",
+          "title": "2025 State of the Cannabis Industry: Sales Trends and Forecasts | Cannabis Science and Technology - Cannabis Industry News, Insights",
+          "page_age": "2 weeks ago"
+        },
+        {
+          "url": "https://www.mordorintelligence.com/industry-reports/cannabis-market/market-size",
+          "title": "Cannabis Market Size (2024 - 2029)",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabismdtelemed.com/blog/30-cannabis-industry-statistics-growth-trends-in-2025",
+          "title": "37 Cannabis Industry Statistics 2026: Market Size, Jobs, Revenue & Growth \u2014 CannabisMD TeleMed",
+          "page_age": "February 19, 2026"
+        },
+        {
+          "url": "https://www.towardshealthcare.com/insights/legal-marijuana-market-size",
+          "title": "Legal Marijuana Market Size to Lead USD 154.5 Bn by 3035",
+          "page_age": "November 17, 2025"
+        },
+        {
+          "url": "https://newfrontierdata.com/cannabis-insights/u-s-legal-cannabis-market-growth/",
+          "title": "New Frontier Data - Washington, DC - U.S. Legal Cannabis Market Growth",
+          "page_age": "May 12, 2024"
+        },
+        {
+          "url": "https://www.technavio.com/report/legal-cannabis-market-industry-analysis",
+          "title": "Legal Cannabis Market Growth Analysis - Size and Forecast 2026-2030 | Technavio",
+          "page_age": "March 12, 2026"
+        },
+        {
+          "url": "https://www.grandviewresearch.com/industry-analysis/legal-cannabis-market",
+          "title": "Legal Cannabis Market Size & Share | Industry Report, 2033",
+          "page_age": null
+        },
+        {
+          "url": "https://mjbizdaily.com/us-cannabis-sales-estimates/",
+          "title": "Projected US legal medical and recreational cannabis market size",
+          "page_age": "November 24, 2025"
+        },
+        {
+          "url": "https://cannabusinessplans.com/cannabis-legal-market-size-projections/",
+          "title": "North America Cannabis Legal Market: Stats and Projections",
+          "page_age": "March 6, 2026"
+        },
+        {
+          "url": "https://www.statista.com/outlook/hmo/cannabis/united-states",
+          "title": "Cannabis - United States | Statista Market Forecast",
+          "page_age": null
+        },
+        {
+          "url": "https://www.towardshealthcare.com/insights/medical-cannabis-market-size",
+          "title": "Medical Cannabis Market Size Grows at 13.8% of CAGR by 2034",
+          "page_age": "October 6, 2025"
+        },
+        {
+          "url": "https://www.statista.com/outlook/hmo/cannabis/medical-cannabis/worldwide",
+          "title": "Medical Cannabis - Worldwide | Statista Market Forecast",
+          "page_age": null
+        },
+        {
+          "url": "https://www.grandviewresearch.com/industry-analysis/legal-marijuana-market",
+          "title": "Legal Marijuana Market Size, Share & Growth Report, 2030",
+          "page_age": null
+        },
+        {
+          "url": "https://www.grandviewresearch.com/industry-analysis/medical-marijuana-market",
+          "title": "Medical Marijuana Market Size & Share Report, 2030",
+          "page_age": null
+        }
+      ],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana grow operations, California)"
+    },
+    {
+      "claim": "State-level legalization initiatives will add $7.4 billion to the 2029 U.S. cannabis market forecast.",
+      "verdict": "UNSUPPORTED",
+      "forward_looking": true,
+      "severity": "MEDIUM",
+      "explanation": "Multiple authoritative sources confirm robust U.S. cannabis market growth through 2029 \u2014 Cannabis Science and Technology (cannabissciencetech.com) projects total U.S. regulated cannabis sales reaching $39.1 billion by 2029, and Grand View Research (grandviewresearch.com) estimates an 11.51% CAGR through 2030 from a 2024 base of $38.5 billion. However, no authoritative source found in this search isolates state-level legalization initiatives as specifically adding $7.4 billion to a 2029 forecast. The only appearance of '$7.4 billion' in search results is a New Frontier Data reference to 2019 adult-use sales, entirely unrelated to the claim's context. The claim's specific incremental figure is unverifiable from any identifiable industry report, government data, or reputable research firm.",
+      "missing_information": "A primary source (e.g., a named MJBizDaily Factbook edition, New Frontier Data report, BDSA forecast, or Arcview/New Frontier state-by-state legalization impact analysis) that explicitly attributes $7.4 billion in incremental 2029 market value to new state-level legalization initiatives would be required to corroborate this figure.",
+      "cited_passages": [],
+      "web_sources": [
+        {
+          "url": "https://www.grandviewresearch.com/industry-analysis/us-cannabis-market",
+          "title": "U.S. Cannabis Market Size & Share | Industry Report, 2030",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabissciencetech.com/view/2025-state-of-the-cannabis-industry-sales-trends-and-forecasts",
+          "title": "2025 State of the Cannabis Industry: Sales Trends and Forecasts | Cannabis Science and Technology - Cannabis Industry News, Insights",
+          "page_age": "2 weeks ago"
+        },
+        {
+          "url": "https://www.technavio.com/report/us-cannabis-market-analysis",
+          "title": "Cannabis Market in US Growth Analysis - Size and Forecast 2025-2029 | Technavio | Technavio",
+          "page_age": "February 14, 2025"
+        },
+        {
+          "url": "https://www.flowhub.com/cannabis-industry-statistics",
+          "title": "2026 Cannabis Industry Statistics",
+          "page_age": "February 19, 2026"
+        },
+        {
+          "url": "https://www.statista.com/outlook/hmo/cannabis/united-states",
+          "title": "Cannabis - United States | Statista Market Forecast",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabismdtelemed.com/blog/30-cannabis-industry-statistics-growth-trends-in-2025",
+          "title": "37 Cannabis Industry Statistics 2026: Market Size, Jobs, Revenue & Growth \u2014 CannabisMD TeleMed",
+          "page_age": "February 19, 2026"
+        },
+        {
+          "url": "https://market.us/report/us-cannabis-market/",
+          "title": "US Cannabis Market Share, Growth Analysis | CAGR of 11.6%",
+          "page_age": "December 8, 2025"
+        },
+        {
+          "url": "https://www.sphericalinsights.com/reports/united-states-cannabis-market",
+          "title": "United States Cannabis Market Size, Share, Forecasts to 2033",
+          "page_age": null
+        },
+        {
+          "url": "https://www.statista.com/outlook/hmo/cannabis/medical-cannabis/united-states",
+          "title": "Medical Cannabis - United States | Statista Market Forecast",
+          "page_age": null
+        },
+        {
+          "url": "https://www.imarcgroup.com/us-cannabis-market",
+          "title": "US Cannabis Market Size, Share & Trends Report To 2034",
+          "page_age": null
+        },
+        {
+          "url": "https://mjbizdaily.com/us-cannabis-sales-estimates/",
+          "title": "Projected US legal medical and recreational cannabis market size",
+          "page_age": "November 24, 2025"
+        },
+        {
+          "url": "https://www.fortunebusinessinsights.com/industry-reports/cannabis-marijuana-market-100219",
+          "title": "Cannabis Market Size & Growth | Forecast Report [2034]",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabusinessplans.com/cannabis-legal-market-size-projections/",
+          "title": "North America Cannabis Legal Market: Stats and Projections",
+          "page_age": "March 6, 2026"
+        },
+        {
+          "url": "https://market.us/report/legal-cannabis-market/",
+          "title": "Legal Cannabis Market Size, Share, Growth | CAGR of 25.2%",
+          "page_age": "May 14, 2025"
+        },
+        {
+          "url": "https://newfrontierdata.com/cannabis-insights/us-legal-cannabis-market-projected-to-double-by-2025/",
+          "title": "New Frontier Data - Washington, DC - U.S. Legal Cannabis Market Projected to Double to $41.5B by 2025",
+          "page_age": "December 18, 2023"
+        }
+      ],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana grow operations, California)"
+    },
+    {
+      "claim": "Recreational cannabis sales will account for more than 53% of the overall U.S. cannabis market by 2029.",
+      "verdict": "CONSISTENT",
+      "forward_looking": true,
+      "severity": "LOW",
+      "explanation": "Multiple authoritative industry sources confirm that recreational (adult-use) cannabis already exceeds 53% of the U.S. cannabis market today \u2014 making the 2029 threshold claim conservative rather than aggressive. Grand View Research (grandviewresearch.com/industry-analysis/us-cannabis-market) reported recreational use held a 66.9% revenue share as of 2024, well above the claimed 53% floor. Market.us (market.us/report/us-cannabis-market/) similarly placed the recreational segment at 55.7% market share in 2024, already surpassing the claim's threshold. Furthermore, cannabusinessplans.com projects adult-use sales to represent more than 80% of the North American cannabis market by 2027\u20132030. The claim's directional logic \u2014 that recreational will exceed 53% by 2029 \u2014 is strongly supported, though the actual share will likely be materially higher than 53% by that date. The only notable dissent comes from Nova One Advisor (novaoneadvisor.com), which placed the medical segment at 77% in 2025, though this likely reflects a different market scope or segment definition. On balance, the claim is consistent with the preponderance of credible sources.",
+      "missing_information": null,
+      "cited_passages": [],
+      "web_sources": [
+        {
+          "url": "https://www.grandviewresearch.com/industry-analysis/us-cannabis-market",
+          "title": "U.S. Cannabis Market Size & Share | Industry Report, 2030",
+          "page_age": null
+        },
+        {
+          "url": "https://www.technavio.com/report/us-cannabis-market-analysis",
+          "title": "Cannabis Market in US Growth Analysis - Size and Forecast 2025-2029 | Technavio | Technavio",
+          "page_age": "February 14, 2025"
+        },
+        {
+          "url": "https://www.cannabissciencetech.com/view/2025-state-of-the-cannabis-industry-sales-trends-and-forecasts",
+          "title": "2025 State of the Cannabis Industry: Sales Trends and Forecasts | Cannabis Science and Technology - Cannabis Industry News, Insights",
+          "page_age": "2 weeks ago"
+        },
+        {
+          "url": "https://bizplanr.ai/blog/cannabis-industry-statistics",
+          "title": "30+ Cannabis Industry Statistics: Growth & Trends in 2025",
+          "page_age": "March 27, 2025"
+        },
+        {
+          "url": "https://www.statista.com/outlook/hmo/cannabis/united-states",
+          "title": "Cannabis - United States | Statista Market Forecast",
+          "page_age": null
+        },
+        {
+          "url": "https://www.flowhub.com/cannabis-industry-statistics",
+          "title": "2026 Cannabis Industry Statistics",
+          "page_age": "February 19, 2026"
+        },
+        {
+          "url": "https://www.statista.com/outlook/hmo/cannabis/worldwide",
+          "title": "Cannabis - Worldwide | Statista Market Forecast",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabusinessplans.com/cannabis-legal-market-size-projections/",
+          "title": "North America Cannabis Legal Market: Stats and Projections",
+          "page_age": "March 6, 2026"
+        },
+        {
+          "url": "https://market.us/report/us-cannabis-market/",
+          "title": "US Cannabis Market Share, Growth Analysis | CAGR of 11.6%",
+          "page_age": "December 8, 2025"
+        },
+        {
+          "url": "https://mjbizdaily.com/us-cannabis-sales-estimates/",
+          "title": "Projected US legal medical and recreational cannabis market size",
+          "page_age": "November 24, 2025"
+        },
+        {
+          "url": "https://www.grandviewresearch.com/industry-analysis/legal-marijuana-market",
+          "title": "Legal Marijuana Market Size, Share & Growth Report, 2030",
+          "page_age": null
+        },
+        {
+          "url": "https://www.grandviewresearch.com/industry-analysis/legal-cannabis-market",
+          "title": "Legal Cannabis Market Size & Share | Industry Report, 2033",
+          "page_age": null
+        },
+        {
+          "url": "https://www.novaoneadvisor.com/report/us-cannabis-market",
+          "title": "US Cannabis Market Size and Research 2026 to 2035",
+          "page_age": "January 12, 2026"
+        },
+        {
+          "url": "https://www.sphericalinsights.com/reports/united-states-cannabis-market",
+          "title": "United States Cannabis Market Size, Share, Forecasts to 2033",
+          "page_age": null
+        }
+      ],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana grow operations, California)"
+    },
+    {
+      "claim": "The legal cannabis market is projected to reach $22.8 billion in total annual sales by 2029.",
+      "verdict": "CONTRADICTS",
+      "forward_looking": true,
+      "severity": "MEDIUM",
+      "explanation": "The $22.8 billion figure is materially inconsistent with every authoritative source found. Cannabis Science and Technology (cannabissciencetech.com, 2025) projects U.S. regulated cannabis sales (adult-use + medical) at $39.1 billion by 2029. Grand View Research (grandviewresearch.com) estimated the U.S. cannabis market at $38.50 billion in 2024 alone, with an 11.51% CAGR through 2030. Paybotic Financial, citing Statista, placed the U.S. legal cannabis market at $45.3 billion as early as 2025. MJBizDaily (mjbizdaily.com) projected retail sales upwards of $53.5 billion by 2027. No web source returned corroborates the specific $22.8 billion figure for 2029 \u2014 it is well below the current consensus range of roughly $39\u2013$57 billion by that year, suggesting the claim likely references an outdated, geographically narrowed, or otherwise incomplete data set. The severity is rated MEDIUM because the error understates TAM rather than overstates it, which is the less dangerous directional mistake for investment due diligence, but it still materially misrepresents the market opportunity.",
+      "missing_information": null,
+      "cited_passages": [],
+      "web_sources": [
+        {
+          "url": "https://www.technavio.com/report/us-cannabis-market-analysis",
+          "title": "Cannabis Market in US Growth Analysis - Size and Forecast 2025-2029 | Technavio | Technavio",
+          "page_age": "February 14, 2025"
+        },
+        {
+          "url": "https://www.grandviewresearch.com/industry-analysis/us-cannabis-market",
+          "title": "U.S. Cannabis Market Size & Share | Industry Report, 2030",
+          "page_age": null
+        },
+        {
+          "url": "https://www.flowhub.com/cannabis-industry-statistics",
+          "title": "2026 Cannabis Industry Statistics",
+          "page_age": "February 19, 2026"
+        },
+        {
+          "url": "https://www.cannabissciencetech.com/view/2025-state-of-the-cannabis-industry-sales-trends-and-forecasts",
+          "title": "2025 State of the Cannabis Industry: Sales Trends and Forecasts | Cannabis Science and Technology - Cannabis Industry News, Insights",
+          "page_age": "2 weeks ago"
+        },
+        {
+          "url": "https://mjbizdaily.com/us-cannabis-sales-estimates/",
+          "title": "Projected US legal medical and recreational cannabis market size",
+          "page_age": "November 24, 2025"
+        },
+        {
+          "url": "https://www.technavio.com/report/legal-cannabis-market-industry-analysis",
+          "title": "Legal Cannabis Market Growth Analysis - Size and Forecast 2026-2030 | Technavio",
+          "page_age": "March 12, 2026"
+        },
+        {
+          "url": "https://payboticfinancial.com/cannabis-industry-statistics-2025/",
+          "title": "2025 Cannabis Industry Statistics & Market Insights | Paybotic Financial",
+          "page_age": "October 2, 2025"
+        },
+        {
+          "url": "https://cannabusinessplans.com/cannabis-legal-market-size-projections/",
+          "title": "North America Cannabis Legal Market: Stats and Projections",
+          "page_age": "March 6, 2026"
+        },
+        {
+          "url": "https://www.sphericalinsights.com/reports/north-america-legal-cannabis-market",
+          "title": "North America Legal Cannabis Market Size, Forecast to 2032",
+          "page_age": null
+        },
+        {
+          "url": "https://www.statista.com/statistics/933384/legal-cannabis-sales-forecast-us/",
+          "title": "Legal recreational cannabis sales U.S. 2022-2028 | Statista",
+          "page_age": "November 29, 2025"
+        },
+        {
+          "url": "https://www.grandviewresearch.com/industry-analysis/california-legal-cannabis-market-report",
+          "title": "California Legal Cannabis Market Size & Share Report, 2030",
+          "page_age": null
+        },
+        {
+          "url": "https://www.grandviewresearch.com/press-release/california-legal-cannabis-market-analysis",
+          "title": "California Legal Cannabis Market To Reach $ 10.34 Bn By 2030",
+          "page_age": null
+        },
+        {
+          "url": "https://www.cannabisbusinesstimes.com/us-states/california/news/15738922/60-of-cannabis-consumed-in-california-comes-from-unregulated-market-as-licensed-production-grows",
+          "title": "60% of Cannabis Consumed in California Comes From Unregulated Market as Licensed Production Grows | Cannabis Business Times",
+          "page_age": "March 4, 2025"
+        },
+        {
+          "url": "https://www.researchandmarkets.com/reports/5830950/california-legal-cannabis-market-size-share-and",
+          "title": "California Legal Cannabis Market Size, Share & Trends Analysis Report By Source (Marijuana, Hemp), By Product (Flowers, Oils And Tinctures), By End-use (Medical, Industrial, Recreational), And Segment Forecasts, 2023 - 2030",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabusinessplans.com/california-cannabis-market/",
+          "title": "California Cannabis Market \u2013 Business Plan Templates",
+          "page_age": "March 7, 2026"
+        },
+        {
+          "url": "https://www.distru.com/cannabis-blog/cannabis-business-insights",
+          "title": "Essential Cannabis Business Insights for 2026 | Distru",
+          "page_age": "February 13, 2026"
+        },
+        {
+          "url": "https://www.skyquestt.com/report/california-legal-cannabis-market/market-size",
+          "title": "California Legal Cannabis Market Size, Share, Growth Analysis - Industry Forecast 2023-2030",
+          "page_age": null
+        },
+        {
+          "url": "https://cannabis.ca.gov/wp-content/uploads/sites/2/2025/03/California-Cannabis-Market-Outlook-FNL.pdf",
+          "title": "California Cannabis Market Outlook 2024 Report Prepared by: ERA Economics, LLC",
+          "page_age": null
+        }
+      ],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana grow operations, California)"
+    },
+    {
+      "claim": "As of August 1, 2025, California had 440 licensed retail marijuana stores, 583 licensed retail cultivations, 198 product manufacturers, and 15 testing facilities.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (regulatory) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana grow operations, California)"
+    },
+    {
+      "claim": "As of August 1, 2025, California had 531 licensed medical marijuana centres, 801 licensed medical cultivations, 242 infused product manufacturers, and 13 testing facilities.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (regulatory) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana grow operations, California)"
+    },
+    {
+      "claim": "Canna Farm projects yearly revenue of approximately $200,000 in Year 1.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": true,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (projection) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana grow operations, California)"
+    },
+    {
+      "claim": "Canna Farm projects yearly revenue of approximately $1,000,000 in Year 2.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": true,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (projection) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana grow operations, California)"
+    },
+    {
+      "claim": "Canna Farm projects yearly revenue of approximately $1,500,000 in Year 3.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": true,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (projection) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana grow operations, California)"
+    },
+    {
+      "claim": "Canna Farm is seeking $330,000 USD in investment capital.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (financial) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana grow operations, California)"
+    },
+    {
+      "claim": "The planned investment budget allocates $100,000 to greenhouses, $70,000 to land and development, $30,000 to legal fees and licensing, $30,000 to security equipment, $20,000 to sales and marketing, and $3,000 to administrative expenses.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": true,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (financial) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana grow operations, California)"
+    },
+    {
+      "claim": "Indoor flower deal sizes range from 0.5 to 100 pounds.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (product) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana grow operations, California)"
+    },
+    {
+      "claim": "Greenhouse flower deal sizes range from 1 to 320 pounds.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (product) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana grow operations, California)"
+    },
+    {
+      "claim": "Outdoor flower deal sizes range from 1 to 200 pounds.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (product) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana grow operations, California)"
+    },
+    {
+      "claim": "The company plans to own and operate a marijuana cultivation facility in the state of California.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": true,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (product) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana grow operations, California)"
+    },
+    {
+      "claim": "The company's leadership team consists of Sara Hills (CEO), Dave Turner (COO), Jacob Garner (CTO), and Allison Cobb (CFO).",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (team) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana grow operations, California)"
+    }
+  ],
+  "warnings": [
+    "Could not resolve company to an SEC CIK (common for private / early-stage startups). Assumed industry: Cannabis cultivation and wholesale (marijuana grow operations, California). Market/industry claims will be assessed via web search; company-specific claims remain INSUFFICIENT_EVIDENCE."
+  ],
+  "report_id": "a9d75a09b833"
+}
