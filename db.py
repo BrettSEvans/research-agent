@@ -23,6 +23,32 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def init_db() -> None:
     Base.metadata.create_all(bind=engine)
+    migrate_schema()
+
+
+def migrate_schema() -> None:
+    """Add new columns to existing tables without dropping data.
+
+    SQLite does not support IF NOT EXISTS on ALTER TABLE, so each ADD COLUMN
+    is wrapped in a try/except. Safe to run on every startup.
+    """
+    with engine.connect() as conn:
+        new_columns = [
+            ("reports",           "share_token", "TEXT"),
+            ("reports",           "is_public",   "INTEGER NOT NULL DEFAULT 0"),
+            ("saved_extractions", "share_token", "TEXT"),
+            ("saved_extractions", "is_public",   "INTEGER NOT NULL DEFAULT 0"),
+        ]
+        for table, col, coltype in new_columns:
+            try:
+                conn.execute(
+                    __import__("sqlalchemy").text(
+                        f"ALTER TABLE {table} ADD COLUMN {col} {coltype}"
+                    )
+                )
+                conn.commit()
+            except Exception:
+                pass  # Column already exists — safe to ignore
 
 
 def get_db() -> Generator[sessionmaker, None, None]:

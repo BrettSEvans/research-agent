@@ -31,13 +31,17 @@ import httpx
 from dotenv import load_dotenv
 from datetime import datetime, timezone
 
-from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response, StreamingResponse
 from fastapi.templating import Jinja2Templates
+from sqlalchemy.orm import Session
 
 from agent import iter_compliance_report, run_compliance_report, SAVED_REPORTS_DIR
+from auth import create_api_key, ensure_default_organization_and_user
+from db import get_db, init_db
 from deck_context import DeckContext
 from extractor import extract_from_pdf
+from models import Organization, Report, SavedExtraction, User
 from version import ANALYZER_VERSION, EXTRACTOR_VERSION
 from conversion import detect_file_type, convert_to_pdf, fetch_google_slides_pdf
 
@@ -61,6 +65,15 @@ SAVED_DIR.mkdir(exist_ok=True)
 
 app = FastAPI(title="VC Pitch Deck + Compliance")
 templates = Jinja2Templates(directory=str(BASE / "templates"))
+
+# Initialise DB tables and run column migrations on startup
+init_db()
+# Bootstrap default org/user from env vars so Basic Auth + legacy data still works
+_default_db = next(get_db())
+try:
+    ensure_default_organization_and_user(_default_db)
+finally:
+    _default_db.close()
 
 
 # ───────────────────────── auth configuration ─────────────────────────────
@@ -172,7 +185,7 @@ async def auth_middleware(request: Request, call_next):
 
     path = request.url.path
     # Auth routes and health-check are always public
-    if path.startswith("/auth") or path in ("/health", "/favicon.ico"):
+    if path.startswith("/auth") or path.startswith("/shared") or path in ("/health", "/favicon.ico"):
         return await call_next(request)
 
     # 1. Google session cookie
@@ -225,6 +238,89 @@ def get_session_dirs(request: Request) -> tuple[Path, Path]:
     uploads.mkdir(parents=True, exist_ok=True)
     context.mkdir(parents=True, exist_ok=True)
     return uploads, context
+
+
+# ───────────────────────── User DB helpers ────────────────────────────────
+
+def _find_or_create_user_org(db: Session, email: str, display_name: str = "", picture: str = "") -> tuple[User, Organization]:
+    """Return (user, org) for the given Google-authenticated email.
+
+    Organisation is derived from the email domain (e.g. firm.com).
+    Both org and user are created on first login; subsequent logins are no-ops.
+    """
+    domain = email.split("@")[-1].lower()
+
+    org = db.query(Organization).filter_by(name=domain).first()
+    if not org:
+        org = Organization(name=domain)
+        db.add(org)
+        db.flush()  # get org.id before creating user
+
+    user = db.query(User).filter_by(email=email).first()
+    if not user:
+        user = User(
+            email=email,
+            display_name=display_name or email,
+            hashed_password="oauth",   # placeholder — Google users never use password auth
+            api_key=create_api_key(),
+            organization_id=org.id,
+        )
+        db.add(user)
+
+    else:
+        # Keep display_name / picture fresh on each login
+        if display_name:
+            user.display_name = display_name
+
+    db.commit()
+    db.refresh(user)
+    db.refresh(org)
+    return user, org
+
+
+def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
+    """FastAPI dependency: return the authenticated User ORM object.
+
+    Checks Google session cookie first, then falls back to HTTP Basic Auth.
+    Raises HTTP 401 if neither is valid.
+    """
+    # 1. Google session cookie (has user_id after the auth bridge)
+    token = request.cookies.get(SESSION_COOKIE, "")
+    if token:
+        session = _load_session(token)
+        if session:
+            user_id = session.get("user_id")
+            if user_id:
+                user = db.get(User, user_id)
+                if user:
+                    return user
+            # Legacy cookie (email only, no user_id) — look up by email
+            email = session.get("email", "")
+            if email:
+                user = db.query(User).filter_by(email=email).first()
+                if user:
+                    return user
+                # First login with new auth bridge — create records now
+                user, _ = _find_or_create_user_org(
+                    db, email,
+                    display_name=session.get("name", ""),
+                    picture=session.get("picture", ""),
+                )
+                return user
+
+    # 2. HTTP Basic Auth — map to the default org/user
+    if _check_basic_auth(request):
+        default_email = os.environ.get("DEFAULT_ADMIN_EMAIL", "")
+        if default_email:
+            user = db.query(User).filter_by(email=default_email).first()
+            if user:
+                return user
+        # Fallback: first user in DB
+        user = db.query(User).first()
+        if user:
+            return user
+
+    raise HTTPException(status_code=401, detail="Not authenticated")
 
 
 # ───────────────────────── Google SSO routes ──────────────────────────────
@@ -297,10 +393,25 @@ async def google_callback(request: Request, code: str = "", state: str = "", err
     if _ALLOWED_DOMAINS and email.split("@")[-1].lower() not in _ALLOWED_DOMAINS:
         return RedirectResponse(url="/auth/login?error=domain_not_allowed", status_code=302)
 
+    # Find or create the user + org in the database
+    db = next(get_db())
+    try:
+        user, org = _find_or_create_user_org(
+            db, email,
+            display_name=userinfo.get("name", email),
+            picture=userinfo.get("picture", ""),
+        )
+        user_id = user.id
+        org_id  = org.id
+    finally:
+        db.close()
+
     session_payload = {
         "email":   email,
         "name":    userinfo.get("name", email),
         "picture": userinfo.get("picture", ""),
+        "user_id": user_id,
+        "org_id":  org_id,
     }
     token = _sign_session(session_payload)
     resp  = RedirectResponse(url="/", status_code=302)
@@ -797,36 +908,44 @@ async def verify_stream(
 # ───────────────────────── saved extractions ──────────────────────────────
 
 @app.get("/saved-extractions")
-async def list_saved_extractions():
-    """Return all saved extractions, newest first, with per-category claim stats."""
+async def list_saved_extractions(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Return all saved extractions for the current org, newest first."""
+    rows = (
+        db.query(SavedExtraction)
+        .filter_by(organization_id=current_user.organization_id)
+        .order_by(SavedExtraction.saved_at.desc())
+        .all()
+    )
     items = []
-    for p in sorted(SAVED_DIR.glob("*.json"), key=lambda f: f.stat().st_mtime, reverse=True):
+    for row in rows:
         try:
-            data = json.loads(p.read_text())
-            extraction = data.get("extraction", {})
+            extraction = json.loads(row.extraction_json) if row.extraction_json else {}
+            meta = json.loads(row.meta_json) if row.meta_json else {}
 
-            # Tally claims by category
             claims = extraction.get("claims", [])
             by_category: dict[str, int] = {}
             for cl in claims:
                 cat = cl.get("category", "other")
                 by_category[cat] = by_category.get(cat, 0) + 1
 
-            # Key metrics names
             metrics = [m.get("metric_name", "") for m in extraction.get("key_metrics", []) if m.get("metric_name")]
 
             items.append({
-                "save_id": p.stem,
-                "company_name": data.get("meta", {}).get("company_name", "Unknown"),
-                "original_filename": data.get("meta", {}).get("original_filename", ""),
-                "extractor_model": data.get("meta", {}).get("extractor_model", ""),
-                "extractor_version": data.get("meta", {}).get("extractor_version", ""),
-                "saved_at": data.get("meta", {}).get("saved_at", ""),
-                # Stats for the info popover
-                "claims_count": len(claims),
+                "save_id":          row.save_id,
+                "company_name":     row.company_name or "Unknown",
+                "original_filename": row.original_filename or "",
+                "extractor_model":  row.extractor_model or "",
+                "extractor_version": row.extractor_version or "",
+                "saved_at":         row.saved_at.isoformat() if row.saved_at else "",
+                "claims_count":     len(claims),
                 "claims_by_category": by_category,
-                "key_metrics": metrics,
-                "stage": extraction.get("stage_assessment", {}).get("stage") if extraction.get("stage_assessment") else None,
+                "key_metrics":      metrics,
+                "stage":            extraction.get("stage_assessment", {}).get("stage") if extraction.get("stage_assessment") else None,
+                "is_public":        row.is_public,
+                "owner_email":      meta.get("owner_email", ""),
             })
         except Exception:
             continue
@@ -839,6 +958,8 @@ async def save_extraction(
     context_id: Annotated[str, Form()],
     original_filename: Annotated[str, Form()] = "",
     extractor_model: Annotated[str, Form()] = "",
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
     """Persist a session extraction to the saved library."""
     _, session_ctx = get_session_dirs(request)
@@ -849,30 +970,55 @@ async def save_extraction(
     extraction_data = json.loads(context_path.read_text())
     company_name = extraction_data.get("company", {}).get("name", "Unknown")
     save_id = uuid.uuid4().hex[:12]
-    saved = {
-        "meta": {
-            "save_id": save_id,
-            "company_name": company_name,
-            "original_filename": original_filename,
-            "extractor_model": extractor_model,
-            "extractor_version": EXTRACTOR_VERSION,
-            "saved_at": datetime.now(timezone.utc).isoformat(),
-        },
+    now = datetime.now(timezone.utc)
+    meta = {
+        "save_id": save_id,
+        "company_name": company_name,
+        "original_filename": original_filename,
+        "extractor_model": extractor_model,
+        "extractor_version": EXTRACTOR_VERSION,
+        "saved_at": now.isoformat(),
+        "owner_email": current_user.email,
+    }
+    saved_file = {
+        "meta": meta,
         "extraction": extraction_data,
     }
-    (SAVED_DIR / f"{save_id}.json").write_text(json.dumps(saved, indent=2))
+    # Write to disk (backup) and to DB (source of truth for queries)
+    (SAVED_DIR / f"{save_id}.json").write_text(json.dumps(saved_file, indent=2))
+    db.add(SavedExtraction(
+        save_id=save_id,
+        owner_id=current_user.id,
+        organization_id=current_user.organization_id,
+        company_name=company_name,
+        original_filename=original_filename,
+        extractor_model=extractor_model,
+        extractor_version=EXTRACTOR_VERSION,
+        meta_json=json.dumps(meta),
+        extraction_json=json.dumps(extraction_data),
+        saved_at=now,
+    ))
+    db.commit()
     return JSONResponse({"save_id": save_id, "company_name": company_name})
 
 
 @app.post("/saved-extractions/{save_id}/load")
-async def load_saved_extraction(request: Request, save_id: str):
+async def load_saved_extraction(
+    request: Request,
+    save_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     """Load a saved extraction back into a fresh session context."""
-    saved_path = SAVED_DIR / f"{save_id}.json"
-    if not saved_path.exists():
+    row = db.query(SavedExtraction).filter_by(
+        save_id=save_id,
+        organization_id=current_user.organization_id,
+    ).first()
+    if not row:
         raise HTTPException(status_code=404, detail=f"Unknown save_id: {save_id}")
 
-    data = json.loads(saved_path.read_text())
-    extraction_data = data["extraction"]
+    extraction_data = json.loads(row.extraction_json)
+    meta = json.loads(row.meta_json) if row.meta_json else {}
 
     # Create a fresh session context so /verify/stream works normally
     _, session_ctx = get_session_dirs(request)
@@ -883,16 +1029,48 @@ async def load_saved_extraction(request: Request, save_id: str):
     return JSONResponse({
         "context_id": token,
         "extraction": extraction_data,
-        "meta": data.get("meta", {}),
+        "meta": meta,
     })
 
 
-@app.delete("/saved-extractions/{save_id}")
-async def delete_saved_extraction(save_id: str):
-    saved_path = SAVED_DIR / f"{save_id}.json"
-    if not saved_path.exists():
+@app.post("/saved-extractions/{save_id}/share")
+async def share_saved_extraction(
+    save_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Generate a public read-only share link for a saved extraction."""
+    row = db.query(SavedExtraction).filter_by(
+        save_id=save_id,
+        organization_id=current_user.organization_id,
+    ).first()
+    if not row:
         raise HTTPException(status_code=404, detail=f"Unknown save_id: {save_id}")
-    saved_path.unlink()
+
+    if not row.share_token:
+        row.share_token = secrets.token_urlsafe(24)
+    row.is_public = True
+    db.commit()
+    return JSONResponse({"share_url": f"{BASE_URL}/shared/extraction/{row.share_token}"})
+
+
+@app.delete("/saved-extractions/{save_id}")
+async def delete_saved_extraction(
+    save_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    row = db.query(SavedExtraction).filter_by(
+        save_id=save_id,
+        organization_id=current_user.organization_id,
+    ).first()
+    if not row:
+        raise HTTPException(status_code=404, detail=f"Unknown save_id: {save_id}")
+    saved_path = SAVED_DIR / f"{save_id}.json"
+    if saved_path.exists():
+        saved_path.unlink()
+    db.delete(row)
+    db.commit()
     return JSONResponse({"deleted": save_id})
 
 
@@ -947,68 +1125,135 @@ async def verify(
 # ───────────────────────── saved reports ──────────────────────────────
 
 @app.get("/reports")
-async def list_reports():
-    """Return all saved compliance reports, newest first, with per-verdict counts."""
+async def list_reports(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Return all compliance reports for the current org, newest first."""
+    rows = (
+        db.query(Report)
+        .filter_by(organization_id=current_user.organization_id)
+        .order_by(Report.generated_at.desc())
+        .all()
+    )
     items = []
-    if not SAVED_REPORTS_DIR.exists():
-        return JSONResponse(items)
-
-    for p in sorted(SAVED_REPORTS_DIR.glob("*.json"), key=lambda f: f.stat().st_mtime, reverse=True):
+    for row in rows:
         try:
-            data = json.loads(p.read_text())
+            data = json.loads(row.report_json)
             results = data.get("results", [])
 
-            # Per-verdict counts (actual verdict names from analyzer.py)
             consistent   = sum(1 for r in results if r.get("verdict") == "CONSISTENT")
             contradicts  = sum(1 for r in results if r.get("verdict") == "CONTRADICTS")
             unsupported  = sum(1 for r in results if r.get("verdict") == "UNSUPPORTED")
             insufficient = sum(1 for r in results if r.get("verdict") == "INSUFFICIENT_EVIDENCE")
             fls_flags    = sum(1 for r in results if r.get("verdict") == "CONTRADICTS" and r.get("forward_looking"))
 
-            # Top flagged findings for dashboard preview (up to 3)
             top_flags = [
                 {"claim": r.get("claim", ""), "verdict": r.get("verdict", ""), "forward_looking": r.get("forward_looking", False)}
                 for r in results if r.get("verdict") == "CONTRADICTS"
             ][:3]
 
             items.append({
-                "report_id": data.get("report_id", p.stem.replace("report_", "")),
-                "company_name": data.get("company_name", "Unknown"),
-                "generated_at": data.get("generated_at", ""),
+                "report_id":        row.report_id,
+                "company_name":     row.company_name or data.get("company_name", "Unknown"),
+                "generated_at":     row.generated_at.isoformat() if row.generated_at else data.get("generated_at", ""),
                 "assumed_industry": data.get("assumed_industry", ""),
-                "cik": data.get("cik", ""),
-                # Models + versions
-                "extractor_model": data.get("extractor_model", ""),
+                "cik":              row.cik or data.get("cik", ""),
+                "extractor_model":  row.extractor_model or data.get("extractor_model", ""),
                 "extractor_version": data.get("extractor_version", ""),
-                "analyzer_model": data.get("analyzer_model", ""),
+                "analyzer_model":   row.analyzer_model or data.get("analyzer_model", ""),
                 "analyzer_version": data.get("analyzer_version", ""),
-                # Verdict breakdown
-                "claims_analyzed": data.get("claims_analyzed", 0),
-                "consistent": consistent,
-                "contradicts": contradicts,
-                "unsupported": unsupported,
-                "insufficient": insufficient,
-                "fls_flags": fls_flags,
-                "top_flags": top_flags,
+                "claims_analyzed":  data.get("claims_analyzed", 0),
+                "consistent":       consistent,
+                "contradicts":      contradicts,
+                "unsupported":      unsupported,
+                "insufficient":     insufficient,
+                "fls_flags":        fls_flags,
+                "top_flags":        top_flags,
+                "is_public":        row.is_public,
+                "owner_email":      data.get("owner_email", ""),
             })
         except Exception:
             continue
     return JSONResponse(items)
 
+
 @app.get("/reports/{report_id}")
-async def get_report(report_id: str):
-    """Retrieve a specific saved compliance report."""
-    report_path = SAVED_REPORTS_DIR / f"report_{report_id}.json"
-    if not report_path.exists():
+async def get_report(
+    report_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Retrieve a specific saved compliance report (org-gated)."""
+    row = db.query(Report).filter_by(
+        report_id=report_id,
+        organization_id=current_user.organization_id,
+    ).first()
+    if not row:
         raise HTTPException(status_code=404, detail=f"Unknown report_id: {report_id}")
-    return JSONResponse(json.loads(report_path.read_text()))
+    return JSONResponse(json.loads(row.report_json))
+
+
+@app.post("/reports/{report_id}/share")
+async def share_report(
+    report_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Generate a public read-only share link for a compliance report."""
+    row = db.query(Report).filter_by(
+        report_id=report_id,
+        organization_id=current_user.organization_id,
+    ).first()
+    if not row:
+        raise HTTPException(status_code=404, detail=f"Unknown report_id: {report_id}")
+
+    if not row.share_token:
+        row.share_token = secrets.token_urlsafe(24)
+    row.is_public = True
+    db.commit()
+    return JSONResponse({"share_url": f"{BASE_URL}/shared/report/{row.share_token}"})
+
 
 @app.delete("/reports/{report_id}")
-async def delete_report(report_id: str):
-    """Delete a saved compliance report."""
-    report_path = SAVED_REPORTS_DIR / f"report_{report_id}.json"
-    if not report_path.exists():
+async def delete_report(
+    report_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Delete a saved compliance report (org-gated)."""
+    row = db.query(Report).filter_by(
+        report_id=report_id,
+        organization_id=current_user.organization_id,
+    ).first()
+    if not row:
         raise HTTPException(status_code=404, detail=f"Unknown report_id: {report_id}")
-    report_path.unlink()
+    report_path = SAVED_REPORTS_DIR / f"report_{report_id}.json"
+    if report_path.exists():
+        report_path.unlink()
+    db.delete(row)
+    db.commit()
     return JSONResponse({"deleted": report_id})
+
+
+# ───────────────────────── public share routes ────────────────────────────
+
+@app.get("/shared/report/{share_token}")
+async def shared_report(share_token: str, db: Session = Depends(get_db)):
+    """Public read-only report view — no authentication required."""
+    row = db.query(Report).filter_by(share_token=share_token, is_public=True).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Share link not found or no longer active.")
+    return JSONResponse(json.loads(row.report_json))
+
+
+@app.get("/shared/extraction/{share_token}")
+async def shared_extraction(share_token: str, db: Session = Depends(get_db)):
+    """Public read-only extraction view — no authentication required."""
+    row = db.query(SavedExtraction).filter_by(share_token=share_token, is_public=True).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Share link not found or no longer active.")
+    extraction = json.loads(row.extraction_json)
+    meta = json.loads(row.meta_json) if row.meta_json else {}
+    return JSONResponse({"extraction": extraction, "meta": meta})
 

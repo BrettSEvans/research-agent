@@ -110,6 +110,8 @@ class SavedExtraction(Base):
     meta_json = Column(Text, nullable=True)
     extraction_json = Column(Text, nullable=False)
     saved_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+    share_token = Column(String(64), unique=True, nullable=True, index=True)
+    is_public = Column(Boolean, default=False, nullable=False)
 
     owner = relationship("User", back_populates="saved_extractions")
     organization = relationship("Organization", back_populates="saved_extractions")
@@ -131,6 +133,8 @@ class Report(Base):
     report_json = Column(Text, nullable=False)
     generated_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
     log_path = Column(String(512), nullable=True)
+    share_token = Column(String(64), unique=True, nullable=True, index=True)
+    is_public = Column(Boolean, default=False, nullable=False)
 
     owner = relationship("User", back_populates="reports")
     organization = relationship("Organization", back_populates="reports")

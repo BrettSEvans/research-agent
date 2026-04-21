@@ -1353,6 +1353,9 @@
                 <button class="btn btn-outlined" style="height:30px;padding:0 10px;font-size:0.8rem" onclick="event.stopPropagation();loadReportDrilldown('${rid}')">
                   <span class="material-symbols-rounded" style="font-size:15px">open_in_new</span>
                 </button>
+                <button class="btn btn-text" style="height:30px;padding:0 6px;color:var(--md-primary)" title="Copy share link" onclick="event.stopPropagation();shareReport('${rid}', this)">
+                  <span class="material-symbols-rounded" style="font-size:15px">${it.is_public ? 'link' : 'share'}</span>
+                </button>
                 <button class="btn btn-text" style="height:30px;padding:0 6px;color:var(--md-error)" onclick="event.stopPropagation();deleteReport('${rid}')">
                   <span class="material-symbols-rounded" style="font-size:15px">delete</span>
                 </button>
@@ -2065,6 +2068,10 @@
                       onclick="loadSavedExtraction('${escape(it.save_id)}')">
                 <span class="material-symbols-rounded" style="font-size:16px">play_arrow</span> Load &amp; Analyze
               </button>
+              <button class="btn btn-text" style="height:32px;padding:0 8px;color:var(--md-primary)" title="Copy share link"
+                      onclick="shareExtraction('${escape(it.save_id)}', this)">
+                <span class="material-symbols-rounded" style="font-size:16px">${it.is_public ? 'link' : 'share'}</span>
+              </button>
               <button class="btn btn-text" style="height:32px;padding:0 8px;color:var(--md-error)"
                       onclick="deleteSavedExtraction('${escape(it.save_id)}')">
                 <span class="material-symbols-rounded" style="font-size:16px">delete</span>
@@ -2094,6 +2101,32 @@
       } catch (e) {
         showToast('Failed to load extraction: ' + e.message);
         loadSavedExtractionsList(); // restore the list
+      }
+    }
+
+    async function shareReport(reportId, btn) {
+      try {
+        const r = await fetch(`/reports/${reportId}/share`, { method: 'POST', headers: apiHeaders() });
+        if (!r.ok) throw new Error((await r.json()).detail || 'Share failed');
+        const { share_url } = await r.json();
+        await navigator.clipboard.writeText(share_url);
+        if (btn) btn.querySelector('.material-symbols-rounded').textContent = 'link';
+        showToast('Share link copied to clipboard!');
+      } catch (e) {
+        showToast('Could not create share link: ' + e.message);
+      }
+    }
+
+    async function shareExtraction(saveId, btn) {
+      try {
+        const r = await fetch(`/saved-extractions/${saveId}/share`, { method: 'POST', headers: apiHeaders() });
+        if (!r.ok) throw new Error((await r.json()).detail || 'Share failed');
+        const { share_url } = await r.json();
+        await navigator.clipboard.writeText(share_url);
+        if (btn) btn.querySelector('.material-symbols-rounded').textContent = 'link';
+        showToast('Share link copied to clipboard!');
+      } catch (e) {
+        showToast('Could not create share link: ' + e.message);
       }
     }
 
@@ -2218,6 +2251,96 @@
       html += `</div>`;
       return html;
     }
+  </script>
+
+  <!-- ── Inactivity auto-logout ─────────────────────────────────────────── -->
+  <div id="inactivity-modal" style="
+    display:none; position:fixed; inset:0; z-index:9999;
+    background:rgba(0,0,0,0.45); align-items:center; justify-content:center;">
+    <div style="
+      background:var(--md-surface-container-lowest); border-radius:var(--md-shape-lg);
+      padding:32px 28px; max-width:380px; width:90%; box-shadow:var(--md-elev-3);
+      display:flex; flex-direction:column; gap:16px; align-items:center; text-align:center;">
+      <span class="material-symbols-rounded" style="font-size:40px;color:var(--md-warning)">timer</span>
+      <h3 style="margin:0;font-size:1.1rem;font-weight:500;">Session Expiring Soon</h3>
+      <p style="margin:0;color:var(--md-on-surface-variant);font-size:0.9rem;">
+        You'll be logged out in <strong id="inactivity-countdown">5:00</strong> due to inactivity.
+      </p>
+      <div style="display:flex;gap:12px;width:100%;justify-content:center;">
+        <button class="btn btn-text" onclick="doLogout()" style="color:var(--md-on-surface-variant);">Log out now</button>
+        <button class="btn btn-filled" onclick="stayLoggedIn()">Stay logged in</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── Inactivity auto-logout (30 min total; warn at 25 min) ─────────────
+    const INACTIVITY_WARN_MS = 25 * 60 * 1000;   // 25 min → show warning
+    const INACTIVITY_LOGOUT_MS = 30 * 60 * 1000;  // 30 min → force logout
+
+    let _inactivityWarnTimer   = null;
+    let _inactivityLogoutTimer = null;
+    let _inactivityCountdown   = null;
+
+    function _clearInactivityTimers() {
+      clearTimeout(_inactivityWarnTimer);
+      clearTimeout(_inactivityLogoutTimer);
+      clearInterval(_inactivityCountdown);
+    }
+
+    function _closeInactivityModal() {
+      const m = document.getElementById('inactivity-modal');
+      if (m) m.style.display = 'none';
+      clearInterval(_inactivityCountdown);
+    }
+
+    function _showInactivityWarning() {
+      const modal = document.getElementById('inactivity-modal');
+      if (!modal) return;
+      modal.style.display = 'flex';
+
+      let secsLeft = 5 * 60;
+      const countEl = document.getElementById('inactivity-countdown');
+      function tick() {
+        const m = String(Math.floor(secsLeft / 60)).padStart(1, '0');
+        const s = String(secsLeft % 60).padStart(2, '0');
+        if (countEl) countEl.textContent = `${m}:${s}`;
+        if (secsLeft <= 0) { clearInterval(_inactivityCountdown); doLogout(); }
+        secsLeft--;
+      }
+      tick();
+      _inactivityCountdown = setInterval(tick, 1000);
+    }
+
+    function resetInactivityTimer() {
+      _clearInactivityTimers();
+      _closeInactivityModal();
+      _inactivityWarnTimer   = setTimeout(_showInactivityWarning, INACTIVITY_WARN_MS);
+      _inactivityLogoutTimer = setTimeout(doLogout, INACTIVITY_LOGOUT_MS);
+    }
+
+    function stayLoggedIn() {
+      resetInactivityTimer();
+    }
+
+    function doLogout() {
+      _clearInactivityTimers();
+      window.location.href = '/auth/logout';
+    }
+
+    // Only activate inactivity timer when a user is authenticated
+    (async () => {
+      try {
+        const r = await fetch('/auth/me', { credentials: 'same-origin' });
+        const user = await r.json();
+        if (user && user.email) {
+          ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt =>
+            document.addEventListener(evt, resetInactivityTimer, { passive: true })
+          );
+          resetInactivityTimer();
+        }
+      } catch (_) { /* unauthenticated or fetch failed — no timer needed */ }
+    })();
   </script>
 </body>
 </html>
