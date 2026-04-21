@@ -1,0 +1,634 @@
+{
+  "report_id": "baf69ad39f92",
+  "generated_at": "20260418T170136Z",
+  "cik": null,
+  "forms": [
+    "10-K",
+    "10-Q",
+    "S-1",
+    "8-K"
+  ],
+  "deck_context_used": true,
+  "assumed_industry": "Cannabis cultivation and wholesale (marijuana growing, California)",
+  "company_name": "CannaFarm",
+  "extractor_model": "claude-haiku-4-5",
+  "extractor_version": "1.2.0",
+  "analyzer_model": "qwen3.5:9b",
+  "analyzer_version": "1.3.0",
+  "claims_analyzed": 28,
+  "flagged_forward_looking_contradictions": 0,
+  "results": [
+    {
+      "claim": "The passage of state initiatives in California, Nevada, Massachusetts, Maine, Florida, Arkansas, Montana, and North Dakota will add $7.4 billion to the 2029 U.S. cannabis market forecast.",
+      "verdict": "UNSUPPORTED",
+      "forward_looking": true,
+      "severity": "high",
+      "explanation": "The provided search results do not contain any information about cannabis market size, forecasts, or industry data. All five search results discuss the general initiative and referendum political process in US states (Wikipedia, Movement Advancement Project, CUSDI, Ballotpedia, Let the Voters Decide) but none contain cannabis-specific market data, financial forecasts, or industry analysis. The claim about $7.4 billion added to the 2029 U.S. cannabis market forecast from state initiatives in California, Nevada, Massachusetts, Maine, Florida, Arkansas, Montana, and North Dakota cannot be verified with these sources. Authoritative industry reports from sources like Statista, IBISWorld, Gartner, or cannabis-specific market research firms would be needed to assess this claim. The search results only confirm which states have initiative processes (e.g., Ballotpedia lists states with initiative or referendum capabilities), but provide no cannabis market data whatsoever.",
+      "missing_information": "Industry-specific cannabis market research reports (e.g., from Statista, Grand View Research, BDSA, or similar cannabis market research firms) that contain 2029 market forecasts and state-level initiative impact analysis would be required to verify this claim.",
+      "cited_passages": [],
+      "web_sources": [
+        {
+          "url": "https://en.wikipedia.org/wiki/Initiatives_and_referendums_in_the_United_States",
+          "title": "Initiatives and referendums in the United States - Wikipedia"
+        },
+        {
+          "url": "https://www.lgbtmap.org/democracy-maps/direct_citizen_initiative_states",
+          "title": "Direct Citizen Initiative States - Movement Advancement Project"
+        },
+        {
+          "url": "https://cusdi.org/faq/which-states-have-initiatives/",
+          "title": "Which states have initiatives? Twenty-four US States have States Initiatives; 70 percent of those needed to call for a Convention; and 63 percent needed to ratify an Amendment."
+        },
+        {
+          "url": "https://ballotpedia.org/States_with_initiative_or_referendum",
+          "title": "States with initiative or referendum - Ballotpedia"
+        },
+        {
+          "url": "https://letthevotersdecide.com/an-overview-and-history-of-the-initiative-and-referendum-process/",
+          "title": "The Initiative and Referendum Process [An Overview & History] - Let the Voters Decide"
+        }
+      ],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana growing, California)"
+    },
+    {
+      "claim": "The overall U.S. legal adult-use and medical cannabis market is projected to reach $22.8 billion by 2029.",
+      "verdict": "UNSUPPORTED",
+      "forward_looking": true,
+      "severity": "medium",
+      "explanation": "The claim states that the U.S. legal adult-use and medical cannabis market is projected to reach $22.8 billion by 2029. However, none of the provided search results contain this specific market size projection figure. The Grand View Research report (https://www.grandviewresearch.com/industry-analysis/us-cannabis-market) discusses market growth drivers but does not provide the $22.8 billion figure. Statista's market forecast (https://www.statista.com/outlook/hmo/cannabis/united-states) mentions legalization trends but does not cite this specific projection. The Yahoo Finance article (https://finance.yahoo.com/news/u-cannabis-market-analysis-2020-121100577.html?fr=sycsrp_catchall) discusses market growth and legalization but does not contain the $22.8 billion figure. Flowhub's industry statistics (https://www.flowhub.com/cannabis-industry-statistics) mentions market growth but does not provide this specific projection. The PMC article (https://pmc.ncbi.nlm.nih.gov/articles/PMC11499687/) focuses on legalization status rather than market size projections. While these sources confirm general market growth trends and legalization expansion, none corroborate the specific $22.8 billion by 2029 claim. To verify this claim, an authoritative industry report from a recognized market research firm (e.g., Grand View Research, Statista, IBISWorld, or McKinsey) that explicitly states this projection would be needed.",
+      "missing_information": "An authoritative industry report or market forecast from a recognized research firm (e.g., Grand View Research, Statista, IBISWorld, or similar) that explicitly states the $22.8 billion U.S. cannabis market projection for 2029 would be required to verify this claim.",
+      "cited_passages": [],
+      "web_sources": [
+        {
+          "url": "https://www.grandviewresearch.com/industry-analysis/us-cannabis-market",
+          "title": "U.S. Cannabis Market Size & Share | Industry Report, 2030"
+        },
+        {
+          "url": "https://www.statista.com/outlook/hmo/cannabis/united-states",
+          "title": "Cannabis - United States | Statista Market Forecast"
+        },
+        {
+          "url": "https://finance.yahoo.com/news/u-cannabis-market-analysis-2020-121100577.html?fr=sycsrp_catchall",
+          "title": "U.S. Cannabis Market Analysis 2020-2024 and Outlook 2025-2029 ..."
+        },
+        {
+          "url": "https://www.flowhub.com/cannabis-industry-statistics",
+          "title": "2026 Cannabis Industry Statistics - Flowhub"
+        },
+        {
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11499687/",
+          "title": "Current Cannabis Use in the United States: Implications for ..."
+        }
+      ],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana growing, California)"
+    },
+    {
+      "claim": "The compound annual growth rate (CAGR) for the U.S. legal cannabis market is 28%.",
+      "verdict": "UNSUPPORTED",
+      "forward_looking": false,
+      "severity": "MEDIUM",
+      "explanation": "The search results do not contain any authoritative sources that support the claim that the U.S. legal cannabis market has a 28% CAGR. The only cannabis-related market data found is from a 2017 Fool.com article [3] which mentions the U.S. legal cannabis market reaching around $17 billion by 2021 but does not specify a 28% CAGR figure. The other search results either define CAGR generally [1][2][5] or discuss unrelated markets (cordless hedge trimmer at 6-8% CAGR, IPaaS at 14.8% CAGR) [4]. No industry reports from Statista, IBISWorld, Gartner, McKinsey, or comparable companies appear in the search results to corroborate the 28% CAGR claim. To properly assess this claim, authoritative industry reports from sources like Statista, Grand View Research, or IBISWorld that specifically report cannabis market CAGR figures would be needed.",
+      "missing_information": "Authoritative industry reports from Statista, IBISWorld, Gartner, McKinsey, or comparable market research firms that specifically report the U.S. legal cannabis market CAGR figure with methodology and time period specified.",
+      "cited_passages": [],
+      "web_sources": [
+        {
+          "url": "https://en.wikipedia.org/wiki/Compound_annual_growth_rate",
+          "title": "Compound annual growth rate - Wikipedia"
+        },
+        {
+          "url": "https://ru.wikipedia.org/wiki/CAGR",
+          "title": "CAGR \u2014 \u0412\u0438\u043a\u0438\u043f\u0435\u0434\u0438\u044f"
+        },
+        {
+          "url": "https://www.fool.com/investing/2017/10/02/this-marijuana-stock-offers-a-compound-annual-grow.aspx",
+          "title": "This Marijuana Stock Offers a Compound Annual Growth Rate of..."
+        },
+        {
+          "url": "https://www.linkedin.com/pulse/cordless-hedge-trimmermarket-analysis-forecastinggrowth-tf13e",
+          "title": "The Cordless Hedge Trimmer market analysis forecasting growth..."
+        },
+        {
+          "url": "https://cagrcalculator.net/",
+          "title": "CAGR Calculator - Calculate Compound Annual Growth Rate Online"
+        }
+      ],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana growing, California)"
+    },
+    {
+      "claim": "Recreational cannabis sales will account for 53% of the overall cannabis market by 2029.",
+      "verdict": "UNSUPPORTED",
+      "forward_looking": true,
+      "severity": "medium",
+      "explanation": "The claim states that 'Recreational cannabis sales will account for 53% of the overall cannabis market by 2029.' None of the provided search results contain this specific statistic or forecast. Search result [1] from Cannabis Science and Technology mentions a 2025 State of the Cannabis Industry report with BDSA partnership but does not provide recreational vs. medical market share projections. Search result [2] from Cannabismdtelemed.com discusses demographic market share (Millennials at 46.2% of U.S. cannabis sales) rather than recreational vs. medical split. Search result [3] from Flowhub references BDSA data on beverage sales (nearly 1% share) but does not address the recreational/medical market split. Search result [4] from ReportsIntellect focuses on the global Cannabis Oil market specifically (valued at USD 820.7 million in 2022, forecast to USD 4,534.2 million by 2029) rather than overall recreational vs. medical cannabis market share. Search result [5] from Analytica Global addresses CBD vape juice market specifically, not overall cannabis market composition. No authoritative source in the search results provides the 53% recreational market share figure by 2029. To verify this claim, industry reports from BDSA, ArcView Research, or similar cannabis market research firms that specifically forecast recreational vs. medical cannabis market split would be needed.",
+      "missing_information": "An industry report from a recognized cannabis market research firm (e.g., BDSA, ArcView Research, or similar) that specifically forecasts the recreational vs. medical cannabis market split by 2029 would be required to verify this claim.",
+      "cited_passages": [],
+      "web_sources": [
+        {
+          "url": "https://www.cannabissciencetech.com/view/2025-state-of-the-cannabis-industry-sales-trends-and-forecasts",
+          "title": "2025 State of the Cannabis Industry: Sales Trends and Forecasts"
+        },
+        {
+          "url": "https://cannabismdtelemed.com/blog/30-cannabis-industry-statistics-growth-trends-in-2025",
+          "title": "30+ Cannabis Industry Statistics: Growth & Trends in 2025"
+        },
+        {
+          "url": "https://www.flowhub.com/cannabis-industry-statistics",
+          "title": "2026 Cannabis Industry Statistics"
+        },
+        {
+          "url": "https://www.reportsintellect.com/report/2911783-global-cannabis-oil-market-2023-by-manufacturers-regions-type-and-application-forecast-to-2029.html",
+          "title": "Global Cannabis Oil Market 2023 by Manufacturers, Regions, Type"
+        },
+        {
+          "url": "https://www.analytica.global/research/cbd-vape-juice-market",
+          "title": "CBD Vape Juice Market Share & Size 2032"
+        }
+      ],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana growing, California)"
+    },
+    {
+      "claim": "By 2029, the legal cannabis market would see $22.8 billion in total annual sales.",
+      "verdict": "CONTRADICTS",
+      "forward_looking": true,
+      "severity": "MEDIUM",
+      "explanation": "The claim states that by 2029, the legal cannabis market would see $22.8 billion in total annual sales. However, search result [1] from Cannabis Science and Technology (cannabissciencetech.com) cites BDSA data forecasting U.S. regulated cannabis sales (including adult use and medical) to reach $39.1 billion by 2029, which materially conflicts with the $22.8 billion claim. Result [3] from CannabisMD TeleMed also cites cultivation market projections of $407.91 billion by 2029, though this appears to be cultivation-specific rather than total market sales. The BDSA forecast of $39.1 billion for U.S. regulated cannabis sales by 2029 is the most directly comparable authoritative figure available in the search results. The claim does not specify whether it refers to California only or a different market definition, but since the claim is presented as a general industry forecast without geographic qualification, the BDSA U.S. total market forecast contradicts the $22.8 billion figure. Additional primary sources such as BDSA's full 2029 forecast report or California-specific market data would be needed to determine if the claim refers to a narrower market segment.",
+      "missing_information": null,
+      "cited_passages": [],
+      "web_sources": [
+        {
+          "url": "https://www.cannabissciencetech.com/view/2025-state-of-the-cannabis-industry-sales-trends-and-forecasts",
+          "title": "2025 State of the Cannabis Industry: Sales Trends and Forecasts | Cannabis Science and Technology - Cannabis Industry News, Insights"
+        },
+        {
+          "url": "https://www.flowhub.com/cannabis-industry-statistics",
+          "title": "2026 Cannabis Industry Statistics"
+        },
+        {
+          "url": "https://cannabismdtelemed.com/blog/30-cannabis-industry-statistics-growth-trends-in-2025",
+          "title": "37 Cannabis Industry Statistics 2026: Market Size, Jobs, Revenue & Growth \u2014 CannabisMD TeleMed"
+        },
+        {
+          "url": "https://www.grandviewresearch.com/industry-analysis/legal-cannabis-market",
+          "title": "Legal Cannabis Market Size & Share | Industry Report, 2033"
+        },
+        {
+          "url": "https://mjbizdaily.com/us-cannabis-sales-estimates/",
+          "title": "Projected US legal medical and recreational cannabis market size"
+        }
+      ],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana growing, California)"
+    },
+    {
+      "claim": "As of August 1, 2025, there were 440 licensed retail marijuana stores in the state.",
+      "verdict": "UNSUPPORTED",
+      "forward_looking": false,
+      "severity": "medium",
+      "explanation": "The claim states that as of August 1, 2025, there were 440 licensed retail marijuana stores in California. However, none of the provided search results contain California-specific data. Result [1] from Bothell Reporter discusses Washington State's retail marijuana store cap (334 to 556), not California [1]. Result [2] from LinkedIn discusses retail marijuana store burglary activity but does not provide California store counts [2]. Result [3] from WHYY covers Delaware cannabis stores [3]. Result [4] from Tidewater News references Virginia legislation (HB 2312) [4]. Result [5] from KDKR discusses Colorado marijuana stores [5]. No authoritative sources in the search results provide California retail marijuana store licensing data. To verify this claim, I would need access to California Bureau of Cannabis Control (BCC) reports, California Department of Cannabis Control (DCC) public data, or industry reports specifically covering California's cannabis retail landscape.",
+      "missing_information": "California Department of Cannabis Control (DCC) public license registry data, California Bureau of Cannabis Control annual reports, or industry reports (e.g., from Statista, IBISWorld, or cannabis industry associations) specifically covering California retail marijuana store counts as of August 1, 2025.",
+      "cited_passages": [],
+      "web_sources": [
+        {
+          "url": "https://www.bothell-reporter.com/news/state-to-increase-number-of-retail-marijuana-stores-following-analysis-of-marketplace/",
+          "title": "State to increase number of retail marijuana stores following analysis..."
+        },
+        {
+          "url": "https://www.linkedin.com/posts/rzalegal_some-key-points-from-the-bulletin-frequency-activity-7408956630488289280-FZOt",
+          "title": "Some key points from the bulletin Frequency and License Type..."
+        },
+        {
+          "url": "https://whyy.org/articles/delaware-recreational-marijuana-stores-bans-restrictions-sussex-county-wilmington-newark/",
+          "title": "Bans, restrictions curb number of Del. cannabis stores - WHYY"
+        },
+        {
+          "url": "https://www.thetidewaternews.com/2021/08/03/town-leaders-discuss-options-regarding-retail-marijuana-stores/",
+          "title": "Town leaders discuss options regarding retail marijuana stores - The..."
+        },
+        {
+          "url": "https://kdvr.com/news/recreational-marijuana-stores-open-across-colorado/",
+          "title": "Lines still stretch around block on 2nd day of marijuana sales in..."
+        }
+      ],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana growing, California)"
+    },
+    {
+      "claim": "As of August 1, 2025, there were 583 licensed retail marijuana cultivation operations.",
+      "verdict": "UNSUPPORTED",
+      "forward_looking": false,
+      "severity": "medium",
+      "explanation": "The search results provided do not contain any authoritative information about California's licensed retail marijuana cultivation operations. All search results reference different jurisdictions: Richmond BizSense discusses Virginia's marijuana market proposal (2027 legalization), ADN reports on an Alaska marijuana operation from 2021, Marijuana Moment covers New York's retail license applications, and Newstribune references a 2019 medical marijuana application. None of these sources provide data specific to California's cannabis market or the claimed figure of 583 licensed retail marijuana cultivation operations as of August 1, 2025. To properly assess this claim, authoritative sources such as the California Bureau of Cannabis Control, California Department of Food and Agriculture, or industry reports from Statista/IBISWorld covering California's specific cannabis licensing data would be needed.",
+      "missing_information": "California Bureau of Cannabis Control licensing data, California Department of Food and Agriculture cultivation permits database, or industry reports specifically covering California's retail marijuana cultivation operations as of August 1, 2025",
+      "cited_passages": [],
+      "web_sources": [
+        {
+          "url": "https://richmondbizsense.com/2026/04/15/governors-amended-marijuana-market-proposal-features-fewer-initial-retail-licenses-phased-increase-to-state-sales-tax/",
+          "title": "Governor's amended marijuana market proposal... - Richmond BizSense"
+        },
+        {
+          "url": "https://vk.com/video-220018529_456248237",
+          "title": "\u0424\u044d\u043a\u0445\u0435\u043c-\u0425\u043e\u043b\u043b | Fackham Hall (2025) \u2014 \u0412\u0438\u0434\u0435\u043e \u043e\u0442 \u041a\u0418\u041d\u041e\u0411\u0420\u041e"
+        },
+        {
+          "url": "https://www.adn.com/alaska-marijuana/2021/03/05/houston-marijuana-operation-accused-of-using-pesticides-falsifying-records-in-rare-criminal-case/",
+          "title": "Houston marijuana operation accused of using pesticides, falsifying..."
+        },
+        {
+          "url": "https://www.marijuanamoment.net/new-yorks-first-marijuana-retail-license-applications-are-now-being-accepted-by-an-indian-tribe/",
+          "title": "New York's First Marijuana Retail License Applications Are Now..."
+        },
+        {
+          "url": "https://www.newstribune.com/news/2019/jul/06/handful-local-medical-marijuana-applications-filed/",
+          "title": "Handful of local medical marijuana applications filed"
+        }
+      ],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana growing, California)"
+    },
+    {
+      "claim": "As of August 1, 2025, there were 198 licensed retail marijuana product manufacturers.",
+      "verdict": "UNSUPPORTED",
+      "forward_looking": false,
+      "severity": "MEDIUM",
+      "explanation": "The claim states there were 198 licensed retail marijuana product manufacturers as of August 1, 2025. None of the search results directly corroborate this specific figure. Result [2] from The Marijuana Herald (March 2026) reports Colorado has 210 retail product manufacturers, which would exceed 198 if this were a national figure, but the claim does not specify geographic scope. Result [3] from MJBizDaily (June 12, 2025) reports 38,509 total active business licenses in regulated markets during Q1 2025 but does not break down by manufacturer type. No authoritative source in the search results provides a specific count of retail marijuana product manufacturers for August 1, 2025. To verify this claim, industry-specific licensing databases from state cannabis regulatory bodies (e.g., California Bureau of Cannabis Control) or reports from cannabis intelligence firms like CRB Monitor would be needed to confirm the exact manufacturer count for that date and jurisdiction.",
+      "missing_information": "State-specific licensing data (particularly California, given the assumed industry location) for August 1, 2025, from official state regulatory bodies or industry intelligence reports that track manufacturer license counts.",
+      "cited_passages": [],
+      "web_sources": [
+        {
+          "url": "https://cannabisrealestateconsultants.com/cannabis-licensing-opportunities-emerging-2025/",
+          "title": "Cannabis Licensing Opportunities Emerging Across U.S.A. in 2025 - CREC"
+        },
+        {
+          "url": "https://themarijuanaherald.com/2026/03/colorado-report-highlights-99-underage-compliance-rate-over-2100-licensed-marijuana-businesses/",
+          "title": "Colorado Report Highlights 99% Underage Compliance Rate, Over 2,100 Licensed Marijuana Businesses"
+        },
+        {
+          "url": "https://mjbizdaily.com/us-marijuana-business-licensing-stable-in-early-2025/",
+          "title": "US marijuana business licensing stable in early 2025"
+        },
+        {
+          "url": "https://www.covasoftware.com/blog/cannabis-industry-milestones-regulation-changes-in-2025",
+          "title": "Cannabis Industry Milestones & Regulation Changes in 2025"
+        },
+        {
+          "url": "https://www.americanbar.org/groups/business_law/resources/business-law-today/2025-august/recent-developments-cannabis-law/",
+          "title": "Cannabis Law: An Update on Recent Developments Related to the Cannabis Industry, 2025"
+        }
+      ],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana growing, California)"
+    },
+    {
+      "claim": "As of August 1, 2025, there were 15 licensed retail marijuana testing facilities.",
+      "verdict": "UNSUPPORTED",
+      "forward_looking": false,
+      "severity": "medium",
+      "explanation": "The claim states that as of August 1, 2025, there were 15 licensed retail marijuana testing facilities (presumably in California, given CannaFarm's location). However, none of the search results provide authoritative data on California's retail marijuana testing facility count as of that date. Result [4] from The Marijuana Herald mentions Minnesota has 3 testing facilities as of February 2026, which is a different state and later date [4]. Results [1] and [2] are Colorado-specific and do not provide California testing facility counts [1][2]. Result [3] discusses Oceanside, CA retail licensing (up to 4 licenses) but does not address testing facilities [3]. Result [5] is a Colorado lab's website with no California facility count [5]. No authoritative sources in the search results corroborate the specific claim of 15 licensed retail marijuana testing facilities in California as of August 1, 2025. To verify this claim, California's Cannabis Control Commission or Bureau of Cannabis Control licensing data would be needed as a primary source.",
+      "missing_information": "California Cannabis Control Commission or Bureau of Cannabis Control licensing database showing the count of licensed retail marijuana testing facilities as of August 1, 2025",
+      "cited_passages": [],
+      "web_sources": [
+        {
+          "url": "https://leg.colorado.gov/bills/hb18-1422",
+          "title": "Marijuana Testing Facilities Standards | Colorado General Assembly"
+        },
+        {
+          "url": "https://med.colorado.gov/licensee-information-and-lookup-tool/licensed-facilities",
+          "title": "Licensed Facilities | Marijuana Enforcement Division - Colorado"
+        },
+        {
+          "url": "https://www.ci.oceanside.ca.us/government/medical-marijuana-regulations",
+          "title": "Cannabis Facilities | Oceanside, CA"
+        },
+        {
+          "url": "https://themarijuanaherald.com/2026/02/minnesota-has-issued-135-cannabis-business-licenses-including-nearly-100-retail-locations/",
+          "title": "Minnesota Has Issued 135 Cannabis Business Licenses Including Nearly 100 Retail Locations"
+        },
+        {
+          "url": "https://gobilabs.com/",
+          "title": "#1 Accredited Cannabis Testing Lab in Colorado | Gobi Labs"
+        }
+      ],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana growing, California)"
+    },
+    {
+      "claim": "As of August 1, 2025, there were 531 licensed medical marijuana centres.",
+      "verdict": "UNSUPPORTED",
+      "forward_looking": false,
+      "severity": "medium",
+      "explanation": "The claim states that as of August 1, 2025, there were 531 licensed medical marijuana centres in California. None of the provided search results contain this specific figure or date combination. The Wikipedia article on Cannabis in California only provides historical data from 2009 (37,236 cards issued as of December 2009) and does not contain 2025 licensing numbers [1]. The Department of Cannabis Control search tool is described as being updated daily but the search result snippet does not provide specific count data [2]. The IBISWorld industry analysis reports 8,056 businesses in the Medical Marijuana Dispensaries industry across the United States in 2025, not California-specific medical marijuana centre counts [4]. The Cannabiz.media article discusses Q2 2025 store licensing across the U.S. but does not provide California-specific medical marijuana centre numbers [3]. The Veriheal.com article covers state-by-state medical marijuana outlooks but does not specify California medical marijuana centre counts for August 1, 2025 [5]. To verify this claim, the Department of Cannabis Control's official license database or a California-specific industry report would need to be consulted for the exact August 1, 2025 count.",
+      "missing_information": "Official data from the California Department of Cannabis Control's license search tool showing the exact count of licensed medical marijuana centres as of August 1, 2025, or a California-specific industry report with verified licensing numbers for that date.",
+      "cited_passages": [],
+      "web_sources": [
+        {
+          "url": "https://en.wikipedia.org/wiki/Cannabis_in_California",
+          "title": "Cannabis in California - Wikipedia"
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/resources/search-for-licensed-business/",
+          "title": "Search for a licensed business - Department of Cannabis Control"
+        },
+        {
+          "url": "https://www.cannabiz.media/blog/cannacurio-115-store-licensing-recap-q2-2025",
+          "title": "Cannacurio #115: Store Licensing Recap Q2 2025 - cannabiz.media"
+        },
+        {
+          "url": "https://www.ibisworld.com/united-states/industry/medical-marijuana-dispensaries/6170/",
+          "title": "Medical Marijuana Dispensaries in the US Industry Analysis, 2025"
+        },
+        {
+          "url": "https://www.veriheal.com/blog/state-by-state-medical-marijuana-outlook-guide/",
+          "title": "Where States Stand on Medical Marijuana in 2025 - veriheal.com"
+        }
+      ],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana growing, California)"
+    },
+    {
+      "claim": "As of August 1, 2025, there were 801 licensed medical marijuana cultivations.",
+      "verdict": "UNSUPPORTED",
+      "forward_looking": false,
+      "severity": "medium",
+      "explanation": "The claim states that as of August 1, 2025, there were 801 licensed medical marijuana cultivations in California. None of the provided search results contain this specific statistic or confirm the number of licensed medical marijuana cultivations in California for that date. The Department of Cannabis Control (DCC) license search tool (https://www.cannabis.ca.gov/resources/search-for-licensed-business/) is mentioned as being updated daily and containing information about all licensed businesses, but the search results do not display actual cultivation counts. Wikipedia's Cannabis in California page (https://en.wikipedia.org/wiki/Cannabis_in_California) only provides outdated data from December 2009 regarding medical cannabis cards issued (37,236 cards), not current cultivation license counts. Statista (https://www.statista.com/topics/3064/medical-marijuana-in-the-us/) and American Marijuana (https://americanmarijuana.org/marijuana-statistics/) mention the industry has grown but do not provide specific 2025 cultivation numbers. The Chambers practice guide (https://practiceguides.chambers.com/practice-guides/medical-cannabis-cannabinoid-regulation-2025/usa) discusses public support percentages but not cultivation license counts. To verify this claim, the official Department of Cannabis Control license database or an industry report from a recognized source (IBISWorld, Gartner, or similar) would need to be consulted for authoritative 2025 data.",
+      "missing_information": "Official data from the California Department of Cannabis Control's license search tool showing the count of licensed medical marijuana cultivations as of August 1, 2025, or an industry report from a recognized market research firm (e.g., IBISWorld, Statista, or similar) that provides verified 2025 cultivation license counts for California.",
+      "cited_passages": [],
+      "web_sources": [
+        {
+          "url": "https://en.wikipedia.org/wiki/Cannabis_in_California",
+          "title": "Cannabis in California - Wikipedia"
+        },
+        {
+          "url": "https://www.cannabis.ca.gov/resources/search-for-licensed-business/",
+          "title": "Search for a licensed business - Department of Cannabis Control"
+        },
+        {
+          "url": "https://practiceguides.chambers.com/practice-guides/medical-cannabis-cannabinoid-regulation-2025/usa",
+          "title": "Medical Cannabis & Cannabinoid Regulation 2025 - USA | Global Practice ..."
+        },
+        {
+          "url": "https://www.statista.com/topics/3064/medical-marijuana-in-the-us/",
+          "title": "Medical cannabis in the U.S. - Statistics & Facts | Statista"
+        },
+        {
+          "url": "https://americanmarijuana.org/marijuana-statistics/",
+          "title": "Marijuana Statistics 2026: Usage, Trends, and Data"
+        }
+      ],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana growing, California)"
+    },
+    {
+      "claim": "As of August 1, 2025, there were 242 licensed medical marijuana infused product manufacturers.",
+      "verdict": "UNSUPPORTED",
+      "forward_looking": false,
+      "severity": "MEDIUM",
+      "explanation": "The claim states that as of August 1, 2025, there were 242 licensed medical marijuana infused product manufacturers in California. None of the provided search results contain this specific statistic or reference California manufacturer counts. The search results include: (1) Colorado Marijuana Enforcement Division licensing information which is state-specific and does not provide California data [1]; (2) MJBizDaily articles from December 2021 discussing infused product company diversification without specific manufacturer counts [2][3]; (3) An American Bar Association article from August 2025 about cannabis law developments that mentions specific companies (Sunshine Enclosures, Final Bell) but provides no manufacturer count statistics [4]; and (4) Illinois cannabis licensing information which is for a different state [5]. No authoritative source in the search results corroborates the specific claim of 242 licensed medical marijuana infused product manufacturers in California as of August 1, 2025. To verify this claim, the venture capital firm would need access to California's Bureau of Medical Cannabis Control (BMCC) licensing database, state regulatory filings, or industry reports from sources like MJBizDaily, BDSA, or similar cannabis industry analytics providers that track California-specific licensing data.",
+      "missing_information": "California Bureau of Medical Cannabis Control (BMCC) licensing database or official state regulatory reports that track the number of licensed medical marijuana infused product manufacturers as of August 1, 2025. Industry reports from cannabis analytics providers (e.g., BDSA, MJBizDaily, Headset) that publish California-specific manufacturer counts would also be needed.",
+      "cited_passages": [],
+      "web_sources": [
+        {
+          "url": "https://med.colorado.gov/licensee-information-and-lookup-tool/licensed-facilities",
+          "title": "Licensed Facilities | Marijuana Enforcement Division - Colorado"
+        },
+        {
+          "url": "https://mjbizdaily.com/chart-marijuana-infused-product-companies-offer-multiple-categories-goods/",
+          "title": "Chart: Most marijuana infused product companies have diversified their offerings"
+        },
+        {
+          "url": "https://mjbizdaily.com/infused-cannabis-product-manufacturers-look-to-future/",
+          "title": "Infused marijuana product manufacturers look to expand customer base"
+        },
+        {
+          "url": "https://www.americanbar.org/groups/business_law/resources/business-law-today/2025-august/recent-developments-cannabis-law/",
+          "title": "Cannabis Law: An Update on Recent Developments Related to the Cannabis Industry, 2025"
+        },
+        {
+          "url": "https://illinoiscannabis.org/licensing/manufacturing",
+          "title": "Illinois Marijuana Manufacturing License | IllinoisCannabis.org"
+        }
+      ],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana growing, California)"
+    },
+    {
+      "claim": "As of August 1, 2025, there were 13 licensed medical marijuana testing facilities.",
+      "verdict": "UNSUPPORTED",
+      "forward_looking": false,
+      "severity": "MEDIUM",
+      "explanation": "The search results provided do not contain any information about California medical marijuana testing facilities or their licensing counts. The available sources cover: (1) Thailand's cannabis legalization in 2018 [1], (2) Arizona's medical marijuana program [2], (3) a Portland, Oregon testing lab shutdown in 2021 [3], (4) an unrelated Russian video [4], and (5) West Virginia's medical marijuana program [5]. None of these sources provide data on California's licensed testing facilities as of August 1, 2025. To verify this claim, authoritative sources such as the California Bureau of Medical Cannabis Control (BMCC) licensing database, California Department of Public Health reports, or industry reports from firms like IBISWorld or Statista covering California cannabis testing facilities would be needed.",
+      "missing_information": "California Bureau of Medical Cannabis Control (BMCC) licensing records or official state reports listing the number of licensed medical marijuana testing facilities as of August 1, 2025",
+      "cited_passages": [],
+      "web_sources": [
+        {
+          "url": "https://en.wikipedia.org/wiki/Cannabis_in_Thailand",
+          "title": "Cannabis in Thailand - Wikipedia"
+        },
+        {
+          "url": "https://www.azdhs.gov/licensing/medical-marijuana/index.php",
+          "title": "Information about Arizona's Medical Marijuana program."
+        },
+        {
+          "url": "https://www.pressherald.com/2021/01/12/portland-cannabis-testing-lab-shut-down-for-operating-without-a-license/",
+          "title": "Portland cannabis testing lab shut down for operating without a license"
+        },
+        {
+          "url": "https://vk.com/video-230221620_456239131",
+          "title": "\u041c\u041e\u0419 \u0413\u041e\u0414 \u0412 \u041e\u041a\u0421\u0424\u041e\u0420\u0414\u0415 (2025) MY OXFORD YEAR \u2014 \u0412\u0438\u0434\u0435\u043e \u043e\u0442..."
+        },
+        {
+          "url": "https://www.marijuanamoment.net/west-virginia-begins-medical-marijuana-patient-registration-but-sales-cant-launch-without-testing/",
+          "title": "West Virginia Begins Medical Marijuana Patient... - Marijuana Moment"
+        }
+      ],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana growing, California)"
+    },
+    {
+      "claim": "CannaFarm's main customers are dispensaries, manufacturers of edible products, and wholesale buyers in California.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (traction) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana growing, California)"
+    },
+    {
+      "claim": "Deal sizes for indoor flower ranged from 0.5 to 100 pounds.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (product) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana growing, California)"
+    },
+    {
+      "claim": "Deal sizes for greenhouse flower ranged from 1 to 320 pounds.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (product) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana growing, California)"
+    },
+    {
+      "claim": "Deal sizes for outdoor flower ranged from 1 to 200 pounds.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (product) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana growing, California)"
+    },
+    {
+      "claim": "CannaFarm projects yearly revenue of about $200,000 in Year 1.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": true,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (projection) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana growing, California)"
+    },
+    {
+      "claim": "CannaFarm projects yearly revenue of about $1,000,000 in Year 2.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": true,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (projection) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana growing, California)"
+    },
+    {
+      "claim": "CannaFarm projects yearly revenue of about $1,500,000 in Year 3.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": true,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (projection) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana growing, California)"
+    },
+    {
+      "claim": "CannaFarm requires a total investment of $330,000 USD.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (financial) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana growing, California)"
+    },
+    {
+      "claim": "$3,000 of the investment is allocated to Administrative Expenses.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (financial) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana growing, California)"
+    },
+    {
+      "claim": "$20,000 of the investment is allocated to Sales & Marketing.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (financial) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana growing, California)"
+    },
+    {
+      "claim": "$30,000 of the investment is allocated to Legal Fees & Licensing.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (financial) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana growing, California)"
+    },
+    {
+      "claim": "$30,000 of the investment is allocated to Security Equipment.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (financial) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana growing, California)"
+    },
+    {
+      "claim": "$70,000 of the investment is allocated to Land & Development.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (financial) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana growing, California)"
+    },
+    {
+      "claim": "$100,000 of the investment is allocated to Greenhouses.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (financial) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana growing, California)"
+    },
+    {
+      "claim": "The leadership team consists of Sara Hills (CEO), Dave Turner (COO), Jacob Garner (CTO), and Allison Cobb (CFO).",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (team) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "web_sources": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and wholesale (marijuana growing, California)"
+    }
+  ],
+  "warnings": [
+    "Could not resolve company to an SEC CIK (common for private / early-stage startups). Assumed industry: Cannabis cultivation and wholesale (marijuana growing, California). Market/industry claims will be assessed via web search; company-specific claims remain INSUFFICIENT_EVIDENCE."
+  ]
+}

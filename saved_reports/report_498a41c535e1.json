@@ -1,0 +1,271 @@
+{
+  "generated_at": "20260416T214428Z",
+  "cik": null,
+  "forms": [
+    "10-K",
+    "10-Q",
+    "S-1",
+    "8-K"
+  ],
+  "deck_context_used": true,
+  "claims_analyzed": 28,
+  "flagged_forward_looking_contradictions": 0,
+  "results": [
+    {
+      "claim": "The national legal cannabis market will reach $22.8 billion by 2029.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": null,
+      "severity": "NONE",
+      "explanation": "Company could not be resolved to an SEC CIK; no filings available to verify against.",
+      "missing_information": "SEC CIK or ticker for the target company.",
+      "cited_passages": []
+    },
+    {
+      "claim": "The passage of cannabis initiatives in California, Nevada, Massachusetts, Maine, Florida, Arkansas, Montana and North Dakota will add $7.4 billion to the 2029 market forecast.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": null,
+      "severity": "NONE",
+      "explanation": "Company could not be resolved to an SEC CIK; no filings available to verify against.",
+      "missing_information": "SEC CIK or ticker for the target company.",
+      "cited_passages": []
+    },
+    {
+      "claim": "The cannabis market will experience a compound annual growth rate (CAGR) of 28%.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": null,
+      "severity": "NONE",
+      "explanation": "Company could not be resolved to an SEC CIK; no filings available to verify against.",
+      "missing_information": "SEC CIK or ticker for the target company.",
+      "cited_passages": []
+    },
+    {
+      "claim": "Recreational cannabis sales will account for more than half (53%) of the overall market by 2029.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": null,
+      "severity": "NONE",
+      "explanation": "Company could not be resolved to an SEC CIK; no filings available to verify against.",
+      "missing_information": "SEC CIK or ticker for the target company.",
+      "cited_passages": []
+    },
+    {
+      "claim": "The company's goals are to own and operate a marijuana cultivation facility in the state of California.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": null,
+      "severity": "NONE",
+      "explanation": "Company could not be resolved to an SEC CIK; no filings available to verify against.",
+      "missing_information": "SEC CIK or ticker for the target company.",
+      "cited_passages": []
+    },
+    {
+      "claim": "The company's vision is to own and operate a marijuana cultivation facility in the state of California.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": null,
+      "severity": "NONE",
+      "explanation": "Company could not be resolved to an SEC CIK; no filings available to verify against.",
+      "missing_information": "SEC CIK or ticker for the target company.",
+      "cited_passages": []
+    },
+    {
+      "claim": "The company's mission is to establish an innovative marijuana growing brand with affordable prices in the residence of City and other Cities in California.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": null,
+      "severity": "NONE",
+      "explanation": "Company could not be resolved to an SEC CIK; no filings available to verify against.",
+      "missing_information": "SEC CIK or ticker for the target company.",
+      "cited_passages": []
+    },
+    {
+      "claim": "As of August 1, 2025, there are 440 licensed retail marijuana businesses in California.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": null,
+      "severity": "NONE",
+      "explanation": "Company could not be resolved to an SEC CIK; no filings available to verify against.",
+      "missing_information": "SEC CIK or ticker for the target company.",
+      "cited_passages": []
+    },
+    {
+      "claim": "As of August 1, 2025, there are 583 licensed marijuana cultivation operations in California.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": null,
+      "severity": "NONE",
+      "explanation": "Company could not be resolved to an SEC CIK; no filings available to verify against.",
+      "missing_information": "SEC CIK or ticker for the target company.",
+      "cited_passages": []
+    },
+    {
+      "claim": "As of August 1, 2025, there are 198 licensed marijuana product manufacturers in California.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": null,
+      "severity": "NONE",
+      "explanation": "Company could not be resolved to an SEC CIK; no filings available to verify against.",
+      "missing_information": "SEC CIK or ticker for the target company.",
+      "cited_passages": []
+    },
+    {
+      "claim": "As of August 1, 2025, there are 15 licensed marijuana testing facilities in California.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": null,
+      "severity": "NONE",
+      "explanation": "Company could not be resolved to an SEC CIK; no filings available to verify against.",
+      "missing_information": "SEC CIK or ticker for the target company.",
+      "cited_passages": []
+    },
+    {
+      "claim": "As of August 1, 2025, there are 531 licensed medical marijuana retail centres in California.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": null,
+      "severity": "NONE",
+      "explanation": "Company could not be resolved to an SEC CIK; no filings available to verify against.",
+      "missing_information": "SEC CIK or ticker for the target company.",
+      "cited_passages": []
+    },
+    {
+      "claim": "As of August 1, 2025, there are 801 licensed medical marijuana cultivation operations in California.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": null,
+      "severity": "NONE",
+      "explanation": "Company could not be resolved to an SEC CIK; no filings available to verify against.",
+      "missing_information": "SEC CIK or ticker for the target company.",
+      "cited_passages": []
+    },
+    {
+      "claim": "As of August 1, 2025, there are 242 licensed medical marijuana infused product manufacturers in California.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": null,
+      "severity": "NONE",
+      "explanation": "Company could not be resolved to an SEC CIK; no filings available to verify against.",
+      "missing_information": "SEC CIK or ticker for the target company.",
+      "cited_passages": []
+    },
+    {
+      "claim": "As of August 1, 2025, there are 13 licensed medical marijuana testing facilities in California.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": null,
+      "severity": "NONE",
+      "explanation": "Company could not be resolved to an SEC CIK; no filings available to verify against.",
+      "missing_information": "SEC CIK or ticker for the target company.",
+      "cited_passages": []
+    },
+    {
+      "claim": "Indoor flower deal sizes range from 0.5 to 100 pounds.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": null,
+      "severity": "NONE",
+      "explanation": "Company could not be resolved to an SEC CIK; no filings available to verify against.",
+      "missing_information": "SEC CIK or ticker for the target company.",
+      "cited_passages": []
+    },
+    {
+      "claim": "Greenhouse flower deal sizes range from 1 to 320 pounds.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": null,
+      "severity": "NONE",
+      "explanation": "Company could not be resolved to an SEC CIK; no filings available to verify against.",
+      "missing_information": "SEC CIK or ticker for the target company.",
+      "cited_passages": []
+    },
+    {
+      "claim": "Outdoor flower deal sizes range from 1 to 200 pounds.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": null,
+      "severity": "NONE",
+      "explanation": "Company could not be resolved to an SEC CIK; no filings available to verify against.",
+      "missing_information": "SEC CIK or ticker for the target company.",
+      "cited_passages": []
+    },
+    {
+      "claim": "Projected yearly revenue for Year 1 is approximately $200,000.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": null,
+      "severity": "NONE",
+      "explanation": "Company could not be resolved to an SEC CIK; no filings available to verify against.",
+      "missing_information": "SEC CIK or ticker for the target company.",
+      "cited_passages": []
+    },
+    {
+      "claim": "Projected yearly revenue for Year 2 is approximately $1,000,000.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": null,
+      "severity": "NONE",
+      "explanation": "Company could not be resolved to an SEC CIK; no filings available to verify against.",
+      "missing_information": "SEC CIK or ticker for the target company.",
+      "cited_passages": []
+    },
+    {
+      "claim": "Projected yearly revenue for Year 3 is approximately $1,500,000.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": null,
+      "severity": "NONE",
+      "explanation": "Company could not be resolved to an SEC CIK; no filings available to verify against.",
+      "missing_information": "SEC CIK or ticker for the target company.",
+      "cited_passages": []
+    },
+    {
+      "claim": "Total capital investment needed is $330,000 USD.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": null,
+      "severity": "NONE",
+      "explanation": "Company could not be resolved to an SEC CIK; no filings available to verify against.",
+      "missing_information": "SEC CIK or ticker for the target company.",
+      "cited_passages": []
+    },
+    {
+      "claim": "$3,000 of investment is allocated to Administrative Expenses.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": null,
+      "severity": "NONE",
+      "explanation": "Company could not be resolved to an SEC CIK; no filings available to verify against.",
+      "missing_information": "SEC CIK or ticker for the target company.",
+      "cited_passages": []
+    },
+    {
+      "claim": "$20,000 of investment is allocated to Sales & Marketing.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": null,
+      "severity": "NONE",
+      "explanation": "Company could not be resolved to an SEC CIK; no filings available to verify against.",
+      "missing_information": "SEC CIK or ticker for the target company.",
+      "cited_passages": []
+    },
+    {
+      "claim": "$30,000 of investment is allocated to Legal Fees & Licensing.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": null,
+      "severity": "NONE",
+      "explanation": "Company could not be resolved to an SEC CIK; no filings available to verify against.",
+      "missing_information": "SEC CIK or ticker for the target company.",
+      "cited_passages": []
+    },
+    {
+      "claim": "$30,000 of investment is allocated to Security Equipment.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": null,
+      "severity": "NONE",
+      "explanation": "Company could not be resolved to an SEC CIK; no filings available to verify against.",
+      "missing_information": "SEC CIK or ticker for the target company.",
+      "cited_passages": []
+    },
+    {
+      "claim": "$70,000 of investment is allocated to Land & Development.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": null,
+      "severity": "NONE",
+      "explanation": "Company could not be resolved to an SEC CIK; no filings available to verify against.",
+      "missing_information": "SEC CIK or ticker for the target company.",
+      "cited_passages": []
+    },
+    {
+      "claim": "$100,000 of investment is allocated to Greenhouses.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": null,
+      "severity": "NONE",
+      "explanation": "Company could not be resolved to an SEC CIK; no filings available to verify against.",
+      "missing_information": "SEC CIK or ticker for the target company.",
+      "cited_passages": []
+    }
+  ],
+  "warnings": [
+    "Could not resolve company to an SEC CIK. Compliance verification against SEC filings is not possible without one. Claims are logged but unverified."
+  ],
+  "report_id": "498a41c535e1"
+}

@@ -1,0 +1,318 @@
+{
+  "generated_at": "20260417T150617Z",
+  "cik": null,
+  "forms": [
+    "10-K",
+    "10-Q",
+    "S-1",
+    "8-K"
+  ],
+  "deck_context_used": true,
+  "assumed_industry": "Cannabis cultivation and retail (legal cannabis business)",
+  "company_name": "Canna Farm",
+  "claims_analyzed": 27,
+  "flagged_forward_looking_contradictions": 0,
+  "results": [
+    {
+      "claim": "National legal cannabis sales were approximately $5 billion in 2023.",
+      "verdict": "CONTRADICTS",
+      "forward_looking": false,
+      "severity": "HIGH",
+      "explanation": "Multiple authoritative industry sources place 2023 U.S. legal cannabis sales dramatically higher than $5 billion. MJBizDaily (mjbizdaily.com/us-cannabis-sales-estimates/) reported combined medical and recreational sales could reach $33.6 billion by end of 2023, while the MJBiz Factbook (mjbizdaily.com/cannabis-industry-will-add-100-billion-to-us-economy-in-2023/) projected $34 billion for 2023 (up from a revised $30 billion in 2022). Whitney Economics (cannabisbusinesstimes.com) projected 2024 legal sales of $31.4 billion representing 9.1% growth over 2023, implying ~$28.8 billion in 2023. Cannabusinessplans.com similarly cited 2023 sales of 'almost $30 billion.' The claimed figure of ~$5 billion is off by roughly 6x the widely cited estimates, making this a material factual error with high severity for any investment decision.",
+      "missing_information": null,
+      "cited_passages": [],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and retail (legal cannabis business)"
+    },
+    {
+      "claim": "National legal cannabis sales are projected to reach $22.8 billion by 2029.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": true,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (projection) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and retail (legal cannabis business)"
+    },
+    {
+      "claim": "Passage of initiatives in California, Nevada, Massachusetts, Maine, Florida, Arkansas, Montana and North Dakota will add $7.4 billion to the 2029 market forecast.",
+      "verdict": "CONTRADICTS",
+      "forward_looking": true,
+      "severity": "HIGH",
+      "explanation": "The states listed \u2014 California, Nevada, Massachusetts, Maine, Florida, Arkansas, Montana, and North Dakota \u2014 correspond exactly to the eight states that passed cannabis ballot initiatives in November 2016. However, authoritative industry sources materially contradict both key data points in the claim. Gray-Robinson LLP (gray-robinson.com), citing industry research, states those 2016 initiatives would produce new markets of $7.1 billion \u2014 not $7.4 billion \u2014 and that figure was projected by 2020, not 2029. Cannabis Business Times (cannabisbusinesstimes.com) independently corroborates the $7.1B figure and 2020 horizon, citing the Arcview Market Research / New Frontier Data 'State of Legal Marijuana Markets' report. The $7.4 billion figure does appear in New Frontier Data's post-2020-election analysis (newfrontierdata.com), but in a completely different context: it refers to the 2020 adult-use sales baseline growing to $25.1B by 2025, not an incremental contribution from the 2016 ballot states to a 2029 forecast. No authoritative source reviewed supports the combination of $7.4B and a 2029 horizon tied specifically to these eight 2016 initiative states. The claim appears to conflate or misstate both the dollar amount and the forecast year.",
+      "missing_information": "A primary industry report (e.g., Arcview/New Frontier Data 'State of Legal Marijuana Markets' post-November 2016 edition or a comparable BDS Analytics / BDSA long-range forecast through 2029) explicitly modeling the incremental market contribution of the eight 2016 ballot-initiative states through 2029 would be needed to determine whether any version of this figure is supportable at that time horizon.",
+      "cited_passages": [],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and retail (legal cannabis business)"
+    },
+    {
+      "claim": "The compound annual growth rate (CAGR) of the cannabis market is projected to be 28%.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": true,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (projection) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and retail (legal cannabis business)"
+    },
+    {
+      "claim": "Recreational cannabis sales will account for more than 53% of the overall market by 2029.",
+      "verdict": "CONSISTENT",
+      "forward_looking": true,
+      "severity": "LOW",
+      "explanation": "Multiple authoritative sources broadly support the claim, though the exact 53% threshold is actually conservative relative to current US data. Grand View Research (grandviewresearch.com/industry-analysis/us-cannabis-market) reports that the recreational use segment already held a 66.9% revenue share of the US cannabis market in 2024 and is projected to grow at the fastest CAGR through 2030, meaning the >53% threshold is readily exceeded for the US market. Statista (statista.com/outlook/hmo/cannabis/recreational-cannabis/united-states) projects US recreational cannabis to reach $30.12bn by 2029 out of a ~$75bn global total, and bizplanr.ai (citing Statista) indicates global recreational revenue reached ~$38.32bn in 2025, suggesting recreational's global share is also near or above 50%. Straits Research and SkyQuest both note that the recreational segment \"dominated\" the global cannabis market and is expected to register the highest CAGR. The one meaningful caveat is that Grand View Research's global legal cannabis report (grandviewresearch.com/industry-analysis/legal-cannabis-market) shows the medical segment at 63.56% globally in 2024, implying recreational is only ~36% on a strictly global basis \u2014 so the verdict depends heavily on whether the claim refers to the US or global market. For a US-focused operator, the claim is well-supported and even understates the recreational share already achieved.",
+      "missing_information": "The claim does not specify US vs. global scope. A primary industry report (e.g., MJBiz Factbook, Statista Cannabis Outlook, or BDSA) that explicitly projects recreational's percentage share of the total market by 2029 \u2014 rather than absolute dollar figures \u2014 would allow a more precise validation.",
+      "cited_passages": [],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and retail (legal cannabis business)"
+    },
+    {
+      "claim": "The legal cannabis market would see $22.8 billion in total annual sales by 2029.",
+      "verdict": "CONTRADICTS",
+      "forward_looking": true,
+      "severity": "HIGH",
+      "explanation": "Every authoritative source reviewed places the legal cannabis market well above $22.8 billion \u2014 not just by 2029, but already today. Whitney Economics (via cannabis.lacity.gov) reported U.S. legal cannabis sales alone hit $30.1 billion in 2024, already exceeding the claim's 2029 target. Grand View Research (grandviewresearch.com) estimated the U.S. market at $38.50 billion in 2024 and projects an 11.51% CAGR through 2030. BDSA (cited by cannabissciencetech.com) forecasts U.S. regulated cannabis sales \u2014 adult use plus medical \u2014 reaching $39.1 billion by 2029, with adult-use alone at $23.9 billion in 2025. Statista and Paybotic Financial (payboticfinancial.com) put the U.S. legal cannabis market at $45.3 billion in 2025. For the global market, Statista projects $75.09 billion by 2029 (bizplanr.ai). No source \u2014 U.S.-only or global \u2014 supports a figure as low as $22.8 billion by 2029; the claim dramatically understates the current market baseline and all forward projections.",
+      "missing_information": null,
+      "cited_passages": [],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and retail (legal cannabis business)"
+    },
+    {
+      "claim": "There are 440 licensed retail marijuana stores as of August 1, 2025.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "HIGH",
+      "explanation": "The claim cites a precise figure of 440 licensed retail marijuana stores 'as of August 1, 2025' but specifies no jurisdiction (state, province, or country), making it impossible to verify definitively. For the U.S. nationally, IBISWorld (ibisworld.com) reports approximately 16,077 businesses in the Medical & Recreational Marijuana Stores industry as of 2025, and Flowhub (flowhub.com) similarly cites nearly 15,000 dispensaries nationwide \u2014 both far exceeding 440. Individual state figures available from search results also do not match: Michigan had 846 adult-use retailers as of July 2025 (420property.com), New York reached 556 licensed retailers by year-end 2025 (MJBizDaily), New Jersey had 240+ adult-use stores as of May 2025 (420property.com), and Ohio had 186 licensed stores (themarijuanaherald.com). No authoritative source corroborates a figure of exactly 440 for any specific jurisdiction as of August 1, 2025. A jurisdiction-specific regulatory database (e.g., a state's Marijuana Enforcement Division or cannabis control authority) would be required to assess this claim properly.",
+      "missing_information": "The claim lacks a jurisdiction qualifier (e.g., specific U.S. state, Canadian province, or country). To verify, the relevant state or provincial cannabis regulatory authority's official licensed-facility database (e.g., Colorado MED, California DCC, or an equivalent regulator) as of August 1, 2025 would be required. Without that, the figure cannot be confirmed or refuted for any sub-national market.",
+      "cited_passages": [],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and retail (legal cannabis business)"
+    },
+    {
+      "claim": "There are 583 licensed cultivations for retail marijuana as of August 1, 2025.",
+      "verdict": "UNSUPPORTED",
+      "forward_looking": false,
+      "severity": "MEDIUM",
+      "explanation": "No authoritative source found that explicitly corroborates a count of exactly 583 licensed retail marijuana cultivation facilities as of August 1, 2025. The most comparable public data comes from Colorado \u2014 the most documented retail marijuana market \u2014 where the Colorado Department of Revenue (DOR) records cited by Westword and MJBiz Daily (mjbizdaily.com) report approximately 488 active recreational cultivation licenses as of December 2025, and the Colorado Marijuana Enforcement Division's (MED) 2025 Regulatory & Enforcement Update (med.colorado.gov, published February 2026, cited by themarijuanaherald.com) places the year-end figure at 478 retail cultivations. These end-of-2025 figures are materially lower (~17\u201318%) than the claimed 583, and the DOR itself documented a 48% decline in recreational cultivation licenses from 2021 to 2025. While the August 2025 count would naturally be higher than the December 2025 count given the declining trend, the gap between 583 and ~488 over roughly five months (August\u2013December 2025) would imply an unusually steep acceleration of closures not corroborated by any available dataset. The state to which this figure applies is also unspecified in the claim, and no nationwide or other state-level source returns a comparable figure of 583.",
+      "missing_information": "A real-time or point-in-time snapshot of retail marijuana cultivation licenses as of August 1, 2025 from the Colorado MED Licensee Information and Lookup Tool (med.colorado.gov/licensee-information-and-lookup-tool) or equivalent state regulatory authority would be required to confirm or refute the specific figure. The claim also does not identify the jurisdiction, which would require clarification before any authoritative single-source lookup is possible.",
+      "cited_passages": [],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and retail (legal cannabis business)"
+    },
+    {
+      "claim": "There are 198 product manufacturers for retail marijuana as of August 1, 2025.",
+      "verdict": "UNSUPPORTED",
+      "forward_looking": false,
+      "severity": "MEDIUM",
+      "explanation": "No authoritative web source directly corroborates the specific figure of 198 retail marijuana product manufacturers as of August 1, 2025. The closest publicly verifiable data point comes from Colorado's Marijuana Enforcement Division (MED) 2025 Regulatory & Enforcement Activity report, cited by The Marijuana Herald (themarijuanaherald.com, March 2026), which states 210 retail product manufacturers at end-of-year 2025 \u2014 a related but distinct figure from a different time snapshot. The Colorado MED's Licensee Information and Lookup Tool (med.colorado.gov) tracks counts by license type in real time but no archived August 1, 2025 snapshot was retrievable. No other state licensing database reviewed (Massachusetts, Minnesota, California) produces a figure of 198. Without a specified jurisdiction and a time-stamped regulatory disclosure, the figure of 198 cannot be confirmed.",
+      "missing_information": "A specific state-level cannabis licensing authority publication or archived snapshot (e.g., Colorado MED's 'Count of Marijuana Licensees by Type' as of August 1, 2025, or an equivalent regulatory report from the relevant state) would be required to confirm or deny this precise count.",
+      "cited_passages": [],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and retail (legal cannabis business)"
+    },
+    {
+      "claim": "There are 15 testing facilities for retail marijuana as of August 1, 2025.",
+      "verdict": "UNSUPPORTED",
+      "forward_looking": false,
+      "severity": "MEDIUM",
+      "explanation": "The claim specifies exactly 15 testing facilities for \"retail marijuana\" as of August 1, 2025, but no authoritative source corroborates this figure for any single jurisdiction. The term \"retail marijuana testing facility\" is a regulatory construct most closely associated with Colorado's Marijuana Enforcement Division (MED). According to coloradocannabis.org (citing MED licensing data as of early 2025), Colorado had only seven licensed retail marijuana testing facilities \u2014 far below 15. For other major cannabis states: Oregon had 12 ORELAP-accredited cannabis testing labs as of April 2025 (oregonstatecannabis.org), Michigan had six licensed safety compliance facilities (michigancannabis.org), and Alaska had three to four (alaskastatecannabis.org). No state-level regulatory source reviewed \u2014 including the Colorado MED licensed-facilities list (med.colorado.gov), Minnesota OCM (mn.gov/ocm), or other state equivalents \u2014 returned a count of 15 retail marijuana testing facilities as of that date. Critically, the claim omits the jurisdiction entirely, making definitive verification impossible without an explicit state reference.",
+      "missing_information": "The specific state or jurisdiction being referenced is not identified. To verify, the authoritative source would be the relevant state regulatory body's official licensed-facility list as of August 1, 2025 (e.g., the Colorado MED's monthly 'Count of Marijuana Licensees by Type' report at med.colorado.gov, or equivalent for another state). No public source reviewed corroborates the figure of 15 for any single jurisdiction.",
+      "cited_passages": [],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and retail (legal cannabis business)"
+    },
+    {
+      "claim": "There are 531 licensed medical marijuana centres as of August 1, 2025.",
+      "verdict": "UNSUPPORTED",
+      "forward_looking": false,
+      "severity": "MEDIUM",
+      "explanation": "Extensive searches across authoritative sources \u2014 including Flowhub's 2026 Cannabis Industry Statistics (reporting ~15,000 total US cannabis dispensaries), Statistics Canada/StratCann (reporting 3,761 licensed Canadian cannabis stores as of June 2025), Florida's Office of Medical Marijuana Use (reporting ~738 dispensaries and ~22 MMTC operators), and Washington State DOH (302 medically-endorsed stores) \u2014 return no reference whatsoever to exactly 531 licensed medical marijuana centres in any jurisdiction. The claim also fails to specify a jurisdiction (US nationally, a specific US state, Canada, Australia, etc.), making authoritative verification impossible. No industry report, government registry, or reputable publication corroborates the figure of 531 as of August 1, 2025.",
+      "missing_information": "The claim does not specify a jurisdiction. To verify, the primary source required would be an official government licensing registry (e.g., a state health department's active dispensary license database, Health Canada's cannabis market data, or Australia's TGA/ODC licence register) for the specific market in question, pulled as of August 1, 2025. No such source was found confirming this count in any jurisdiction searched.",
+      "cited_passages": [],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and retail (legal cannabis business)"
+    },
+    {
+      "claim": "There are 801 licensed medical marijuana cultivations as of August 1, 2025.",
+      "verdict": "UNSUPPORTED",
+      "forward_looking": false,
+      "severity": "MEDIUM",
+      "explanation": "No authoritative source found that corroborates the precise figure of 801 licensed medical marijuana cultivations as of August 1, 2025. The industry's most authoritative licensing tracker, CRB Monitor (crbmonitor.com), reported 37,889 total active U.S. cannabis business licenses across all license types in Q2 2025 and 37,555 in Q3 2025 \u2014 figures that are orders of magnitude larger and cover all license categories, not just medical cultivation. MJBizDaily (mjbizdaily.com), citing CRB Monitor, put Q1 2025 total active licenses at 38,509. The only reference to '801' found in any cannabis regulation document was a 2023 state-by-state regulation PDF (files.passle.net) describing New Jersey's CRC approving conditional licenses bringing a total to 801 \u2014 referring to all license types combined in that state, not specifically medical cultivation licenses, and predating August 2025 by roughly two years. No state regulatory agency database or federal source reviewed confirmed 801 as the count of medical marijuana cultivation licenses for any specific jurisdiction as of that date.",
+      "missing_information": "The specific jurisdiction (state or federal) this claim applies to is unspecified. To verify, one would need direct data from the relevant state's medical marijuana regulatory agency (e.g., a state Department of Health or cannabis control board license registry dashboard) showing an active cultivation license count as of August 1, 2025.",
+      "cited_passages": [],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and retail (legal cannabis business)"
+    },
+    {
+      "claim": "There are 242 licensed medical marijuana infused product manufacturers as of August 1, 2025.",
+      "verdict": "UNSUPPORTED",
+      "forward_looking": false,
+      "severity": "MEDIUM",
+      "explanation": "Extensive web searches across state regulatory databases, the Colorado Marijuana Enforcement Division (med.colorado.gov), Michigan Cannabis Regulatory Agency (michigan.gov/cra), Missouri Division of Cannabis Regulation (health.mo.gov), and aggregated national data from CRB Monitor (via mjbizdaily.com) found no authoritative source confirming a count of exactly 242 licensed medical marijuana infused product manufacturers as of August 1, 2025. The claim does not specify a state or jurisdiction, which is a critical omission \u2014 cannabis licensing is entirely state-regulated, and figures differ dramatically by state. The closest historical reference found is Colorado's MED reporting 254 medical MIP licenses as of December 2016 (mjbizdaily.com), with the MED's 2025 Regulatory and Enforcement Update (med.colorado.gov) noting 'declining license numbers' in 2025 but providing no per-type breakdown. Michigan's medical processor count was 83 as of August 31, 2025 (cannabusinessplans.com); Missouri is capped at 86 manufacturing licenses (biotrack.com); Pennsylvania has approximately 25\u201330 grower/processors (cannabusinessplans.com). No source \u2014 state agency report, industry database, or trade publication \u2014 was found that cites the figure of 242 for any state or nationally.",
+      "missing_information": "A specific state-level regulatory report or official licensee dashboard (e.g., Colorado MED 'Count of Marijuana Licensees by Type' tool at med.colorado.gov/licensee-information-and-lookup-tool, or equivalent for whichever state the claim refers to) showing a breakdown of active medical marijuana infused product manufacturer licenses as of August 1, 2025 would be required. The claim must also specify which state or jurisdiction is being referenced.",
+      "cited_passages": [],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and retail (legal cannabis business)"
+    },
+    {
+      "claim": "There are 13 licensed medical marijuana testing facilities as of August 1, 2025.",
+      "verdict": "UNSUPPORTED",
+      "forward_looking": false,
+      "severity": "MEDIUM",
+      "explanation": "The claim that there are 13 licensed medical marijuana testing facilities as of August 1, 2025, cannot be corroborated by any authoritative source \u2014 and critically, the claim omits a jurisdiction, making it unverifiable as stated. Web searches across multiple state regulatory databases and industry trackers returned the following facility counts near the claimed date: Florida had 8 (FloridaStateCannabis.org, April 2025); Ohio had 8 (OhioStateCannabis.org, April 2025); Kentucky had 7 (KYCannabisLawGroup.com, June 2025); Colorado had 7 (ColoradoCannabis.org, early 2025); Missouri had 10 (The Beacon / Missouri Independent, October 2024); Oregon had 12 (OregonStateCannabis.org, April 2025); Mississippi had 4 (Mississippi Free Press, August 2025); and Maryland had 3 (Cannaspire.com, 2025). No state-level regulatory disclosure reviewed returned a figure of exactly 13. Oregon (12 as of April 2025) is closest, but still does not confirm the claim as of August 1, 2025. Without a specified jurisdiction, no authoritative primary source can confirm or deny this figure.",
+      "missing_information": "No jurisdiction is specified in the claim. To verify, the relevant state's regulatory agency licensing portal or official certified lab list (e.g., a state Department of Health or cannabis control authority) as of August 1, 2025 would be required. For example, if the claim refers to Oregon, the ORELAP-accredited labs list from OHA (oregon.gov) as of August 2025 would be needed; if Arizona, the AZDHS Certified Testing Laboratories PDF (last revised 08/29/2025) with a full lab count would be required.",
+      "cited_passages": [],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and retail (legal cannabis business)"
+    },
+    {
+      "claim": "Deal sizes for indoor flower range from 0.5 to 100 pounds.",
+      "verdict": "CONSISTENT",
+      "forward_looking": false,
+      "severity": "LOW",
+      "explanation": "Multiple authoritative sources corroborate the broad 0.5\u2013100 lb deal-size range for indoor cannabis flower. On the lower bound, wholesalecbdflowershop.com explicitly lists offerings from '1/2 LB \u2013 100 LBS,' and several wholesale platforms (Green Unicorn Farms, ShopZaza, Rogue Origin) all advertise half-pound (0.5 lb) minimum purchases for indoor flower. On the upper bound, 25hourfarms.com references orders up to 100 lbs, and wholesalecbdflowershop.com again matches the 100 lb ceiling. Cannabis Benchmarks (cannabisbenchmarks.com) provides the most granular B2B data: average *forward* deal sizes for indoor-grown flower have ranged from ~29 lbs (September 2021) to ~69 lbs (July 2022), squarely within the stated range; average *spot* deal sizes are much smaller at ~2.4\u20132.5 lbs per transaction, also within range. The 0.5\u2013100 lb window is therefore broadly representative of typical B2B transaction sizes, though very large bulk operators can transact above 100 lbs. The claim is not materially contradicted by any source found.",
+      "missing_information": null,
+      "cited_passages": [],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and retail (legal cannabis business)"
+    },
+    {
+      "claim": "Deal sizes for greenhouse flower range from 1 to 320 pounds.",
+      "verdict": "UNSUPPORTED",
+      "forward_looking": false,
+      "severity": "MEDIUM",
+      "explanation": "No authoritative industry source specifically corroborates a deal-size range of 1\u2013320 pounds for greenhouse cannabis flower. The most relevant data comes from Cannabis Benchmarks\u00ae (cannabisbenchmarks.com), which tracks wholesale cannabis transactions: their weekly U.S. Cannabis Spot Index reports show average spot deal sizes of roughly 2\u20132.5 pounds and average forward deal sizes for greenhouse flower ranging from ~21 pounds (January 2021) to ~96 pounds (mid-2022), far below the claimed 320-pound upper bound. While wholesale platforms (e.g., wholesalecbdflower.com, greenunicornfarms.com) confirm that 1-pound minimum orders are standard in the market\u2014supporting the lower bound\u2014no source documents 320 pounds as an industry-typical upper limit for a single greenhouse flower deal. The claim's specific range is therefore not corroborated by available data.",
+      "missing_information": "Transaction-level distribution data (minimum, maximum, and full range of individual deal sizes) for greenhouse flower would be needed\u2014such as Cannabis Benchmarks\u00ae premium subscription reports or state-level regulatory transaction data from mature markets (e.g., Colorado MED, Oregon OLCC) that capture the full dispersion of wholesale order sizes, not just averages.",
+      "cited_passages": [],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and retail (legal cannabis business)"
+    },
+    {
+      "claim": "Deal sizes for outdoor flower range from 1 to 200 pounds.",
+      "verdict": "CONSISTENT",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "The claim that outdoor cannabis flower deal sizes range from 1 to 200 pounds is broadly consistent with authoritative industry data. Cannabis Benchmarks (cannabisbenchmarks.com), the most credible U.S. wholesale cannabis price-reporting agency, consistently reports average forward deal sizes for outdoor flower between 43 lbs (September 2019) and 96 lbs (July 2022) across multiple reporting periods \u2014 placing 200 lbs at roughly twice the average, a plausible upper bound for larger wholesale transactions within a realistic distribution. Spot-market deal averages reported by Cannabis Benchmarks are much smaller (~2.5 lbs), confirming that the lower end of the 1-lb claim is realistic. CannDelta (canndelta.com), a cannabis licensing consultancy, independently corroborates the low end, noting 'some allow orders as small as 1\u20135 pounds.' Multiple wholesale platforms (e.g., Hemp Living Wholesale, ShopZaza) also confirm pound-level minimum purchases. No single authoritative source explicitly defines 200 lbs as the precise ceiling, but the overall 1\u2013200 lb range is consistent with the distribution implied by Cannabis Benchmarks' averages.",
+      "missing_information": null,
+      "cited_passages": [],
+      "analysis_method": "web_search",
+      "assumed_industry": "Cannabis cultivation and retail (legal cannabis business)"
+    },
+    {
+      "claim": "Year 1 yearly revenue is projected to be about $200,000.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": true,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (projection) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and retail (legal cannabis business)"
+    },
+    {
+      "claim": "Year 2 yearly revenue is projected to be about $1,000,000.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": true,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (projection) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and retail (legal cannabis business)"
+    },
+    {
+      "claim": "Year 3 yearly revenue is projected to be about $1,500,000.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": true,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (projection) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and retail (legal cannabis business)"
+    },
+    {
+      "claim": "Total investments needed are $330,000 USD.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (financial) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and retail (legal cannabis business)"
+    },
+    {
+      "claim": "Administrative expenses budgeted at $3,000.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (financial) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and retail (legal cannabis business)"
+    },
+    {
+      "claim": "Sales and Marketing expenses budgeted at $20,000.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (financial) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and retail (legal cannabis business)"
+    },
+    {
+      "claim": "Legal Fees and Licensing expenses budgeted at $30,000.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (financial) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and retail (legal cannabis business)"
+    },
+    {
+      "claim": "Security Equipment expenses budgeted at $30,000.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (financial) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and retail (legal cannabis business)"
+    },
+    {
+      "claim": "Land and Development expenses budgeted at $70,000.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (financial) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and retail (legal cannabis business)"
+    },
+    {
+      "claim": "Greenhouse expenses budgeted at $100,000.",
+      "verdict": "INSUFFICIENT_EVIDENCE",
+      "forward_looking": false,
+      "severity": "NONE",
+      "explanation": "This is a company-specific claim (financial) and cannot be verified without SEC filings for the target company. No CIK was resolved from the deck.",
+      "missing_information": "SEC filings for this company (10-K, 10-Q, S-1, Form D), or direct company disclosures (data room, audited financials).",
+      "cited_passages": [],
+      "analysis_method": "none",
+      "assumed_industry": "Cannabis cultivation and retail (legal cannabis business)"
+    }
+  ],
+  "warnings": [
+    "Could not resolve company to an SEC CIK (common for private / early-stage startups). Assumed industry: Cannabis cultivation and retail (legal cannabis business). Market/industry claims will be assessed via web search; company-specific claims remain INSUFFICIENT_EVIDENCE."
+  ],
+  "report_id": "89b5d53570d1"
+}
