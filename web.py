@@ -332,6 +332,37 @@ async def auth_me(request: Request):
     return JSONResponse(None)
 
 
+@app.get("/config")
+async def get_config(request: Request):
+    """Return feature flags and model configuration for the frontend.
+
+    The frontend uses this to:
+    - Determine which UI cards to show (models, API key)
+    - Override hardcoded models when ENABLE_CLIENT_MODELS=true
+    - Bind configuration to the current session
+
+    This endpoint is unauthenticated so the frontend can load config before login.
+    It only returns feature flags, not sensitive data.
+    """
+    enable_client_models = os.environ.get("ENABLE_CLIENT_MODELS", "false").lower() == "true"
+
+    # Determine models based on flag
+    if enable_client_models:
+        extractor_model = "claude-opus-4-6"
+        analyzer_model = "claude-opus-4-6"
+    else:
+        # Default to current hardcoded values in frontend
+        extractor_model = "claude-sonnet-4-6"
+        analyzer_model = "claude-sonnet-4-6"
+
+    return JSONResponse({
+        "enable_client_models": enable_client_models,
+        "extractor_model": extractor_model,
+        "analyzer_model": analyzer_model,
+        "allowed_models": list(ALLOWED_MODELS),
+    })
+
+
 # ───────────────────────── Google Slides OAuth2 ──────────────────────────────
 
 @app.get("/auth/google/slides-auth")
