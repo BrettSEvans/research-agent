@@ -1055,10 +1055,10 @@
     const continueExtractBtn = document.getElementById('continue-extract-btn');
     const verifyBtn = document.getElementById('verify-btn');
     const cancelVerifyBtn = document.getElementById('cancel-verify-btn');
-    // Hardcoded models — BYOK + model dropdowns removed. All Anthropic usage
-    // runs on the server-side ANTHROPIC_API_KEY env var.
-    const EXTRACTOR_MODEL = 'claude-sonnet-4-6';
-    const ANALYZER_MODEL  = 'claude-sonnet-4-6';
+    // These are defaults; /config endpoint may override them based on ENABLE_CLIENT_MODELS flag.
+    // All Anthropic usage runs on the server-side ANTHROPIC_API_KEY env var.
+    let EXTRACTOR_MODEL = 'claude-sonnet-4-6';
+    let ANALYZER_MODEL  = 'claude-sonnet-4-6';
 
     let currentContextId = null;
     let currentFailedPages = [];  // 1-indexed slides the local vision model couldn't process
@@ -1198,10 +1198,52 @@
       }
     }
 
+    /** Apply UI changes based on client_models feature flag. */
+    function applyClientModelsUX(enableClientModels) {
+      const cardIds = [
+        'model-selection-card',    // Hide model dropdown (if it exists)
+        'api-key-card',            // Hide API key input (if it exists)
+      ];
+
+      if (enableClientModels) {
+        // Hide model/API key cards
+        cardIds.forEach(id => {
+          const card = document.getElementById(id);
+          if (card) card.classList.add('hidden');
+        });
+      } else {
+        // Keep cards visible (current behavior)
+        cardIds.forEach(id => {
+          const card = document.getElementById(id);
+          if (card) card.classList.remove('hidden');
+        });
+      }
+    }
+
     // Fetch current user on page load
     document.addEventListener('DOMContentLoaded', () => {
       fetchCurrentUser();
       handleGoogleSlidesCallback();
+
+      // Fetch feature flags and config from server
+      fetch('/config')
+        .then(r => r.json())
+        .then(config => {
+          // Store config globally for use throughout app
+          window.appConfig = config;
+
+          // Update hardcoded models if server specifies them
+          if (config.extractor_model) {
+            EXTRACTOR_MODEL = config.extractor_model;
+          }
+          if (config.analyzer_model) {
+            ANALYZER_MODEL = config.analyzer_model;
+          }
+
+          // Toggle UI visibility based on feature flag
+          applyClientModelsUX(config.enable_client_models);
+        })
+        .catch(e => console.warn('Failed to load config:', e));
     });
 
     /** Populate the app-bar user widget if the user is logged in via Google SSO. */
