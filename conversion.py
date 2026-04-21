@@ -22,6 +22,7 @@ import pdf2image
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 from google.auth.transport.requests import Request
+from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception_type
 
 
 def detect_file_type(filename: str) -> str:
@@ -56,6 +57,32 @@ def detect_file_type(filename: str) -> str:
         )
 
     return ext
+
+
+@retry(
+    stop=stop_after_attempt(2),
+    wait=wait_fixed(2),
+    retry=retry_if_exception_type(subprocess.TimeoutExpired),
+    reraise=True,
+)
+def _run_soffice(cmd: list, timeout: int = 60) -> subprocess.CompletedProcess:
+    """Run LibreOffice command with timeout retry.
+
+    Retries on subprocess.TimeoutExpired with 2s fixed delay (2 attempts total).
+    Other exceptions are not retried.
+
+    Args:
+        cmd: Command list for subprocess.run
+        timeout: Timeout in seconds (default 60)
+
+    Returns:
+        subprocess.CompletedProcess result
+
+    Raises:
+        subprocess.TimeoutExpired: If timeout occurs on final attempt
+        Any other exception from subprocess.run
+    """
+    return subprocess.run(cmd, capture_output=True, timeout=timeout)
 
 
 async def convert_to_pdf(file_path: Path, file_type: str) -> Path:
@@ -130,11 +157,11 @@ def convert_pptx_to_pdf(pptx_path: Path, pdf_path: Path) -> None:
                 # In production, consider using LibreOffice for higher quality
                 pass
 
-        # Fallback: use LibreOffice if available
-        result = subprocess.run(
+        # Fallback: use LibreOffice if available (with retry on timeout)
+        result = _run_soffice(
             ['soffice', '--headless', '--convert-to', 'pdf', '--outdir',
              str(pdf_path.parent), str(pptx_path)],
-            capture_output=True, timeout=60
+            timeout=60
         )
 
         if result.returncode != 0:
@@ -178,12 +205,15 @@ def _pptx_to_text_pdf(prs, pdf_path: Path) -> None:
 
 
 def convert_ppt_to_pdf(ppt_path: Path, pdf_path: Path) -> None:
-    """Convert legacy PowerPoint (.ppt) to PDF using LibreOffice."""
+    """Convert legacy PowerPoint (.ppt) to PDF using LibreOffice.
+
+    Retries on timeout with 2 attempts via Tenacity (2s fixed delay between attempts).
+    """
     try:
-        result = subprocess.run(
+        result = _run_soffice(
             ['soffice', '--headless', '--convert-to', 'pdf', '--outdir',
              str(pdf_path.parent), str(ppt_path)],
-            capture_output=True, timeout=60
+            timeout=60
         )
 
         if result.returncode != 0:
@@ -244,12 +274,15 @@ def convert_docx_to_pdf(docx_path: Path, pdf_path: Path) -> None:
 
 
 def convert_doc_to_pdf(doc_path: Path, pdf_path: Path) -> None:
-    """Convert legacy Word (.doc) to PDF using LibreOffice."""
+    """Convert legacy Word (.doc) to PDF using LibreOffice.
+
+    Retries on timeout with 2 attempts via Tenacity (2s fixed delay between attempts).
+    """
     try:
-        result = subprocess.run(
+        result = _run_soffice(
             ['soffice', '--headless', '--convert-to', 'pdf', '--outdir',
              str(pdf_path.parent), str(doc_path)],
-            capture_output=True, timeout=60
+            timeout=60
         )
 
         if result.returncode != 0:
