@@ -177,6 +177,40 @@ def _check_basic_auth(request: Request) -> bool:
         return False
 
 
+def _is_email_allowed(email: str, db: Session) -> bool:
+    """
+    Check if an email passes the whitelist (env vars OR DB entries).
+
+    Returns True if:
+    - No restrictions are configured (open access)
+    - Email matches an entry in _ALLOWED_EMAILS
+    - Email domain matches an entry in _ALLOWED_DOMAINS
+    - Email or domain is in the Whitelist table
+    """
+    email = email.lower()
+    domain = email.split("@")[-1]
+
+    # Check env var lists
+    if email in _ALLOWED_EMAILS:
+        return True
+    if _ALLOWED_DOMAINS and domain in _ALLOWED_DOMAINS:
+        return True
+
+    # Check DB whitelist
+    db_email_hit = db.query(Whitelist).filter_by(value=email, type="email").first()
+    db_domain_hit = db.query(Whitelist).filter_by(value=domain, type="domain").first()
+    if db_email_hit or db_domain_hit:
+        return True
+
+    # If any restriction exists, deny by default
+    any_restriction = bool(_ALLOWED_EMAILS or _ALLOWED_DOMAINS or db.query(Whitelist).first())
+    if any_restriction:
+        return False
+
+    # No restrictions configured — allow all
+    return True
+
+
 # ── Auth middleware ────────────────────────────────────────────────────────
 
 @app.middleware("http")
@@ -388,18 +422,11 @@ async def google_one_tap(request: Request, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail=f"Invalid token: {exc}")
 
     email   = idinfo.get("email", "").lower()
-    domain  = email.split("@")[-1]
     name    = idinfo.get("name", email)
     picture = idinfo.get("picture", "")
 
     # Whitelist check — env-var lists OR DB entries; open if nothing configured.
-    db_email_hit  = db.query(Whitelist).filter_by(value=email,  type="email").first()
-    db_domain_hit = db.query(Whitelist).filter_by(value=domain, type="domain").first()
-    env_email_hit  = email in _ALLOWED_EMAILS
-    env_domain_hit = bool(_ALLOWED_DOMAINS) and domain in _ALLOWED_DOMAINS
-    any_restriction = bool(_ALLOWED_EMAILS or _ALLOWED_DOMAINS or db.query(Whitelist).first())
-    allowed = (not any_restriction) or env_email_hit or env_domain_hit or db_email_hit or db_domain_hit
-    if not allowed:
+    if not _is_email_allowed(email, db):
         raise HTTPException(status_code=403, detail="Your email is not on the access list. Contact the administrator.")
 
     user, org = _find_or_create_user_org(db, email, display_name=name, picture=picture)
