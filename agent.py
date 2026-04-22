@@ -27,6 +27,7 @@ from deck_context import DeckContext
 from retriever import DenseRetriever
 from sec import Filing, chunk_text, fetch_text, list_filings, lookup_cik
 from version import ANALYZER_VERSION, EXTRACTOR_VERSION
+import regulatory_kb
 
 
 import uuid
@@ -170,6 +171,11 @@ def iter_compliance_report(
 
     report_id = uuid.uuid4().hex[:12]
     
+    # Default to SEC module if no modules specified
+    if not modules:
+        modules = ["sec"]
+    modules_set = set(modules)
+
     report: dict = {
         "report_id": report_id,
         "generated_at": ts,
@@ -186,6 +192,7 @@ def iter_compliance_report(
         "flagged_forward_looking_contradictions": 0,
         "results": [],
         "warnings": [],
+        "modules": list(modules_set),
     }
 
     yield {
@@ -197,6 +204,7 @@ def iter_compliance_report(
             "total_claims": len(claims),
             "forms": forms,
             "generated_at": ts,
+            "modules": list(modules_set),
         },
     }
 
@@ -248,6 +256,7 @@ def iter_compliance_report(
                         "cited_passages": [], "web_sources": web_sources,
                         "analysis_method": "web_search",
                         "assumed_industry": assumed_industry,
+                        "jurisdiction": "sec",
                     }
                 except Exception as exc:
                     return i, {
@@ -258,6 +267,7 @@ def iter_compliance_report(
                         "cited_passages": [], "web_sources": [],
                         "analysis_method": "web_search_failed",
                         "assumed_industry": assumed_industry,
+                        "jurisdiction": "sec",
                     }
             else:
                 reason_category = category or "unknown category"
@@ -275,6 +285,7 @@ def iter_compliance_report(
                     "cited_passages": [], "web_sources": [],
                     "analysis_method": "none",
                     "assumed_industry": assumed_industry,
+                    "jurisdiction": "sec",
                 }
 
         indexed = list(enumerate(claims, start=1))
@@ -364,6 +375,7 @@ def iter_compliance_report(
                 if 1 <= p <= len(hits)
             ],
             "web_sources": [],
+            "jurisdiction": "sec",
         }
         return i, entry
 
@@ -383,6 +395,118 @@ def iter_compliance_report(
 
     report["claims_analyzed"] = len(claims)
     report["flagged_forward_looking_contradictions"] = flagged
+
+    # ── EU SFDR/CSRD Module (if requested) ──
+    if "eu_sfdr_csrd" in modules_set and deck:
+        from analyzer_sfdr import analyze_claim as analyze_claim_eu, analyze_esg_completeness
+        try:
+            eu_retriever = regulatory_kb.get_retriever("eu_sfdr_csrd")
+        except Exception:
+            eu_retriever = None
+
+        if verbose:
+            _log("[+] Running EU SFDR/CSRD compliance analysis...")
+        yield {"event": "status", "data": {"message": "Analyzing claims against EU SFDR/CSRD standards…"}}
+
+        deck_ctx_str = deck.clarifying_context() if deck else None
+        index = len(report["results"]) + 1
+
+        # Analyze each claim against EU KB
+        for claim in claims:
+            try:
+                hits = eu_retriever.search(claim, top_k=top_k) if eu_retriever else []
+                assessment = analyze_claim_eu(
+                    client, claim, hits, deck_context=deck_ctx_str, model=analyzer_model,
+                    esg_metrics=deck.extraction.esg_metrics if deck else None
+                )
+                entry = {
+                    "claim": claim,
+                    "verdict": assessment.verdict,
+                    "forward_looking": assessment.forward_looking,
+                    "severity": assessment.severity,
+                    "explanation": assessment.explanation,
+                    "missing_information": assessment.missing_information,
+                    "cited_passages": [],
+                    "jurisdiction": "eu_sfdr_csrd",
+                    "red_flags": assessment.red_flags,
+                    "warnings": assessment.warnings,
+                    "verified": assessment.verified,
+                    "action_items": assessment.action_items,
+                }
+                report["results"].append(entry)
+                if verbose:
+                    _log(f"    [{index}/{len(claims)}] {entry['verdict']} [{entry['severity']}] EU: {entry['claim'][:60]}")
+                yield {"event": "claim_result", "data": {"index": index, "total": len(claims), "entry": entry}}
+                index += 1
+            except Exception as e:
+                if verbose:
+                    _log(f"    [{index}/{len(claims)}] ERROR analyzing with EU module: {e}")
+                index += 1
+
+        # ESG Completeness checks
+        if verbose:
+            _log("[+] Running EU ESG completeness check...")
+        try:
+            for result in analyze_esg_completeness(client, deck.extraction.esg_metrics if deck else None, model=analyzer_model):
+                entry = {
+                    "claim": f"[ESG Completeness] {result.explanation[:60]}",
+                    "verdict": result.verdict,
+                    "forward_looking": result.forward_looking,
+                    "severity": result.severity,
+                    "explanation": result.explanation,
+                    "missing_information": "",
+                    "cited_passages": [],
+                    "jurisdiction": "eu_sfdr_csrd",
+                    "red_flags": result.red_flags,
+                    "warnings": result.warnings,
+                    "verified": result.verified,
+                    "action_items": result.action_items,
+                }
+                report["results"].append(entry)
+                yield {"event": "claim_result", "data": {"index": index, "total": len(claims), "entry": entry}}
+                index += 1
+        except Exception as e:
+            if verbose:
+                _log(f"    ESG completeness check failed: {e}")
+
+    # ── California SB 54 Module (if requested) ──
+    if "ca_sb54" in modules_set and deck:
+        from analyzer_sb54 import analyze_demographic_completeness
+
+        if verbose:
+            _log("[+] Running California SB 54 compliance analysis...")
+        yield {"event": "status", "data": {"message": "Analyzing founder demographics against CA SB 54 standards…"}}
+
+        index = len(report["results"]) + 1
+
+        # Demographic completeness checks
+        if verbose:
+            _log("[+] Running founder demographic completeness check...")
+        try:
+            for result in analyze_demographic_completeness(
+                client, deck.extraction.founder_demographics if deck else None, model=analyzer_model
+            ):
+                entry = {
+                    "claim": f"[Demographics] {result.explanation[:60]}",
+                    "verdict": result.verdict,
+                    "forward_looking": result.forward_looking,
+                    "severity": result.severity,
+                    "explanation": result.explanation,
+                    "missing_information": "",
+                    "cited_passages": [],
+                    "jurisdiction": "ca_sb54",
+                    "red_flags": result.red_flags,
+                    "warnings": result.warnings,
+                    "verified": result.verified,
+                    "action_items": result.action_items,
+                }
+                report["results"].append(entry)
+                yield {"event": "claim_result", "data": {"index": index, "total": len(claims), "entry": entry}}
+                index += 1
+        except Exception as e:
+            if verbose:
+                _log(f"    Demographic completeness check failed: {e}")
+
     _write_log(report, cik_label, ts)
     yield {"event": "done", "data": {"report": report}}
 

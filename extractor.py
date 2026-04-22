@@ -170,6 +170,50 @@ class EsgMetrics(BaseModel):
     )
 
 
+class FounderDemographics(BaseModel):
+    """Founder demographic metrics extracted when CA SB 54 module is active."""
+    founder_count: int | None = Field(
+        default=None,
+        description="Total number of founders listed"
+    )
+    gender_diversity: str | None = Field(
+        default=None,
+        description="Gender breakdown if stated, e.g., '50% women, 50% men'"
+    )
+    women_founder_pct: float | None = Field(
+        default=None,
+        description="Percentage of women founders if stated"
+    )
+    underrepresented_minority_pct: float | None = Field(
+        default=None,
+        description="Percentage of underrepresented minority founders if stated"
+    )
+    race_ethnicity_data: str | None = Field(
+        default=None,
+        description="Race/ethnicity breakdown if disclosed"
+    )
+    educational_background: list[str] = Field(
+        default_factory=list,
+        description="Educational institutions or degrees mentioned for founders"
+    )
+    prior_startup_experience: bool | None = Field(
+        default=None,
+        description="True if founders have prior startup founding experience; False if none mentioned"
+    )
+    industry_expertise: str | None = Field(
+        default=None,
+        description="Description of founders' domain expertise or prior roles"
+    )
+    diverse_background_statement: str | None = Field(
+        default=None,
+        description="Any explicit diversity commitment or statement by founders"
+    )
+    disclosure_completeness: str | None = Field(
+        default=None,
+        description="Assessment of how complete the founder demographic disclosure is"
+    )
+
+
 class DeckExtraction(BaseModel):
     company: CompanyIdentity
     claims: list[ExtractedClaim] = Field(
@@ -199,6 +243,12 @@ class DeckExtraction(BaseModel):
     esg_metrics: EsgMetrics | None = Field(
         default=None,
         description="ESG metrics extracted when EU SFDR/CSRD module is active; null otherwise"
+    )
+
+    # --- Founder Demographics (populated when CA SB 54 module is active) ---
+    founder_demographics: FounderDemographics | None = Field(
+        default=None,
+        description="Founder demographic metrics extracted when CA SB 54 module is active; null otherwise"
     )
 
     extraction_notes: str = Field(
