@@ -59,14 +59,48 @@ def run_regulatory_update() -> None:
     """
     Fetch latest regulatory sources, update KB, notify users of changes.
 
-    This is called daily at 07:00 UTC by the scheduler.
+    This is called daily at 07:00 UTC (or configured REGULATORY_CHECK_HOUR) by the scheduler.
 
     Steps:
     1. For each RegulationSource (SEC, SFDR/CSRD, SB54):
        - Fetch if changed (HTTP delta-check: ETag, Last-Modified, SHA-256)
        - If changed: re-ingest chunks, re-compute embeddings
-    2. For each user: create Notification entries for updated sources
-    3. Log summary to logger
+       - Notify all users of the change
+    2. Log summary to logger
     """
-    # TODO: Implement regulatory KB update logic (Epic 1)
-    logger.info("Regulatory update job triggered (stub)")
+    from db import get_db
+    from regulatory_kb import load_sources, fetch_if_changed, ingest_source, _notify_all_users
+
+    db = next(get_db())
+    try:
+        sources = load_sources(db)
+        if not sources:
+            logger.info("[scheduler] No regulation sources to check")
+            return
+
+        updated_count = 0
+        for source in sources:
+            try:
+                changed, raw_text = fetch_if_changed(source)
+                if changed and raw_text:
+                    old_version = source.version_label
+                    ingest_source(source, raw_text, db)
+                    _notify_all_users(db, source.module, source, old_version)
+                    updated_count += 1
+                    logger.info(f"[scheduler] Updated: {source.name}")
+                else:
+                    # Update last_fetched even if no change
+                    from models import utc_now
+                    source.last_fetched = utc_now()
+                    db.commit()
+                    logger.debug(f"[scheduler] No change: {source.name}")
+            except Exception as e:
+                logger.error(f"[scheduler] Error processing {source.name}: {e}")
+                # Continue to next source — don't crash the whole job
+
+        logger.info(f"[scheduler] Regulatory update complete: {updated_count} source(s) updated")
+
+    except Exception as e:
+        logger.error(f"[scheduler] Regulatory update job failed: {e}")
+    finally:
+        db.close()

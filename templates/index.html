@@ -844,6 +844,9 @@
 
   <main class="container">
 
+    <!-- Notification banner for regulatory updates -->
+    <div id="notification-banner" style="display:none; margin-bottom:16px;"></div>
+
     <!-- DASHBOARD VIEW -->
     <div id="dashboard-view">
       <div class="row" style="justify-content: space-between; align-items: center; margin-bottom: 24px;">
@@ -1220,9 +1223,69 @@
       }
     }
 
+    /** Load and display regulatory update notifications. */
+    async function loadNotifications() {
+      try {
+        const resp = await fetch('/notifications', { credentials: 'same-origin' });
+        if (!resp.ok) return;
+        const notes = await resp.json();
+        if (!notes || notes.length === 0) return;
+
+        const banner = document.getElementById('notification-banner');
+        const chips = notes.map(n => `
+          <div class="notification-chip" data-id="${n.id}" style="
+            display: flex; align-items: center; gap: 12px;
+            background: var(--md-secondary-container);
+            border: 1px solid var(--md-secondary);
+            border-radius: 8px; padding: 12px 16px; margin-bottom: 8px;
+            font-size: 0.875rem; color: var(--md-on-secondary-container);
+          ">
+            <span class="material-symbols-rounded" style="font-size: 20px;">update</span>
+            <div style="flex: 1;">
+              <div style="font-weight: 500;">${escapeHtml(n.title)}</div>
+              <div style="font-size: 0.8rem; color: var(--md-on-secondary-container); opacity: 0.8;">${escapeHtml(n.body)}</div>
+            </div>
+            <button class="btn btn-text" onclick="dismissNote(${n.id})" style="white-space: nowrap;">
+              Dismiss
+            </button>
+          </div>
+        `).join('');
+        banner.innerHTML = chips;
+        banner.style.display = 'block';
+      } catch (e) {
+        console.warn('[notifications] Error loading:', e);
+      }
+    }
+
+    /** Dismiss a notification by ID. */
+    async function dismissNote(id) {
+      try {
+        const resp = await fetch(`/notifications/${id}/dismiss`, {
+          method: 'POST',
+          credentials: 'same-origin',
+        });
+        if (!resp.ok) {
+          console.error('[notifications] Dismiss failed:', resp.statusText);
+          return;
+        }
+        const chip = document.querySelector(`.notification-chip[data-id="${id}"]`);
+        if (chip) chip.remove();
+      } catch (e) {
+        console.error('[notifications] Error dismissing:', e);
+      }
+    }
+
+    /** Escape HTML to prevent XSS. */
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
     // Fetch current user on page load
     document.addEventListener('DOMContentLoaded', () => {
       fetchCurrentUser();
+      loadNotifications();
       handleGoogleSlidesCallback();
 
       // Fetch feature flags and config from server

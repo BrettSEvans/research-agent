@@ -86,6 +86,18 @@ try:
 finally:
     _default_db.close()
 
+# Start background scheduler for daily regulatory updates
+from scheduler import start_scheduler, stop_scheduler
+
+_scheduler = start_scheduler()
+
+
+# Graceful shutdown
+@app.on_event("shutdown")
+def shutdown_event():
+    """Shutdown scheduler on FastAPI shutdown."""
+    stop_scheduler()
+
 
 # ───────────────────────── auth configuration ─────────────────────────────
 
@@ -466,6 +478,89 @@ async def auth_me(request: Request):
                 "picture": session.get("picture"),
             })
     return JSONResponse(None)
+
+
+# ─────────────────────── Notification API ────────────────────────────────────
+# User notifications for regulatory updates. Requires valid session.
+
+@app.get("/notifications")
+async def get_notifications(request: Request, db: Session = Depends(get_db)):
+    """
+    Fetch undismissed notifications for the current user.
+
+    Requires: Valid session cookie
+    Returns: [{"id", "module", "source_name", "title", "body", "created_at"}]
+    """
+    token = request.cookies.get(SESSION_COOKIE, "")
+    if not token:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    session = _load_session(token)
+    if not session:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    user_id = session.get("user_id")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    from models import Notification
+
+    notifications = (
+        db.query(Notification)
+        .filter_by(user_id=user_id, dismissed_at=None)
+        .order_by(Notification.created_at.desc())
+        .all()
+    )
+
+    return JSONResponse([
+        {
+            "id": n.id,
+            "module": n.module,
+            "source_name": n.source_name,
+            "title": n.title,
+            "body": n.body,
+            "created_at": n.created_at.isoformat(),
+        }
+        for n in notifications
+    ])
+
+
+@app.post("/notifications/{notification_id}/dismiss")
+async def dismiss_notification(
+    notification_id: int, request: Request, db: Session = Depends(get_db)
+):
+    """
+    Dismiss a notification (mark as dismissed).
+
+    Requires: Valid session cookie + ownership (user_id matches)
+    Returns: {"ok": true}
+    """
+    token = request.cookies.get(SESSION_COOKIE, "")
+    if not token:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    session = _load_session(token)
+    if not session:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    user_id = session.get("user_id")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    from models import Notification
+    from datetime import datetime, timezone
+
+    notification = db.query(Notification).filter_by(id=notification_id).first()
+    if not notification:
+        raise HTTPException(status_code=404, detail="Notification not found")
+
+    if notification.user_id != user_id:
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+    notification.dismissed_at = datetime.now(timezone.utc)
+    db.commit()
+
+    return JSONResponse({"ok": True})
 
 
 # ─────────────────────── Admin whitelist API ────────────────────────────────
