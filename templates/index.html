@@ -1089,7 +1089,7 @@
     /**
      * Show a dismissable error snackbar at the bottom of the page.
      * @param {string} message - text to show
-     * @param {{duration?: number, variant?: string}} [opts]
+     * @param {Object} [opts] - {duration?: number, variant?: string}
      */
     function showToast(message, { duration = 6000, variant = 'error' } = {}) {
       const container = document.getElementById('toast-container');

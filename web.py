@@ -199,7 +199,7 @@ async def auth_middleware(request: Request, call_next):
     - Valid Basic Auth header → allow (useful for API / curl access).
     - Otherwise: browser → redirect to /auth/login; API → 401.
     """
-    google_enabled = bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
+    google_enabled = bool(GOOGLE_CLIENT_ID)
     auth_required  = google_enabled or bool(_BASIC_USER and _BASIC_PASS)
 
     if not auth_required:
