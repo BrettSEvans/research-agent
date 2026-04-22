@@ -346,103 +346,66 @@ async def health():
 @app.get("/auth/login", response_class=HTMLResponse)
 async def login_page(request: Request):
     return templates.TemplateResponse(request=request, name="login.html", context={
-        "google_enabled": bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET),
+        "google_enabled":   bool(GOOGLE_CLIENT_ID),
+        "google_client_id": GOOGLE_CLIENT_ID,
     })
 
 
-@app.get("/auth/google")
-async def google_login(request: Request):
-    if not (GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET):
-        raise HTTPException(status_code=503, detail="Google SSO is not configured.")
-    state = secrets.token_urlsafe(20)
-    params = {
-        "client_id":     GOOGLE_CLIENT_ID,
-        "redirect_uri":  f"{BASE_URL}/auth/google/callback",
-        "response_type": "code",
-        "scope":         "openid email profile",
-        "state":         state,
-        "access_type":   "online",
-        "prompt":        "select_account",
-    }
-    url = GOOGLE_AUTH_URL + "?" + urllib.parse.urlencode(params)
-    resp = RedirectResponse(url=url, status_code=302)
-    resp.set_cookie("oauth_state", state, max_age=600, httponly=True,
-                    samesite="lax", secure=_SECURE_COOKIES)
-    return resp
+@app.post("/auth/google/one-tap")
+async def google_one_tap(request: Request, db: Session = Depends(get_db)):
+    """Verify a Google One Tap credential (signed JWT) and create a session.
 
+    Called by the login page JS after the user approves the One Tap prompt.
+    Works inside cross-origin iframes on saasless.ai because no redirect is
+    needed — the credential comes back via a JS callback, not a URL parameter.
+    """
+    from google.oauth2 import id_token as google_id_token
+    from google.auth.transport import requests as google_requests
 
-@app.get("/auth/google/callback")
-async def google_callback(request: Request, code: str = "", state: str = "", error: str = ""):
-    if error:
-        return RedirectResponse(url=f"/auth/login?error={urllib.parse.quote(error)}", status_code=302)
+    if not GOOGLE_CLIENT_ID:
+        raise HTTPException(status_code=503, detail="Google SSO is not configured on this server.")
 
-    stored_state = request.cookies.get("oauth_state", "")
-    if not stored_state or not hmac.compare_digest(stored_state, state):
-        return RedirectResponse(url="/auth/login?error=state_mismatch", status_code=302)
+    body = await request.form()
+    credential = body.get("credential", "")
+    if not credential:
+        raise HTTPException(status_code=400, detail="Missing credential")
 
     try:
-        async with httpx.AsyncClient() as client:
-            tok = await client.post(GOOGLE_TOKEN_URL, data={
-                "client_id":     GOOGLE_CLIENT_ID,
-                "client_secret": GOOGLE_CLIENT_SECRET,
-                "code":          code,
-                "grant_type":    "authorization_code",
-                "redirect_uri":  f"{BASE_URL}/auth/google/callback",
-            }, headers={"Accept": "application/json"})
-            tok.raise_for_status()
-            access_token = tok.json().get("access_token", "")
-
-            info = await client.get(GOOGLE_USERINFO_URL,
-                                    headers={"Authorization": f"Bearer {access_token}"})
-            info.raise_for_status()
-            userinfo = info.json()
+        idinfo = google_id_token.verify_oauth2_token(
+            credential, google_requests.Request(), GOOGLE_CLIENT_ID
+        )
     except Exception as exc:
-        return RedirectResponse(
-            url=f"/auth/login?error={urllib.parse.quote(str(exc))}", status_code=302
-        )
+        raise HTTPException(status_code=401, detail=f"Invalid token: {exc}")
 
-    email: str = userinfo.get("email", "")
-    email_lower = email.lower()
-    domain = email_lower.split("@")[-1]
+    email   = idinfo.get("email", "").lower()
+    domain  = email.split("@")[-1]
+    name    = idinfo.get("name", email)
+    picture = idinfo.get("picture", "")
 
-    # Check whitelist: env-var list OR DB whitelist (email or domain match).
-    # If no restrictions configured at all, allow everyone through.
-    db = next(get_db())
-    try:
-        db_email_hit  = db.query(Whitelist).filter_by(value=email_lower,  type="email").first()
-        db_domain_hit = db.query(Whitelist).filter_by(value=domain,       type="domain").first()
-        env_email_hit  = email_lower in _ALLOWED_EMAILS
-        env_domain_hit = bool(_ALLOWED_DOMAINS) and domain in _ALLOWED_DOMAINS
-        any_restriction = bool(_ALLOWED_EMAILS or _ALLOWED_DOMAINS or
-                               db.query(Whitelist).first())
-        allowed = (not any_restriction) or env_email_hit or env_domain_hit or db_email_hit or db_domain_hit
-        if not allowed:
-            db.close()
-            return RedirectResponse(url="/auth/login?error=domain_not_allowed", status_code=302)
+    # Whitelist check — env-var lists OR DB entries; open if nothing configured.
+    db_email_hit  = db.query(Whitelist).filter_by(value=email,  type="email").first()
+    db_domain_hit = db.query(Whitelist).filter_by(value=domain, type="domain").first()
+    env_email_hit  = email in _ALLOWED_EMAILS
+    env_domain_hit = bool(_ALLOWED_DOMAINS) and domain in _ALLOWED_DOMAINS
+    any_restriction = bool(_ALLOWED_EMAILS or _ALLOWED_DOMAINS or db.query(Whitelist).first())
+    allowed = (not any_restriction) or env_email_hit or env_domain_hit or db_email_hit or db_domain_hit
+    if not allowed:
+        raise HTTPException(status_code=403, detail="Your email is not on the access list. Contact the administrator.")
 
-        # Find or create the user + org in the database
-        user, org = _find_or_create_user_org(
-            db, email,
-            display_name=userinfo.get("name", email),
-            picture=userinfo.get("picture", ""),
-        )
-        user_id = user.id
-        org_id  = org.id
-    finally:
-        db.close()
-
+    user, org = _find_or_create_user_org(db, email, display_name=name, picture=picture)
     session_payload = {
         "email":   email,
-        "name":    userinfo.get("name", email),
-        "picture": userinfo.get("picture", ""),
-        "user_id": user_id,
-        "org_id":  org_id,
+        "name":    name,
+        "picture": picture,
+        "user_id": user.id,
+        "org_id":  org.id,
     }
     token = _sign_session(session_payload)
-    resp  = RedirectResponse(url="/", status_code=302)
+    resp  = JSONResponse({"ok": True})
+    # SameSite=None is required so the cookie is sent in cross-origin iframe
+    # requests. Secure=True is mandatory when SameSite=None (Railway = HTTPS).
     resp.set_cookie(SESSION_COOKIE, token, max_age=SESSION_MAX_AGE,
-                    httponly=True, samesite="lax", secure=_SECURE_COOKIES)
-    resp.delete_cookie("oauth_state")
+                    httponly=True, samesite="none", secure=True)
     return resp
 
 
