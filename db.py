@@ -266,3 +266,79 @@ def seed_eu_regulatory_sources(db: Session) -> None:
         logger.error(f"Error seeding EU regulatory sources: {e}")
         db.rollback()
         raise
+
+
+def seed_ca_regulatory_sources(db: Session) -> None:
+    """Seed California regulatory sources on first startup.
+
+    Idempotent: checks if sources exist before creating and ingesting.
+    Immediately ingests all CA sources to populate the knowledge base.
+
+    This function is called during startup (in web.py) before the scheduler begins,
+    ensuring the CA regulatory KB is available for the first user query.
+    """
+    # Check if CA sources already exist (idempotent)
+    existing = db.query(RegulationSource).filter_by(module="ca_sb54").first()
+    if existing:
+        logger.debug("CA regulatory sources already seeded, skipping")
+        return
+
+    # Import here to avoid circular imports
+    from regulatory_kb import fetch_if_changed, ingest_source
+    from models import utc_now
+
+    # Define the CA regulatory sources to seed
+    sources_data = [
+        {
+            "module": "ca_sb54",
+            "name": "California SB 54 — Nonprofit Integrity Act",
+            "url": "https://leginfo.legislature.ca.gov/faces/billNavClient.xhtml?bill_id=201320140SB54",
+            "version_label": "CA SB 54 (2013)",
+        },
+        {
+            "module": "ca_sb54",
+            "name": "California SB 164 — Board Diversity Requirements",
+            "url": "https://leginfo.legislature.ca.gov/faces/billNavClient.xhtml?bill_id=201820190SB164",
+            "version_label": "CA SB 164 (2018)",
+        },
+        {
+            "module": "ca_sb54",
+            "name": "California Department of Fair Employment and Housing (DFEH) Guidelines",
+            "url": "https://dfeh.ca.gov/wp-content/uploads/sites/32/2020/07/DFEH_Investigations_and_Complaints_Process.pdf",
+            "version_label": "DFEH Guidelines (2023)",
+        },
+    ]
+
+    try:
+        # Create RegulationSource rows for each CA source
+        sources = []
+        for data in sources_data:
+            source = RegulationSource(**data)
+            db.add(source)
+            sources.append(source)
+        db.commit()
+        logger.info(f"Created {len(sources)} CA regulatory sources in DB")
+
+        # Immediately fetch and ingest each source to populate the KB
+        for source in sources:
+            try:
+                # Fetch the source and check if it changed (always True on first run)
+                changed, raw_text = fetch_if_changed(source)
+                if changed and raw_text:
+                    # Ingest: chunk, embed, and write to disk
+                    chunk_count = ingest_source(source, raw_text, db)
+                    logger.info(
+                        f"Ingested {source.name}: {chunk_count} chunks, "
+                        f"last_fetched={source.last_fetched}, last_changed={source.last_changed}"
+                    )
+                else:
+                    logger.warning(f"No content received for {source.name}")
+            except Exception as e:
+                logger.error(f"Failed to ingest {source.name}: {e}")
+                # Continue to next source instead of failing the entire seed
+
+        logger.info("CA regulatory source seeding complete")
+    except Exception as e:
+        logger.error(f"Error seeding CA regulatory sources: {e}")
+        db.rollback()
+        raise
