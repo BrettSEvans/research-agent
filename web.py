@@ -32,6 +32,7 @@ from dotenv import load_dotenv
 from datetime import datetime, timezone
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
+from pydantic import BaseModel
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
@@ -41,7 +42,7 @@ from auth import create_api_key, ensure_default_organization_and_user
 from db import get_db, init_db
 from deck_context import DeckContext
 from extractor import extract_from_pdf
-from models import Organization, Report, SavedExtraction, User
+from models import Organization, Report, SavedExtraction, User, Whitelist
 from version import ANALYZER_VERSION, EXTRACTOR_VERSION
 from conversion import detect_file_type, convert_to_pdf, fetch_google_slides_pdf
 
@@ -101,6 +102,10 @@ _ALLOWED_EMAILS = {
     for e in os.environ.get("ALLOWED_EMAILS", "brettevanssf@gmail.com").split(",")
     if e.strip()
 }
+
+# Admin API key — used by saasless.ai to manage the PitchPerfect whitelist.
+# Set ADMIN_API_KEY env var to a strong random secret.
+ADMIN_API_KEY = os.environ.get("ADMIN_API_KEY", "")
 
 # Session cookie — HMAC-signed JSON, no extra dependencies
 SECRET_KEY       = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
@@ -192,7 +197,7 @@ async def auth_middleware(request: Request, call_next):
 
     path = request.url.path
     # Auth routes and health-check are always public
-    if path.startswith("/auth") or path.startswith("/shared") or path in ("/health", "/favicon.ico"):
+    if path.startswith("/auth") or path.startswith("/shared") or path.startswith("/admin/whitelist") or path in ("/health", "/favicon.ico"):
         return await call_next(request)
 
     # 1. Google session cookie
@@ -398,14 +403,24 @@ async def google_callback(request: Request, code: str = "", state: str = "", err
 
     email: str = userinfo.get("email", "")
     email_lower = email.lower()
-    # Allow if: specific email is whitelisted, OR domain is in allowed domains (when set)
-    if email_lower not in _ALLOWED_EMAILS:
-        if _ALLOWED_DOMAINS and email_lower.split("@")[-1] not in _ALLOWED_DOMAINS:
-            return RedirectResponse(url="/auth/login?error=domain_not_allowed", status_code=302)
+    domain = email_lower.split("@")[-1]
 
-    # Find or create the user + org in the database
+    # Check whitelist: env-var list OR DB whitelist (email or domain match).
+    # If no restrictions configured at all, allow everyone through.
     db = next(get_db())
     try:
+        db_email_hit  = db.query(Whitelist).filter_by(value=email_lower,  type="email").first()
+        db_domain_hit = db.query(Whitelist).filter_by(value=domain,       type="domain").first()
+        env_email_hit  = email_lower in _ALLOWED_EMAILS
+        env_domain_hit = bool(_ALLOWED_DOMAINS) and domain in _ALLOWED_DOMAINS
+        any_restriction = bool(_ALLOWED_EMAILS or _ALLOWED_DOMAINS or
+                               db.query(Whitelist).first())
+        allowed = (not any_restriction) or env_email_hit or env_domain_hit or db_email_hit or db_domain_hit
+        if not allowed:
+            db.close()
+            return RedirectResponse(url="/auth/login?error=domain_not_allowed", status_code=302)
+
+        # Find or create the user + org in the database
         user, org = _find_or_create_user_org(
             db, email,
             display_name=userinfo.get("name", email),
@@ -451,6 +466,71 @@ async def auth_me(request: Request):
                 "picture": session.get("picture"),
             })
     return JSONResponse(None)
+
+
+# ─────────────────────── Admin whitelist API ────────────────────────────────
+# Protected by X-Admin-Key header. Called by saasless.ai to manage who
+# can log in via Google SSO. No Google session required — uses its own key.
+
+def _require_admin_key(request: Request) -> None:
+    """Raise 403 if the request doesn't carry a valid admin API key."""
+    if not ADMIN_API_KEY:
+        raise HTTPException(status_code=503, detail="Admin API key not configured on server.")
+    key = request.headers.get("X-Admin-Key", "")
+    if not hmac.compare_digest(key, ADMIN_API_KEY):
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+
+@app.get("/admin/whitelist")
+async def whitelist_list(request: Request, db: Session = Depends(get_db)):
+    """Return all whitelisted emails and domains."""
+    _require_admin_key(request)
+    entries = db.query(Whitelist).order_by(Whitelist.created_at.desc()).all()
+    return JSONResponse([
+        {
+            "id":         e.id,
+            "value":      e.value,
+            "type":       e.type,
+            "added_by":   e.added_by,
+            "created_at": e.created_at.isoformat(),
+        }
+        for e in entries
+    ])
+
+
+class WhitelistAddRequest(BaseModel):
+    value: str   # email address or domain (e.g. "user@example.com" or "example.com")
+    added_by: str | None = None
+
+
+@app.post("/admin/whitelist")
+async def whitelist_add(body: WhitelistAddRequest, request: Request, db: Session = Depends(get_db)):
+    """Add an email or domain to the whitelist."""
+    _require_admin_key(request)
+    value = body.value.strip().lower()
+    if not value:
+        raise HTTPException(status_code=400, detail="value is required")
+    entry_type = "email" if "@" in value else "domain"
+    existing = db.query(Whitelist).filter_by(value=value).first()
+    if existing:
+        return JSONResponse({"id": existing.id, "value": existing.value, "type": existing.type}, status_code=200)
+    entry = Whitelist(value=value, type=entry_type, added_by=body.added_by)
+    db.add(entry)
+    db.commit()
+    db.refresh(entry)
+    return JSONResponse({"id": entry.id, "value": entry.value, "type": entry.type}, status_code=201)
+
+
+@app.delete("/admin/whitelist/{entry_id}")
+async def whitelist_delete(entry_id: int, request: Request, db: Session = Depends(get_db)):
+    """Remove an entry from the whitelist by ID."""
+    _require_admin_key(request)
+    entry = db.get(Whitelist, entry_id)
+    if not entry:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    db.delete(entry)
+    db.commit()
+    return JSONResponse({"ok": True})
 
 
 @app.get("/config")

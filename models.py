@@ -141,6 +141,16 @@ class Report(Base):
     project = relationship("Project", back_populates="reports")
 
 
+class Whitelist(Base):
+    __tablename__ = "whitelist"
+
+    id = Column(Integer, primary_key=True, index=True)
+    value = Column(String(256), unique=True, nullable=False, index=True)  # email or domain
+    type = Column(String(16), nullable=False)   # "email" or "domain"
+    added_by = Column(String(256), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+
+
 class Upload(Base):
     __tablename__ = "uploads"
 

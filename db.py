@@ -8,7 +8,7 @@ from typing import Generator
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from models import Base, DeckContext, Organization, Project, Report, SavedExtraction, Upload, User
+from models import Base, DeckContext, Organization, Project, Report, SavedExtraction, Upload, User, Whitelist
 
 BASE = Path(__file__).parent
 DATABASE_URL = os.environ.get("DATABASE_URL") or f"sqlite:///{BASE / 'compliance_agent.db'}"
