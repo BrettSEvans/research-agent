@@ -40,7 +40,7 @@ from sqlalchemy.orm import Session
 
 from agent import iter_compliance_report, run_compliance_report, SAVED_REPORTS_DIR
 from auth import create_api_key, ensure_default_organization_and_user
-from db import get_db, init_db
+from db import get_db, init_db, seed_eu_regulatory_sources
 from deck_context import DeckContext
 from extractor import extract_from_pdf
 from models import Organization, Report, SavedExtraction, User, Whitelist
@@ -79,6 +79,14 @@ app.add_middleware(
 
 # Initialise DB tables and run column migrations on startup
 init_db()
+
+# Seed EU regulatory sources (idempotent, runs only on first startup)
+_seed_db = next(get_db())
+try:
+    seed_eu_regulatory_sources(_seed_db)
+finally:
+    _seed_db.close()
+
 # Bootstrap default org/user from env vars so Basic Auth + legacy data still works
 _default_db = next(get_db())
 try:

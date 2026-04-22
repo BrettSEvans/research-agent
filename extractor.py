@@ -125,6 +125,51 @@ class ExtractedMetric(BaseModel):
     metric_name: str = Field(description="e.g., 'ARR', 'CAC', 'LTV', 'NRR', 'EBITDA', 'Waitlist Signups', 'Founder Domain Expertise'")
     value: str = Field(description="The extracted value, e.g., '$5M', '$100', '120%', 'Ex-Googler'")
 
+
+class EsgMetrics(BaseModel):
+    """ESG-specific metrics extracted from pitch decks when EU SFDR/CSRD module is active."""
+    scope_1_emissions: str | None = Field(
+        default=None,
+        description="Scope 1 GHG emissions with year, e.g., '12,000 tCO2e (2025)'"
+    )
+    scope_2_emissions: str | None = Field(
+        default=None,
+        description="Scope 2 GHG emissions with year"
+    )
+    scope_3_emissions: str | None = Field(
+        default=None,
+        description="Scope 3 GHG emissions with year"
+    )
+    has_third_party_audit: bool | None = Field(
+        default=None,
+        description="True if deck claims external audit; False if no audit mentioned; None if unclear"
+    )
+    audit_body: str | None = Field(
+        default=None,
+        description="Name of auditor if stated (e.g., 'Bureau Veritas'); null if not audited"
+    )
+    board_diversity_pct: str | None = Field(
+        default=None,
+        description="Board diversity percentage if stated, e.g., '40% women'"
+    )
+    supply_chain_disclosure: str | None = Field(
+        default=None,
+        description="Whether supply chain disclosure is provided"
+    )
+    ai_risk_sector: bool | None = Field(
+        default=None,
+        description="True if AI used in regulated sector (Health/Finance/HR/Infrastructure); False otherwise"
+    )
+    ai_transparency_statement: str | None = Field(
+        default=None,
+        description="Text of any AI risk/transparency disclosure"
+    )
+    sfdr_article_claim: str | None = Field(
+        default=None,
+        description="'Article 8' or 'Article 9' if deck claims SFDR classification"
+    )
+
+
 class DeckExtraction(BaseModel):
     company: CompanyIdentity
     claims: list[ExtractedClaim] = Field(
@@ -146,8 +191,14 @@ class DeckExtraction(BaseModel):
 
     # --- Stage-Specific Extracted Fields ---
     key_metrics: list[ExtractedMetric] = Field(
-        default_factory=list, 
+        default_factory=list,
         description="Extract key startup metrics based on the inferred stage (e.g. ARR, CAC, LTV, NRR, Gross Margin, EBITDA, Rule of 40, Exit Strategy, Early Validation Signals)."
+    )
+
+    # --- ESG Metrics (populated when EU SFDR/CSRD module is active) ---
+    esg_metrics: EsgMetrics | None = Field(
+        default=None,
+        description="ESG metrics extracted when EU SFDR/CSRD module is active; null otherwise"
     )
 
     extraction_notes: str = Field(
@@ -392,6 +443,31 @@ def _merge_deck_extractions(
     )
 
 
+def _build_system_prompt(requested_metrics: list[str] | None = None) -> str:
+    """Build system prompt with conditional rules based on requested modules.
+
+    When EU SFDR/CSRD module is requested, adds instructions to extract ESG metrics.
+    """
+    base = SYSTEM_PROMPT
+
+    if requested_metrics and "eu_sfdr_csrd" in requested_metrics:
+        base += """
+
+ADDITIONALLY, WHEN EU SFDR/CSRD MODULE IS ACTIVE:
+Extract ESG-specific data with these constraints:
+- Scope 1, 2, 3 GHG emissions figures with measurement year (e.g., "12,000 tCO2e (2024)")
+- Whether a third-party sustainability audit is referenced and by whom
+- Board diversity percentage if stated
+- Whether the company uses AI in a regulated sector (Health, Finance, HR, Infrastructure)
+- Any SFDR Article 8 or Article 9 self-classification the company claims
+- Any sustainability supply chain disclosure statement
+
+Extract only what is explicitly stated. Use null for missing fields. Do not invent data.
+Zero hallucination: if emissions are claimed without numbers, mark as null and note in extraction_notes."""
+
+    return base
+
+
 def extract_from_pdf(
     pdf_path: str | Path,
     client: anthropic.Anthropic | None = None,
@@ -452,7 +528,7 @@ def extract_from_pdf(
                 # Ollama calls on pages that will ultimately land in failed_pages.
                 result = llm_local.call_structured_vision(
                     model=model,
-                    system=SYSTEM_PROMPT,
+                    system=_build_system_prompt(requested_metrics),
                     user_text=user_text,
                     images_b64=batch_imgs,
                     output_format=DeckExtraction,
@@ -503,7 +579,7 @@ def extract_from_pdf(
         caller = llm_inception.call_structured if llm_inception.is_inception_model(model) else llm_local.call_structured
         return caller(
             model=model,
-            system=SYSTEM_PROMPT,
+            system=_build_system_prompt(requested_metrics),
             user_content=user_content,
             output_format=DeckExtraction,
         ), []
@@ -517,7 +593,7 @@ def extract_from_pdf(
         client.messages.parse,
         model=model,
         max_tokens=16000,
-        system=SYSTEM_PROMPT,
+        system=_build_system_prompt(requested_metrics),
         **_thinking_kwargs(model),
         messages=[
             {
@@ -587,7 +663,7 @@ def extract_failed_pages_with_claude(
         client.messages.parse,
         model=model,
         max_tokens=8000,
-        system=SYSTEM_PROMPT,
+        system=_build_system_prompt(requested_metrics),
         **_thinking_kwargs(model),
         messages=[
             {
