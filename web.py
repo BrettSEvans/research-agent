@@ -40,7 +40,7 @@ from sqlalchemy.orm import Session
 
 from agent import iter_compliance_report, run_compliance_report, SAVED_REPORTS_DIR
 from auth import create_api_key, ensure_default_organization_and_user
-from db import get_db, init_db
+from db import get_db, init_db, seed_eu_regulatory_sources
 from deck_context import DeckContext
 from extractor import extract_from_pdf
 from models import Organization, Report, SavedExtraction, User, Whitelist
@@ -79,12 +79,32 @@ app.add_middleware(
 
 # Initialise DB tables and run column migrations on startup
 init_db()
+
+# Seed EU regulatory sources (idempotent, runs only on first startup)
+_seed_db = next(get_db())
+try:
+    seed_eu_regulatory_sources(_seed_db)
+finally:
+    _seed_db.close()
+
 # Bootstrap default org/user from env vars so Basic Auth + legacy data still works
 _default_db = next(get_db())
 try:
     ensure_default_organization_and_user(_default_db)
 finally:
     _default_db.close()
+
+# Start background scheduler for daily regulatory updates
+from scheduler import start_scheduler, stop_scheduler
+
+_scheduler = start_scheduler()
+
+
+# Graceful shutdown
+@app.on_event("shutdown")
+def shutdown_event():
+    """Shutdown scheduler on FastAPI shutdown."""
+    stop_scheduler()
 
 
 # ───────────────────────── auth configuration ─────────────────────────────
@@ -175,6 +195,40 @@ def _check_basic_auth(request: Request) -> bool:
         return u == _BASIC_USER and p == _BASIC_PASS
     except Exception:
         return False
+
+
+def _is_email_allowed(email: str, db: Session) -> bool:
+    """
+    Check if an email passes the whitelist (env vars OR DB entries).
+
+    Returns True if:
+    - No restrictions are configured (open access)
+    - Email matches an entry in _ALLOWED_EMAILS
+    - Email domain matches an entry in _ALLOWED_DOMAINS
+    - Email or domain is in the Whitelist table
+    """
+    email = email.lower()
+    domain = email.split("@")[-1]
+
+    # Check env var lists
+    if email in _ALLOWED_EMAILS:
+        return True
+    if _ALLOWED_DOMAINS and domain in _ALLOWED_DOMAINS:
+        return True
+
+    # Check DB whitelist
+    db_email_hit = db.query(Whitelist).filter_by(value=email, type="email").first()
+    db_domain_hit = db.query(Whitelist).filter_by(value=domain, type="domain").first()
+    if db_email_hit or db_domain_hit:
+        return True
+
+    # If any restriction exists, deny by default
+    any_restriction = bool(_ALLOWED_EMAILS or _ALLOWED_DOMAINS or db.query(Whitelist).first())
+    if any_restriction:
+        return False
+
+    # No restrictions configured — allow all
+    return True
 
 
 # ── Auth middleware ────────────────────────────────────────────────────────
@@ -388,18 +442,11 @@ async def google_one_tap(request: Request, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail=f"Invalid token: {exc}")
 
     email   = idinfo.get("email", "").lower()
-    domain  = email.split("@")[-1]
     name    = idinfo.get("name", email)
     picture = idinfo.get("picture", "")
 
     # Whitelist check — env-var lists OR DB entries; open if nothing configured.
-    db_email_hit  = db.query(Whitelist).filter_by(value=email,  type="email").first()
-    db_domain_hit = db.query(Whitelist).filter_by(value=domain, type="domain").first()
-    env_email_hit  = email in _ALLOWED_EMAILS
-    env_domain_hit = bool(_ALLOWED_DOMAINS) and domain in _ALLOWED_DOMAINS
-    any_restriction = bool(_ALLOWED_EMAILS or _ALLOWED_DOMAINS or db.query(Whitelist).first())
-    allowed = (not any_restriction) or env_email_hit or env_domain_hit or db_email_hit or db_domain_hit
-    if not allowed:
+    if not _is_email_allowed(email, db):
         raise HTTPException(status_code=403, detail="Your email is not on the access list. Contact the administrator.")
 
     user, org = _find_or_create_user_org(db, email, display_name=name, picture=picture)
@@ -439,6 +486,89 @@ async def auth_me(request: Request):
                 "picture": session.get("picture"),
             })
     return JSONResponse(None)
+
+
+# ─────────────────────── Notification API ────────────────────────────────────
+# User notifications for regulatory updates. Requires valid session.
+
+@app.get("/notifications")
+async def get_notifications(request: Request, db: Session = Depends(get_db)):
+    """
+    Fetch undismissed notifications for the current user.
+
+    Requires: Valid session cookie
+    Returns: [{"id", "module", "source_name", "title", "body", "created_at"}]
+    """
+    token = request.cookies.get(SESSION_COOKIE, "")
+    if not token:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    session = _load_session(token)
+    if not session:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    user_id = session.get("user_id")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    from models import Notification
+
+    notifications = (
+        db.query(Notification)
+        .filter_by(user_id=user_id, dismissed_at=None)
+        .order_by(Notification.created_at.desc())
+        .all()
+    )
+
+    return JSONResponse([
+        {
+            "id": n.id,
+            "module": n.module,
+            "source_name": n.source_name,
+            "title": n.title,
+            "body": n.body,
+            "created_at": n.created_at.isoformat(),
+        }
+        for n in notifications
+    ])
+
+
+@app.post("/notifications/{notification_id}/dismiss")
+async def dismiss_notification(
+    notification_id: int, request: Request, db: Session = Depends(get_db)
+):
+    """
+    Dismiss a notification (mark as dismissed).
+
+    Requires: Valid session cookie + ownership (user_id matches)
+    Returns: {"ok": true}
+    """
+    token = request.cookies.get(SESSION_COOKIE, "")
+    if not token:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    session = _load_session(token)
+    if not session:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    user_id = session.get("user_id")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    from models import Notification
+    from datetime import datetime, timezone
+
+    notification = db.query(Notification).filter_by(id=notification_id).first()
+    if not notification:
+        raise HTTPException(status_code=404, detail="Notification not found")
+
+    if notification.user_id != user_id:
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+    notification.dismissed_at = datetime.now(timezone.utc)
+    db.commit()
+
+    return JSONResponse({"ok": True})
 
 
 # ─────────────────────── Admin whitelist API ────────────────────────────────

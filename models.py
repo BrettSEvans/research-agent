@@ -167,3 +167,35 @@ class Upload(Base):
     owner = relationship("User", back_populates="uploads")
     organization = relationship("Organization", back_populates="uploads")
     project = relationship("Project", back_populates="uploads")
+
+
+class RegulationSource(Base):
+    __tablename__ = "regulation_sources"
+
+    id = Column(Integer, primary_key=True, index=True)
+    module = Column(String(32), nullable=False, index=True)  # "sec" | "eu_sfdr_csrd" | "ca_sb54"
+    name = Column(String(256), nullable=False)  # human label, e.g. "SFDR Level 1"
+    url = Column(String(1024), nullable=False)
+    etag = Column(String(256), nullable=True)
+    last_modified = Column(String(256), nullable=True)
+    content_sha256 = Column(String(64), nullable=True)
+    version_label = Column(String(128), nullable=True)  # e.g. "ELI:32021R2088"
+    last_fetched = Column(DateTime(timezone=True), nullable=True)
+    last_changed = Column(DateTime(timezone=True), nullable=True)
+    chunk_count = Column(Integer, default=0)
+    created_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+
+
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    module = Column(String(32), nullable=False)  # "sec" | "eu_sfdr_csrd" | "ca_sb54"
+    source_name = Column(String(256), nullable=False)
+    title = Column(String(512), nullable=False)
+    body = Column(Text, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
+    dismissed_at = Column(DateTime(timezone=True), nullable=True)
+
+    user = relationship("User", backref="notifications")

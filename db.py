@@ -1,14 +1,17 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 from pathlib import Path
 from typing import Generator
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
 
-from models import Base, DeckContext, Organization, Project, Report, SavedExtraction, Upload, User, Whitelist
+from models import Base, DeckContext, Organization, Project, Report, SavedExtraction, Upload, User, Whitelist, RegulationSource
+
+logger = logging.getLogger(__name__)
 
 BASE = Path(__file__).parent
 DATABASE_URL = os.environ.get("DATABASE_URL") or f"sqlite:///{BASE / 'compliance_agent.db'}"
@@ -175,3 +178,91 @@ def migrate_existing_data(default_user_email: str, default_org_name: str, defaul
         db.commit()
     finally:
         db.close()
+
+
+def seed_eu_regulatory_sources(db: Session) -> None:
+    """Seed EU regulatory sources on first startup.
+
+    Idempotent: checks if sources exist before creating and ingesting.
+    Immediately ingests all 5 sources to populate the knowledge base.
+
+    This function is called during startup (in web.py) before the scheduler begins,
+    ensuring the regulatory KB is available for the first user query.
+    """
+    # Check if EU sources already exist (idempotent)
+    existing = db.query(RegulationSource).filter_by(module="eu_sfdr_csrd").first()
+    if existing:
+        logger.debug("EU regulatory sources already seeded, skipping")
+        return
+
+    # Import here to avoid circular imports
+    from regulatory_kb import fetch_if_changed, ingest_source
+    from models import utc_now
+
+    # Define the 5 EU regulatory sources to seed
+    sources_data = [
+        {
+            "module": "eu_sfdr_csrd",
+            "name": "SFDR Level 1 (EU 2019/2088)",
+            "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32019R2088",
+            "version_label": "ELI:32019R2088",
+        },
+        {
+            "module": "eu_sfdr_csrd",
+            "name": "SFDR RTS Delegated Regulation (EU 2022/1288)",
+            "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32022R1288",
+            "version_label": "ELI:32022R1288",
+        },
+        {
+            "module": "eu_sfdr_csrd",
+            "name": "CSRD Directive (EU 2022/2464)",
+            "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32022L2464",
+            "version_label": "ELI:32022L2464",
+        },
+        {
+            "module": "eu_sfdr_csrd",
+            "name": "EU AI Act High-Risk Annex III (EU 2024/1689)",
+            "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32024R1689",
+            "version_label": "ELI:32024R1689",
+        },
+        {
+            "module": "eu_sfdr_csrd",
+            "name": "ESRS Set 1 — CSRD Technical Standards (EU 2023/2772)",
+            "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32023R2772",
+            "version_label": "ELI:32023R2772",
+        },
+    ]
+
+    try:
+        # Create RegulationSource rows for each EU source
+        sources = []
+        for data in sources_data:
+            source = RegulationSource(**data)
+            db.add(source)
+            sources.append(source)
+        db.commit()
+        logger.info(f"Created {len(sources)} EU regulatory sources in DB")
+
+        # Immediately fetch and ingest each source to populate the KB
+        for source in sources:
+            try:
+                # Fetch the source and check if it changed (always True on first run)
+                changed, raw_text = fetch_if_changed(source)
+                if changed and raw_text:
+                    # Ingest: chunk, embed, and write to disk
+                    chunk_count = ingest_source(source, raw_text, db)
+                    logger.info(
+                        f"Ingested {source.name}: {chunk_count} chunks, "
+                        f"last_fetched={source.last_fetched}, last_changed={source.last_changed}"
+                    )
+                else:
+                    logger.warning(f"No content received for {source.name}")
+            except Exception as e:
+                logger.error(f"Failed to ingest {source.name}: {e}")
+                # Continue to next source instead of failing the entire seed
+
+        logger.info("EU regulatory source seeding complete")
+    except Exception as e:
+        logger.error(f"Error seeding EU regulatory sources: {e}")
+        db.rollback()
+        raise
