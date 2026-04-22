@@ -32,6 +32,7 @@ from dotenv import load_dotenv
 from datetime import datetime, timezone
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response, StreamingResponse
 from fastapi.templating import Jinja2Templates
@@ -66,6 +67,15 @@ SAVED_DIR.mkdir(exist_ok=True)
 
 app = FastAPI(title="VC Pitch Deck + Compliance")
 templates = Jinja2Templates(directory=str(BASE / "templates"))
+
+# Allow saasless.ai to call the /admin/whitelist API from the browser.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://saasless.ai", "https://www.saasless.ai"],
+    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+    allow_headers=["X-Admin-Key", "Content-Type"],
+    allow_credentials=False,
+)
 
 # Initialise DB tables and run column migrations on startup
 init_db()
