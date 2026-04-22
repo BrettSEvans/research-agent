@@ -60,21 +60,21 @@ def detect_greenwashing_risk(esg_metrics: EsgMetrics | None) -> GreenwashingRisk
         red_flags.append("Article 8/9 sustainability claim lacks quantified environmental metrics")
         risk_score += 25
 
-    # Pattern 2: Missing audit for ESG claims
-    has_emissions = bool(esg_metrics.scope_1_emissions or esg_metrics.scope_2_emissions or esg_metrics.scope_3_emissions)
-    if has_emissions and not esg_metrics.has_third_party_audit:
-        patterns.append("Emissions claims without third-party audit")
-        missing_evidence.append("Third-party audit verification")
-        red_flags.append("Unaudited ESG claims increase greenwashing risk")
-        risk_score += 30
-
-    # Pattern 3: Selective disclosure (some scopes missing)
+    # Pattern 2: Selective disclosure (some scopes missing)
     scope_count = sum(1 for s in [esg_metrics.scope_1_emissions, esg_metrics.scope_2_emissions, esg_metrics.scope_3_emissions] if s)
     if scope_count == 1:
         patterns.append("Only one emissions scope disclosed (suspicious selective reporting)")
         missing_evidence.append("Scope 2 and 3 emissions data")
         red_flags.append("Selective Scope disclosure may hide material emissions")
         risk_score += 15
+
+    # Pattern 3: Missing audit for ESG claims
+    has_emissions = bool(esg_metrics.scope_1_emissions or esg_metrics.scope_2_emissions or esg_metrics.scope_3_emissions)
+    if has_emissions and not esg_metrics.has_third_party_audit:
+        patterns.append("Emissions claims without third-party audit")
+        missing_evidence.append("Third-party audit verification")
+        red_flags.append("Unaudited ESG claims increase greenwashing risk")
+        risk_score += 30
 
     # Pattern 4: Missing board diversity with ESG claims
     if esg_metrics.sfdr_article_claim and not esg_metrics.board_diversity_pct:
@@ -98,10 +98,10 @@ def detect_greenwashing_risk(esg_metrics: EsgMetrics | None) -> GreenwashingRisk
         risk_score += 15
 
     # Pattern 7: No diversity data despite being asked
-    if not esg_metrics.gender_diversity and not esg_metrics.race_ethnicity_data:
-        patterns.append("No demographic diversity disclosure")
-        missing_evidence.append("Gender and race/ethnicity diversity breakdown")
-        red_flags.append("Absence of demographic disclosure suggests potential homogeneity")
+    if not esg_metrics.board_diversity_pct:
+        patterns.append("No board diversity disclosure")
+        missing_evidence.append("Board composition and diversity metrics")
+        red_flags.append("Absence of board diversity disclosure suggests potential governance risk")
         risk_score += 10
 
     # Determine overall risk level

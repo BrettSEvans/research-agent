@@ -101,9 +101,9 @@ def calculate_compliance_score(
         risk_level = "NONE"
     elif overall_score >= 60:
         risk_level = "LOW"
-    elif overall_score >= 40:
+    elif overall_score >= 30:
         risk_level = "MEDIUM"
-    elif overall_score >= 20:
+    elif overall_score >= 15:
         risk_level = "HIGH"
     else:
         risk_level = "CRITICAL"
@@ -116,7 +116,9 @@ def calculate_compliance_score(
 
     # Adjust risk level based on missing critical data
     if missing_data >= len(assessments) * 0.5:  # > 50% missing
-        if risk_level not in ["CRITICAL", "HIGH"]:
+        if risk_level == "CRITICAL":
+            risk_level = "HIGH"
+        elif risk_level not in ["HIGH"]:
             risk_level = "MEDIUM"
 
     # Generate recommendation

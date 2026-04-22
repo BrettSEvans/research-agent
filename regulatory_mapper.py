@@ -225,7 +225,7 @@ def aggregate_regulatory_maps(maps: List[RegulatoryMap]) -> dict:
     """
     if not maps:
         return {
-            "total_violations_all": 0,
+            "total_violations_all_jurisdictions": 0,
             "jurisdictions": [],
             "all_cited_articles": [],
             "critical_action_items": [],

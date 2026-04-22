@@ -200,7 +200,6 @@ class TestRemediationVelocity:
         before = [
             {"severity": "HIGH"},
             {"severity": "HIGH"},
-            {"severity": "HIGH"},
             {"severity": "LOW"},
         ]
         after = [

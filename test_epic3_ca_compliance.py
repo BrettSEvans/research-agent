@@ -35,8 +35,8 @@ class TestCASourceCreation:
         db.add.side_effect = mock_add
         db.query.return_value.filter_by.return_value.first.return_value = None
 
-        with patch('db.fetch_if_changed') as mock_fetch, \
-             patch('db.ingest_source') as mock_ingest:
+        with patch('regulatory_kb.fetch_if_changed') as mock_fetch, \
+             patch('regulatory_kb.ingest_source') as mock_ingest:
             mock_fetch.return_value = (True, "test content")
             mock_ingest.return_value = 100
 
@@ -70,8 +70,8 @@ class TestCASourceCreation:
         db.add.side_effect = mock_add
         db.query.return_value.filter_by.return_value.first.return_value = None
 
-        with patch('db.fetch_if_changed') as mock_fetch, \
-             patch('db.ingest_source') as mock_ingest:
+        with patch('regulatory_kb.fetch_if_changed') as mock_fetch, \
+             patch('regulatory_kb.ingest_source') as mock_ingest:
             mock_fetch.return_value = (True, "test content")
             mock_ingest.return_value = 100
 
@@ -91,8 +91,8 @@ class TestCASourceCreation:
         db.add.side_effect = mock_add
         db.query.return_value.filter_by.return_value.first.return_value = None
 
-        with patch('db.fetch_if_changed') as mock_fetch, \
-             patch('db.ingest_source') as mock_ingest:
+        with patch('regulatory_kb.fetch_if_changed') as mock_fetch, \
+             patch('regulatory_kb.ingest_source') as mock_ingest:
             mock_fetch.return_value = (True, "test content")
             mock_ingest.return_value = 100
 
@@ -112,8 +112,8 @@ class TestCASourceCreation:
         db.add.side_effect = mock_add
         db.query.return_value.filter_by.return_value.first.return_value = None
 
-        with patch('db.fetch_if_changed') as mock_fetch, \
-             patch('db.ingest_source') as mock_ingest:
+        with patch('regulatory_kb.fetch_if_changed') as mock_fetch, \
+             patch('regulatory_kb.ingest_source') as mock_ingest:
             mock_fetch.return_value = (True, "test content")
             mock_ingest.return_value = 100
 
@@ -133,8 +133,8 @@ class TestCASourceCreation:
         db.add.side_effect = mock_add
         db.query.return_value.filter_by.return_value.first.return_value = None
 
-        with patch('db.fetch_if_changed') as mock_fetch, \
-             patch('db.ingest_source') as mock_ingest:
+        with patch('regulatory_kb.fetch_if_changed') as mock_fetch, \
+             patch('regulatory_kb.ingest_source') as mock_ingest:
             mock_fetch.return_value = (True, "test content")
             mock_ingest.return_value = 100
 
@@ -155,8 +155,8 @@ class TestCASourceCreation:
         db.add.side_effect = mock_add
         db.query.return_value.filter_by.return_value.first.return_value = None
 
-        with patch('db.fetch_if_changed') as mock_fetch, \
-             patch('db.ingest_source') as mock_ingest:
+        with patch('regulatory_kb.fetch_if_changed') as mock_fetch, \
+             patch('regulatory_kb.ingest_source') as mock_ingest:
             mock_fetch.return_value = (True, "test content")
             mock_ingest.return_value = 100
 
@@ -177,8 +177,8 @@ class TestCASourceCreation:
         db.add.side_effect = mock_add
         db.query.return_value.filter_by.return_value.first.return_value = None
 
-        with patch('db.fetch_if_changed') as mock_fetch, \
-             patch('db.ingest_source') as mock_ingest:
+        with patch('regulatory_kb.fetch_if_changed') as mock_fetch, \
+             patch('regulatory_kb.ingest_source') as mock_ingest:
             mock_fetch.return_value = (True, "test content")
             mock_ingest.return_value = 100
 
@@ -202,8 +202,8 @@ class TestCASourceIngestion:
             sources_added.append(source)
         db.add.side_effect = mock_add
 
-        with patch('db.fetch_if_changed') as mock_fetch, \
-             patch('db.ingest_source') as mock_ingest:
+        with patch('regulatory_kb.fetch_if_changed') as mock_fetch, \
+             patch('regulatory_kb.ingest_source') as mock_ingest:
             mock_fetch.return_value = (True, "test content")
             mock_ingest.return_value = 100
 
@@ -222,8 +222,8 @@ class TestCASourceIngestion:
             sources_added.append(source)
         db.add.side_effect = mock_add
 
-        with patch('db.fetch_if_changed') as mock_fetch, \
-             patch('db.ingest_source') as mock_ingest:
+        with patch('regulatory_kb.fetch_if_changed') as mock_fetch, \
+             patch('regulatory_kb.ingest_source') as mock_ingest:
             mock_fetch.return_value = (True, "test content")
             mock_ingest.return_value = 100
 
@@ -243,8 +243,8 @@ class TestCASourceIngestion:
             ingested_sources.append(source)
             return 50
 
-        with patch('db.fetch_if_changed') as mock_fetch, \
-             patch('db.ingest_source') as mock_ingest_fn:
+        with patch('regulatory_kb.fetch_if_changed') as mock_fetch, \
+             patch('regulatory_kb.ingest_source') as mock_ingest_fn:
             mock_fetch.return_value = (True, "test content")
             mock_ingest_fn.side_effect = mock_ingest
 
@@ -269,8 +269,8 @@ class TestCASourceIngestion:
             fetched_sources.append(source)
             return (True, "test content")
 
-        with patch('db.fetch_if_changed') as mock_fetch_fn, \
-             patch('db.ingest_source') as mock_ingest:
+        with patch('regulatory_kb.fetch_if_changed') as mock_fetch_fn, \
+             patch('regulatory_kb.ingest_source') as mock_ingest:
             mock_fetch_fn.side_effect = mock_fetch
             mock_ingest.return_value = 100
 
@@ -294,8 +294,8 @@ class TestCASourceIngestion:
             sources_added.append(source)
         db.add.side_effect = mock_add
 
-        with patch('db.fetch_if_changed') as mock_fetch, \
-             patch('db.ingest_source') as mock_ingest:
+        with patch('regulatory_kb.fetch_if_changed') as mock_fetch, \
+             patch('regulatory_kb.ingest_source') as mock_ingest:
             # First call succeeds, second fails, third succeeds
             mock_fetch.return_value = (True, "test content")
             mock_ingest.side_effect = [100, Exception("Network error"), 100]
@@ -316,8 +316,8 @@ class TestCASourceIngestion:
             sources_added.append(source)
         db.add.side_effect = mock_add
 
-        with patch('db.fetch_if_changed') as mock_fetch, \
-             patch('db.ingest_source') as mock_ingest:
+        with patch('regulatory_kb.fetch_if_changed') as mock_fetch, \
+             patch('regulatory_kb.ingest_source') as mock_ingest:
             # Return False for changed (no change detected)
             mock_fetch.return_value = (False, "")
             mock_ingest.return_value = 0
@@ -336,8 +336,8 @@ class TestCASourceDBState:
         db = Mock(spec=Session)
         db.query.return_value.filter_by.return_value.first.return_value = None
 
-        with patch('db.fetch_if_changed') as mock_fetch, \
-             patch('db.ingest_source') as mock_ingest:
+        with patch('regulatory_kb.fetch_if_changed') as mock_fetch, \
+             patch('regulatory_kb.ingest_source') as mock_ingest:
             mock_fetch.return_value = (True, "test content")
             mock_ingest.return_value = 100
 
@@ -352,8 +352,8 @@ class TestCASourceDBState:
         db.query.return_value.filter_by.return_value.first.return_value = None
         db.commit.side_effect = Exception("DB Error")
 
-        with patch('db.fetch_if_changed') as mock_fetch, \
-             patch('db.ingest_source') as mock_ingest:
+        with patch('regulatory_kb.fetch_if_changed') as mock_fetch, \
+             patch('regulatory_kb.ingest_source') as mock_ingest:
             mock_fetch.return_value = (True, "test content")
             mock_ingest.return_value = 100
 
@@ -377,8 +377,8 @@ class TestCASourceIntegration:
             ca_sources.append(source)
         db.add.side_effect = mock_add
 
-        with patch('db.fetch_if_changed') as mock_fetch, \
-             patch('db.ingest_source') as mock_ingest:
+        with patch('regulatory_kb.fetch_if_changed') as mock_fetch, \
+             patch('regulatory_kb.ingest_source') as mock_ingest:
             mock_fetch.return_value = (True, "test content")
             mock_ingest.return_value = 100
 
@@ -398,8 +398,8 @@ class TestCASourceIntegration:
             sources_added.append(source)
         db.add.side_effect = mock_add
 
-        with patch('db.fetch_if_changed') as mock_fetch, \
-             patch('db.ingest_source') as mock_ingest:
+        with patch('regulatory_kb.fetch_if_changed') as mock_fetch, \
+             patch('regulatory_kb.ingest_source') as mock_ingest:
             mock_fetch.return_value = (True, "test content")
             mock_ingest.return_value = 100
 
@@ -419,8 +419,8 @@ class TestCASourceIntegration:
             sources_added.append(source)
         db.add.side_effect = mock_add
 
-        with patch('db.fetch_if_changed') as mock_fetch, \
-             patch('db.ingest_source') as mock_ingest:
+        with patch('regulatory_kb.fetch_if_changed') as mock_fetch, \
+             patch('regulatory_kb.ingest_source') as mock_ingest:
             mock_fetch.return_value = (True, "test content")
             mock_ingest.return_value = 100
 
@@ -455,8 +455,8 @@ class TestCASourceIntegration:
         query_mock.filter_by.return_value = filter_by_mock
         filter_by_mock.first.return_value = None  # No CA sources yet
 
-        with patch('db.fetch_if_changed') as mock_fetch, \
-             patch('db.ingest_source') as mock_ingest:
+        with patch('regulatory_kb.fetch_if_changed') as mock_fetch, \
+             patch('regulatory_kb.ingest_source') as mock_ingest:
             mock_fetch.return_value = (True, "test content")
             mock_ingest.return_value = 100
 

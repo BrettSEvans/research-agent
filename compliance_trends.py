@@ -83,8 +83,8 @@ def analyze_compliance_trend(
         days_elapsed = (last.timestamp - first.timestamp).days
         velocity = score_change / max(days_elapsed, 1)
         trend_direction = (
-            TrendDirection.IMPROVING if velocity > 2
-            else TrendDirection.DECLINING if velocity < -2
+            TrendDirection.IMPROVING if velocity > 0.5
+            else TrendDirection.DECLINING if velocity < -0.5
             else TrendDirection.STABLE
         )
         trend_score = min(1.0, max(-1.0, velocity / 50))  # Normalize to [-1, 1]
@@ -97,13 +97,13 @@ def analyze_compliance_trend(
 
     # Forecast critical date
     estimated_critical_date = None
-    if velocity < -2 and sorted_points[-1].score > 20:
+    if velocity < -0.5 and sorted_points[-1].score > 20:
         days_to_critical = (20 - sorted_points[-1].score) / velocity
         estimated_critical_date = sorted_points[-1].timestamp + timedelta(days=days_to_critical)
 
     # Forecast resolution date
     estimated_resolution_date = None
-    if velocity > 2 and sorted_points[-1].score < 80:
+    if velocity > 0.5 and sorted_points[-1].score < 80:
         days_to_resolution = (80 - sorted_points[-1].score) / velocity
         estimated_resolution_date = sorted_points[-1].timestamp + timedelta(days=days_to_resolution)
 
