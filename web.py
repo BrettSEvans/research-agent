@@ -94,6 +94,13 @@ _ALLOWED_DOMAINS = {
     for d in os.environ.get("ALLOWED_EMAIL_DOMAINS", "").split(",")
     if d.strip()
 }
+# Optional comma-separated list of specific emails always allowed, regardless of domain.
+# e.g. ALLOWED_EMAILS=admin@gmail.com,partner@otherdomain.com
+_ALLOWED_EMAILS = {
+    e.strip().lower()
+    for e in os.environ.get("ALLOWED_EMAILS", "brettevanssf@gmail.com").split(",")
+    if e.strip()
+}
 
 # Session cookie — HMAC-signed JSON, no extra dependencies
 SECRET_KEY       = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
@@ -390,8 +397,11 @@ async def google_callback(request: Request, code: str = "", state: str = "", err
         )
 
     email: str = userinfo.get("email", "")
-    if _ALLOWED_DOMAINS and email.split("@")[-1].lower() not in _ALLOWED_DOMAINS:
-        return RedirectResponse(url="/auth/login?error=domain_not_allowed", status_code=302)
+    email_lower = email.lower()
+    # Allow if: specific email is whitelisted, OR domain is in allowed domains (when set)
+    if email_lower not in _ALLOWED_EMAILS:
+        if _ALLOWED_DOMAINS and email_lower.split("@")[-1] not in _ALLOWED_DOMAINS:
+            return RedirectResponse(url="/auth/login?error=domain_not_allowed", status_code=302)
 
     # Find or create the user + org in the database
     db = next(get_db())
