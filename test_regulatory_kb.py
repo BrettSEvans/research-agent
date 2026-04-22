@@ -14,6 +14,7 @@ import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch, Mock
 
+import numpy as np
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -65,14 +66,9 @@ def db_session():
 
 
 @pytest.fixture
-def temp_kb_dir(monkeypatch):
+def temp_kb_dir():
     """Temporary directory for KB storage."""
     with tempfile.TemporaryDirectory() as tmpdir:
-        monkeypatch.setenv("DATA_ROOT", tmpdir)
-        # Re-import to pick up new DATA_ROOT
-        import importlib
-        import regulatory_kb
-        importlib.reload(regulatory_kb)
         yield Path(tmpdir)
 
 
@@ -178,9 +174,13 @@ class TestIngestion:
 
         raw_text = "Regulation text. " * 100  # Long enough to create multiple chunks
 
-        with patch("regulatory_kb.chunk_text") as mock_chunk, \
-             patch("regulatory_kb.DenseRetriever"):
+        with patch("regulatory_kb.KB_BASE", temp_kb_dir), \
+             patch("regulatory_kb.chunk_text") as mock_chunk, \
+             patch("regulatory_kb.DenseRetriever") as mock_retriever_class:
             mock_chunk.return_value = ["Chunk 1", "Chunk 2", "Chunk 3"]
+            mock_retriever = MagicMock()
+            mock_retriever.embeddings = np.zeros((3, 384))
+            mock_retriever_class.return_value = mock_retriever
 
             chunk_count = ingest_source(source, raw_text, db_session)
 
@@ -208,9 +208,13 @@ class TestIngestion:
 
         raw_text = "Regulation text. " * 100
 
-        with patch("regulatory_kb.chunk_text") as mock_chunk, \
-             patch("regulatory_kb.DenseRetriever"):
+        with patch("regulatory_kb.KB_BASE", temp_kb_dir), \
+             patch("regulatory_kb.chunk_text") as mock_chunk, \
+             patch("regulatory_kb.DenseRetriever") as mock_retriever_class:
             mock_chunk.return_value = ["Chunk 1", "Chunk 2"]
+            mock_retriever = MagicMock()
+            mock_retriever.embeddings = np.zeros((2, 384))
+            mock_retriever_class.return_value = mock_retriever
 
             ingest_source(source, raw_text, db_session)
 
@@ -277,6 +281,8 @@ class TestRetrieverCache:
 
     def test_retriever_cache_is_invalidated_on_ingest(self, db_session, temp_kb_dir):
         """After ingest_source, _retrievers[module] is set to None (cache invalid)."""
+        import regulatory_kb as kb_module
+
         source = RegulationSource(
             module="eu_sfdr_csrd",
             name="SFDR Level 1",
@@ -286,18 +292,22 @@ class TestRetrieverCache:
         db_session.commit()
 
         # Pre-populate cache with a fake retriever
-        _retrievers["eu_sfdr_csrd"] = MagicMock()
+        kb_module._retrievers["eu_sfdr_csrd"] = MagicMock()
 
         raw_text = "Regulation text. " * 100
 
-        with patch("regulatory_kb.chunk_text") as mock_chunk, \
-             patch("regulatory_kb.DenseRetriever"):
+        with patch("regulatory_kb.KB_BASE", temp_kb_dir), \
+             patch("regulatory_kb.chunk_text") as mock_chunk, \
+             patch("regulatory_kb.DenseRetriever") as mock_retriever_class:
             mock_chunk.return_value = ["Chunk 1", "Chunk 2"]
+            mock_retriever = MagicMock()
+            mock_retriever.embeddings = np.zeros((2, 384))
+            mock_retriever_class.return_value = mock_retriever
 
             ingest_source(source, raw_text, db_session)
 
             # Cache should be invalidated (None)
-            assert _retrievers["eu_sfdr_csrd"] is None
+            assert kb_module._retrievers["eu_sfdr_csrd"] is None
 
 
 class TestLoadSources:
