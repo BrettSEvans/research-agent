@@ -18,7 +18,7 @@ with exponential backoff via Tenacity.
 from __future__ import annotations
 
 import threading
-from ddgs import DDGS
+from duckduckgo_search import DDGS
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception
 
 # Hard wall-clock deadline per search attempt (seconds).
