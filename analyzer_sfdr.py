@@ -37,13 +37,33 @@ def _thinking_kwargs(model: str, budget_tokens: int = 4000) -> dict:
     return {"thinking": {"type": "enabled", "budget_tokens": budget_tokens}}
 
 
+def _retry_after_wait(retry_state) -> float:
+    """Honour the server's ``Retry-After`` header; fall back to exponential."""
+    exc = retry_state.outcome.exception()
+    if isinstance(exc, anthropic.RateLimitError):
+        resp = getattr(exc, "response", None)
+        if resp is not None:
+            try:
+                secs = float(resp.headers.get("retry-after", 0))
+                if secs > 0:
+                    return secs
+            except (ValueError, TypeError):
+                pass
+    attempt = retry_state.attempt_number
+    return min(1.0 * (2 ** (attempt - 1)), 30.0)
+
+
 def _call_anthropic_with_retry(fn, *args, **kwargs):
-    """Call Anthropic API with Tenacity retry on rate limits."""
-    from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception
+    """Call Anthropic API with Tenacity retry on rate limits.
+
+    Uses the server-supplied ``Retry-After`` header when available; falls back
+    to exponential backoff. Other exceptions propagate immediately.
+    """
+    from tenacity import retry, stop_after_attempt, retry_if_exception
 
     @retry(
         stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=1, max=30),
+        wait=_retry_after_wait,
         retry=retry_if_exception(lambda e: isinstance(e, anthropic.RateLimitError)),
         reraise=True
     )
@@ -187,7 +207,7 @@ def analyze_claim(
         response = _call_anthropic_with_retry(
             client.messages.parse,
             model=model,
-            max_tokens=8000,
+            max_tokens=4000,
             system=SYSTEM_PROMPT_SFDR,
             **_thinking_kwargs(model, budget_tokens=4000),
             messages=[{"role": "user", "content": user_message}],

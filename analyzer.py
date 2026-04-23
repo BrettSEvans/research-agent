@@ -46,15 +46,38 @@ def _thinking_kwargs(model: str, budget_tokens: int = 4000) -> dict:
     return {"thinking": {"type": "enabled", "budget_tokens": budget_tokens}}
 
 
+def _retry_after_wait(retry_state) -> float:
+    """Honour the server's ``Retry-After`` header; fall back to exponential.
+
+    Anthropic returns a ``retry-after`` (seconds) header on 429 responses.
+    Using that value avoids over-sleeping (exponential can be too long) and
+    under-sleeping (fixed backoff may re-hit the limit immediately).
+    """
+    exc = retry_state.outcome.exception()
+    if isinstance(exc, anthropic.RateLimitError):
+        resp = getattr(exc, "response", None)
+        if resp is not None:
+            try:
+                secs = float(resp.headers.get("retry-after", 0))
+                if secs > 0:
+                    return secs
+            except (ValueError, TypeError):
+                pass
+    # Exponential fallback: 1s → 2s → 4s … capped at 30s
+    attempt = retry_state.attempt_number
+    return min(1.0 * (2 ** (attempt - 1)), 30.0)
+
+
 def _call_anthropic_with_retry(fn, *args, **kwargs):
     """Call Anthropic API with Tenacity retry on rate limits (429).
 
-    Retries with exponential backoff on RateLimitError (429 status).
+    Retries using the server-supplied ``Retry-After`` header when available;
+    falls back to exponential backoff (1s → 2s → 4s … 30s max).
     Other exceptions propagate immediately.
     """
     @retry(
         stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=1, max=30),  # 1s, 2s, 4s... up to 30s
+        wait=_retry_after_wait,
         retry=retry_if_exception(
             lambda e: isinstance(e, anthropic.RateLimitError)
         ),
@@ -252,7 +275,7 @@ def analyze_industry_claim(
     response = _call_anthropic_with_retry(
         client.messages.parse,
         model=model,
-        max_tokens=16000,
+        max_tokens=4000,
         system=INDUSTRY_SYSTEM_PROMPT,
         messages=[{"role": "user", "content": user_content}],
         tools=[{"type": "web_search_20260209", "name": "web_search"}],
@@ -302,7 +325,7 @@ def analyze_claim(
     response = _call_anthropic_with_retry(
         client.messages.parse,
         model=model,
-        max_tokens=16000,
+        max_tokens=4000,
         system=SYSTEM_PROMPT,
         **_thinking_kwargs(model),
         messages=[{"role": "user", "content": user_content}],
