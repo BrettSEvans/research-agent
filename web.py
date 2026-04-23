@@ -40,7 +40,7 @@ from sqlalchemy.orm import Session
 
 from agent import iter_compliance_report, run_compliance_report, SAVED_REPORTS_DIR
 from auth import create_api_key, ensure_default_organization_and_user
-from db import get_db, init_db, seed_eu_regulatory_sources
+from db import get_db, init_db, seed_eu_regulatory_sources, seed_ca_regulatory_sources
 from deck_context import DeckContext
 from extractor import extract_from_pdf
 from models import Organization, Report, SavedExtraction, User, Whitelist
@@ -86,6 +86,14 @@ try:
     seed_eu_regulatory_sources(_seed_db)
 finally:
     _seed_db.close()
+
+# Seed CA regulatory sources (idempotent, runs only on first startup)
+_seed_ca_db = next(get_db())
+try:
+    seed_ca_regulatory_sources(_seed_ca_db)
+finally:
+    _seed_ca_db.close()
+
 
 # Bootstrap default org/user from env vars so Basic Auth + legacy data still works
 _default_db = next(get_db())
