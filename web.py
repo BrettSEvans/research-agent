@@ -94,6 +94,7 @@ try:
 finally:
     _seed_ca_db.close()
 
+
 # Bootstrap default org/user from env vars so Basic Auth + legacy data still works
 _default_db = next(get_db())
 try:

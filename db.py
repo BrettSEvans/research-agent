@@ -268,6 +268,7 @@ def seed_eu_regulatory_sources(db: Session) -> None:
         raise
 
 
+
 def seed_ca_regulatory_sources(db: Session) -> None:
     """Seed California regulatory sources on first startup.
 
