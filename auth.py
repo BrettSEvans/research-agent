@@ -94,18 +94,6 @@ def ensure_default_organization_and_user(db: Session) -> tuple[Organization, Use
         db.commit()
         db.refresh(organization)
 
-    project = db.query(Project).filter_by(name=default_project_name, organization_id=organization.id).first()
-    if not project:
-        project = Project(
-            name=default_project_name,
-            description="Default organization project.",
-            organization_id=organization.id,
-            owner_id=0,
-        )
-        db.add(project)
-        db.commit()
-        db.refresh(project)
-
     user = db.query(User).filter_by(email=default_user_email).first()
     if not user:
         user = create_user(
@@ -115,13 +103,26 @@ def ensure_default_organization_and_user(db: Session) -> tuple[Organization, Use
             organization=organization,
             display_name="Brett Evans",
             is_admin=True,
-            project=project,
+            project=None,  # Create project after user exists
         )
     elif os.environ.get("DEFAULT_API_KEY") and user.api_key != os.environ.get("DEFAULT_API_KEY"):
         user.api_key = os.environ["DEFAULT_API_KEY"]
         db.add(user)
         db.commit()
         db.refresh(user)
+
+    # Create default project after user exists (so owner_id is valid)
+    project = db.query(Project).filter_by(name=default_project_name, organization_id=organization.id).first()
+    if not project:
+        project = Project(
+            name=default_project_name,
+            description="Default organization project.",
+            organization_id=organization.id,
+            owner_id=user.id,
+        )
+        db.add(project)
+        db.commit()
+        db.refresh(project)
 
     if project.owner_id == 0:
         project.owner_id = user.id
