@@ -193,7 +193,6 @@ async def frame_options_middleware(request: Request, call_next):
     return response
 
 
-@app.middleware("http")
 def _check_basic_auth(request: Request) -> bool:
     """Return True if the request carries valid HTTP Basic Auth credentials."""
     if not (_BASIC_USER and _BASIC_PASS):
@@ -210,6 +209,7 @@ def _check_basic_auth(request: Request) -> bool:
         return False
 
 
+@app.middleware("http")
 async def auth_middleware(request: Request, call_next):
     """Unified auth gate: Google session cookie OR HTTP Basic Auth.
 
