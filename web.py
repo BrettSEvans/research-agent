@@ -78,7 +78,13 @@ templates = Jinja2Templates(directory=str(BASE / "templates"))
 # Allow saasless.ai to call the /admin/whitelist API from the browser.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://saasless.ai", "https://www.saasless.ai"],
+    allow_origins=[
+        "https://saasless.ai",
+        "https://www.saasless.ai",
+        "https://lovable.app",
+        "https://preview.lovable.app",
+    ],
+    allow_origin_regex=r"https://.*\.lovable\.app",
     allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
     allow_headers=["X-Admin-Key", "Content-Type"],
     allow_credentials=False,
