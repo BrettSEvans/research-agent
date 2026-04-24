@@ -957,9 +957,12 @@ async def verify_stream(
     extractor_model: Annotated[str | None, Form()] = None,
     startup_stage: Annotated[str | None, Form()] = None,
     modules: Annotated[str | None, Form()] = None,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
     """Server-Sent Events endpoint: emits one claim_result event per claim
-    as soon as analysis finishes, so the browser can render incrementally."""
+    as soon as analysis finishes, so the browser can render incrementally.
+    Saves the completed report to the database on the 'done' event."""
     if analyzer_model and analyzer_model not in ALLOWED_MODELS:
         raise HTTPException(status_code=400, detail=f"Unknown model: {analyzer_model}")
     _, session_ctx = get_session_dirs(request)
@@ -994,6 +997,27 @@ async def verify_stream(
                 modules=modules.split(",") if modules else None,
                 api_key=api_key,
             ):
+                if event.get("event") == "done":
+                    # Save completed report to the database
+                    try:
+                        report_data = event["data"]["report"]
+                        report_id = report_data.get("report_id") or str(uuid.uuid4())
+                        report_data["owner_email"] = current_user.email
+                        row = Report(
+                            report_id=report_id,
+                            owner_id=current_user.id,
+                            organization_id=current_user.organization_id,
+                            company_name=report_data.get("company_name"),
+                            cik=report_data.get("cik"),
+                            extractor_model=report_data.get("extractor_model"),
+                            analyzer_model=report_data.get("analyzer_model"),
+                            report_json=json.dumps(report_data),
+                        )
+                        db.add(row)
+                        db.commit()
+                        event["data"]["report"]["report_id"] = report_id
+                    except Exception as save_exc:
+                        print(f"[verify/stream] Warning: failed to save report to DB: {save_exc}")
                 yield f"data: {json.dumps(event)}\n\n"
         except Exception as exc:
             yield f"data: {json.dumps({'event': 'error', 'data': {'message': str(exc)}})}\n\n"
@@ -1187,6 +1211,8 @@ async def verify(
     analyzer_model: Annotated[str | None, Form()] = None,
     startup_stage: Annotated[str | None, Form()] = None,
     modules: Annotated[str | None, Form()] = None,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
     if analyzer_model and analyzer_model not in ALLOWED_MODELS:
         raise HTTPException(status_code=400, detail=f"Unknown model: {analyzer_model}")
@@ -1223,6 +1249,27 @@ async def verify(
         modules=modules.split(",") if modules else None,
         api_key=get_api_key(request),
     )
+
+    # Save to database
+    try:
+        report_data = report if isinstance(report, dict) else json.loads(report.body)
+        report_id = report_data.get("report_id") or str(uuid.uuid4())
+        report_data["owner_email"] = current_user.email
+        row = Report(
+            report_id=report_id,
+            owner_id=current_user.id,
+            organization_id=current_user.organization_id,
+            company_name=report_data.get("company_name"),
+            cik=report_data.get("cik"),
+            extractor_model=report_data.get("extractor_model"),
+            analyzer_model=report_data.get("analyzer_model"),
+            report_json=json.dumps(report_data),
+        )
+        db.add(row)
+        db.commit()
+    except Exception as save_exc:
+        print(f"[verify] Warning: failed to save report to DB: {save_exc}")
+
     return report
 
 # ───────────────────────── saved reports ──────────────────────────────
