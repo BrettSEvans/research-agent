@@ -13,12 +13,8 @@ Run:
 """
 from __future__ import annotations
 
-import base64
-import hashlib
-import hmac
 import json
 import os
-import secrets
 import tempfile
 import time
 import urllib.parse
@@ -39,7 +35,16 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from agent import iter_compliance_report, run_compliance_report, SAVED_REPORTS_DIR
-from auth import create_api_key, ensure_default_organization_and_user
+# Import from auth package (new modular structure)
+from auth import (
+    find_or_create_user_org,
+    get_current_user,
+    is_email_allowed,
+    load_session,
+    sign_session,
+)
+# Import legacy functions from module-level auth.py (kept for backwards compat)
+from auth import ensure_default_organization_and_user  # noqa: F401
 from db import get_db, init_db, seed_eu_regulatory_sources, seed_ca_regulatory_sources
 from deck_context import DeckContext
 from extractor import extract_from_pdf
@@ -162,81 +167,12 @@ GOOGLE_SLIDES_SCOPES = [
 ]
 
 
-# ── Session helpers ────────────────────────────────────────────────────────
-
-def _sign_session(payload: dict) -> str:
-    """Return a compact, HMAC-signed token encoding *payload* + expiry."""
-    body = {**payload, "exp": int(time.time()) + SESSION_MAX_AGE}
-    data = base64.urlsafe_b64encode(
-        json.dumps(body, separators=(",", ":")).encode()
-    ).rstrip(b"=").decode()
-    sig = hmac.new(SECRET_KEY.encode(), data.encode(), hashlib.sha256).hexdigest()
-    return f"{data}.{sig}"
+# Session functions moved to auth/handlers.py
+# Import them at the top: sign_session, load_session
 
 
-def _load_session(token: str) -> dict | None:
-    """Verify and decode a session token; returns None if invalid / expired."""
-    try:
-        data, sig = token.rsplit(".", 1)
-        expected = hmac.new(SECRET_KEY.encode(), data.encode(), hashlib.sha256).hexdigest()
-        if not hmac.compare_digest(sig, expected):
-            return None
-        # Restore padding before decoding
-        payload = json.loads(base64.urlsafe_b64decode(data + "=="))
-        if payload.get("exp", 0) < time.time():
-            return None
-        return payload
-    except Exception:
-        return None
-
-
-def _check_basic_auth(request: Request) -> bool:
-    """Return True when a valid Basic Auth header is present."""
-    if not (_BASIC_USER and _BASIC_PASS):
-        return False
-    auth = request.headers.get("Authorization", "")
-    if not auth.startswith("Basic "):
-        return False
-    try:
-        decoded = base64.b64decode(auth[6:]).decode("utf-8")
-        u, p = decoded.split(":", 1)
-        return u == _BASIC_USER and p == _BASIC_PASS
-    except Exception:
-        return False
-
-
-def _is_email_allowed(email: str, db: Session) -> bool:
-    """
-    Check if an email passes the whitelist (env vars OR DB entries).
-
-    Returns True if:
-    - No restrictions are configured (open access)
-    - Email matches an entry in _ALLOWED_EMAILS
-    - Email domain matches an entry in _ALLOWED_DOMAINS
-    - Email or domain is in the Whitelist table
-    """
-    email = email.lower()
-    domain = email.split("@")[-1]
-
-    # Check env var lists
-    if email in _ALLOWED_EMAILS:
-        return True
-    if _ALLOWED_DOMAINS and domain in _ALLOWED_DOMAINS:
-        return True
-
-    # Check DB whitelist
-    db_email_hit = db.query(Whitelist).filter_by(value=email, type="email").first()
-    db_domain_hit = db.query(Whitelist).filter_by(value=domain, type="domain").first()
-    if db_email_hit or db_domain_hit:
-        return True
-
-    # If any restriction exists, deny by default
-    any_restriction = bool(_ALLOWED_EMAILS or _ALLOWED_DOMAINS or db.query(Whitelist).first())
-    if any_restriction:
-        return False
-
-    # No restrictions configured — allow all
-    return True
+# Whitelist checking moved to auth/handlers.py
+# Import it at the top: is_email_allowed
 
 
 # ── Auth middleware ────────────────────────────────────────────────────────
@@ -275,7 +211,7 @@ async def auth_middleware(request: Request, call_next):
     # 1. Google session cookie
     if google_enabled:
         token = request.cookies.get(SESSION_COOKIE, "")
-        if token and _load_session(token):
+        if token and load_session(token):
             return await call_next(request)
 
     # 2. HTTP Basic Auth header (API clients / curl)
@@ -324,87 +260,9 @@ def get_session_dirs(request: Request) -> tuple[Path, Path]:
     return uploads, context
 
 
-# ───────────────────────── User DB helpers ────────────────────────────────
-
-def _find_or_create_user_org(db: Session, email: str, display_name: str = "", picture: str = "") -> tuple[User, Organization]:
-    """Return (user, org) for the given Google-authenticated email.
-
-    Organisation is derived from the email domain (e.g. firm.com).
-    Both org and user are created on first login; subsequent logins are no-ops.
-    """
-    domain = email.split("@")[-1].lower()
-
-    org = db.query(Organization).filter_by(name=domain).first()
-    if not org:
-        org = Organization(name=domain)
-        db.add(org)
-        db.flush()  # get org.id before creating user
-
-    user = db.query(User).filter_by(email=email).first()
-    if not user:
-        user = User(
-            email=email,
-            display_name=display_name or email,
-            hashed_password="oauth",   # placeholder — Google users never use password auth
-            api_key=create_api_key(),
-            organization_id=org.id,
-        )
-        db.add(user)
-
-    else:
-        # Keep display_name / picture fresh on each login
-        if display_name:
-            user.display_name = display_name
-
-    db.commit()
-    db.refresh(user)
-    db.refresh(org)
-    return user, org
-
-
-def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
-    """FastAPI dependency: return the authenticated User ORM object.
-
-    Checks Google session cookie first, then falls back to HTTP Basic Auth.
-    Raises HTTP 401 if neither is valid.
-    """
-    # 1. Google session cookie (has user_id after the auth bridge)
-    token = request.cookies.get(SESSION_COOKIE, "")
-    if token:
-        session = _load_session(token)
-        if session:
-            user_id = session.get("user_id")
-            if user_id:
-                user = db.get(User, user_id)
-                if user:
-                    return user
-            # Legacy cookie (email only, no user_id) — look up by email
-            email = session.get("email", "")
-            if email:
-                user = db.query(User).filter_by(email=email).first()
-                if user:
-                    return user
-                # First login with new auth bridge — create records now
-                user, _ = _find_or_create_user_org(
-                    db, email,
-                    display_name=session.get("name", ""),
-                    picture=session.get("picture", ""),
-                )
-                return user
-
-    # 2. HTTP Basic Auth — map to the default org/user
-    if _check_basic_auth(request):
-        default_email = os.environ.get("DEFAULT_ADMIN_EMAIL", "")
-        if default_email:
-            user = db.query(User).filter_by(email=default_email).first()
-            if user:
-                return user
-        # Fallback: first user in DB
-        user = db.query(User).first()
-        if user:
-            return user
-
-    raise HTTPException(status_code=401, detail="Not authenticated")
+# User/org functions moved to auth/handlers.py
+# Import them at the top: find_or_create_user_org
+# get_current_user is now in auth/dependencies.py and imported at the top
 
 
 # ───────────────────────── Google SSO routes ──────────────────────────────
@@ -454,10 +312,10 @@ async def google_one_tap(request: Request, db: Session = Depends(get_db)):
     picture = idinfo.get("picture", "")
 
     # Whitelist check — env-var lists OR DB entries; open if nothing configured.
-    if not _is_email_allowed(email, db):
+    if not is_email_allowed(email, db):
         raise HTTPException(status_code=403, detail="Your email is not on the access list. Contact the administrator.")
 
-    user, org = _find_or_create_user_org(db, email, display_name=name, picture=picture)
+    user, org = find_or_create_user_org(db, email, display_name=name, picture=picture)
     session_payload = {
         "email":   email,
         "name":    name,
@@ -465,7 +323,7 @@ async def google_one_tap(request: Request, db: Session = Depends(get_db)):
         "user_id": user.id,
         "org_id":  org.id,
     }
-    token = _sign_session(session_payload)
+    token = sign_session(session_payload)
     resp  = JSONResponse({"ok": True})
     # SameSite=None is required so the cookie is sent in cross-origin iframe
     # requests. Secure=True is mandatory when SameSite=None (Railway = HTTPS).
@@ -486,7 +344,7 @@ async def auth_me(request: Request):
     """Return the current user's info (or null) — polled by the frontend."""
     token = request.cookies.get(SESSION_COOKIE, "")
     if token:
-        session = _load_session(token)
+        session = load_session(token)
         if session:
             return JSONResponse({
                 "email":   session.get("email"),
