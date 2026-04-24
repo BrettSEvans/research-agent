@@ -393,7 +393,7 @@ async def get_notifications(request: Request, db: Session = Depends(get_db)):
     if not token:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
-    session = _load_session(token)
+    session = load_session(token)
     if not session:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
@@ -437,7 +437,7 @@ async def dismiss_notification(
     if not token:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
-    session = _load_session(token)
+    session = load_session(token)
     if not session:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
