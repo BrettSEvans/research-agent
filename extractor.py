@@ -73,191 +73,72 @@ def _call_anthropic_with_retry(fn, *args, **kwargs):
 
 
 class CompanyIdentity(BaseModel):
-    name: str = Field(description="Official company name exactly as stated in the deck.")
-    ticker: str | None = Field(
-        default=None,
-        description="Public ticker if explicitly stated in the deck. Null otherwise. NEVER guess.",
-    )
-    cik: str | None = Field(
-        default=None,
-        description="SEC CIK if explicitly stated. Null otherwise. NEVER guess.",
-    )
-    website: str | None = Field(default=None, description="Website URL if shown in the deck.")
-    description: str | None = Field(
-        default=None,
-        description="One-sentence company description, verbatim from the deck if available.",
-    )
-    industry: str | None = Field(
-        default=None,
-        description=(
-            "Industry/sector the company operates in (e.g., 'B2B SaaS for legal tech', "
-            "'fintech lending', 'biotech oncology'). Prefer terminology used in the deck. "
-            "If no industry is stated directly, infer conservatively from the product "
-            "description and market claims. Null only if the deck provides no basis."
-        ),
-    )
-    founders: list[str] = Field(
-        default_factory=list,
-        description="Names of the founders."
-    )
+    name: str
+    ticker: str | None = None
+    cik: str | None = None
+    website: str | None = None
+    description: str | None = None
+    industry: str | None = None
+    founders: list[str] = Field(default_factory=list)
 
 
 class ExtractedClaim(BaseModel):
-    text: str = Field(
-        description="Clear restatement of the claim as a single falsifiable sentence."
-    )
-    verbatim: str = Field(
-        description="Exact quote from the deck supporting this claim. Required."
-    )
-    slide: int = Field(description="1-indexed slide/page number where the claim appears.")
+    text: str
+    verbatim: str
+    slide: int
     category: Literal[
         "financial", "market", "product", "team", "traction", "projection", "regulatory", "other"
     ]
-    likely_forward_looking: bool = Field(
-        description=(
-            "True if the claim is a projection, expectation, plan, or target. "
-            "False for historical facts."
-        )
-    )
+    likely_forward_looking: bool
 
 
 class ExtractedMetric(BaseModel):
-    metric_name: str = Field(description="e.g., 'ARR', 'CAC', 'LTV', 'NRR', 'EBITDA', 'Waitlist Signups', 'Founder Domain Expertise'")
-    value: str = Field(description="The extracted value, e.g., '$5M', '$100', '120%', 'Ex-Googler'")
+    metric_name: str
+    value: str
 
 
 class EsgMetrics(BaseModel):
     """ESG-specific metrics extracted from pitch decks when EU SFDR/CSRD module is active."""
-    scope_1_emissions: str | None = Field(
-        default=None,
-        description="Scope 1 GHG emissions with year, e.g., '12,000 tCO2e (2025)'"
-    )
-    scope_2_emissions: str | None = Field(
-        default=None,
-        description="Scope 2 GHG emissions with year"
-    )
-    scope_3_emissions: str | None = Field(
-        default=None,
-        description="Scope 3 GHG emissions with year"
-    )
-    has_third_party_audit: bool | None = Field(
-        default=None,
-        description="True if deck claims external audit; False if no audit mentioned; None if unclear"
-    )
-    audit_body: str | None = Field(
-        default=None,
-        description="Name of auditor if stated (e.g., 'Bureau Veritas'); null if not audited"
-    )
-    board_diversity_pct: str | None = Field(
-        default=None,
-        description="Board diversity percentage if stated, e.g., '40% women'"
-    )
-    supply_chain_disclosure: str | None = Field(
-        default=None,
-        description="Whether supply chain disclosure is provided"
-    )
-    ai_risk_sector: bool | None = Field(
-        default=None,
-        description="True if AI used in regulated sector (Health/Finance/HR/Infrastructure); False otherwise"
-    )
-    ai_transparency_statement: str | None = Field(
-        default=None,
-        description="Text of any AI risk/transparency disclosure"
-    )
-    sfdr_article_claim: str | None = Field(
-        default=None,
-        description="'Article 8' or 'Article 9' if deck claims SFDR classification"
-    )
+    scope_1_emissions: str | None = None
+    scope_2_emissions: str | None = None
+    scope_3_emissions: str | None = None
+    has_third_party_audit: bool | None = None
+    audit_body: str | None = None
+    board_diversity_pct: str | None = None
+    supply_chain_disclosure: str | None = None
+    ai_risk_sector: bool | None = None
+    ai_transparency_statement: str | None = None
+    sfdr_article_claim: str | None = None
 
 
 class FounderDemographics(BaseModel):
     """Founder demographic metrics extracted when CA SB 54 module is active."""
-    founder_count: int | None = Field(
-        default=None,
-        description="Total number of founders listed"
-    )
-    gender_diversity: str | None = Field(
-        default=None,
-        description="Gender breakdown if stated, e.g., '50% women, 50% men'"
-    )
-    women_founder_pct: float | None = Field(
-        default=None,
-        description="Percentage of women founders if stated"
-    )
-    underrepresented_minority_pct: float | None = Field(
-        default=None,
-        description="Percentage of underrepresented minority founders if stated"
-    )
-    race_ethnicity_data: str | None = Field(
-        default=None,
-        description="Race/ethnicity breakdown if disclosed"
-    )
-    educational_background: list[str] = Field(
-        default_factory=list,
-        description="Educational institutions or degrees mentioned for founders"
-    )
-    prior_startup_experience: bool | None = Field(
-        default=None,
-        description="True if founders have prior startup founding experience; False if none mentioned"
-    )
-    industry_expertise: str | None = Field(
-        default=None,
-        description="Description of founders' domain expertise or prior roles"
-    )
-    diverse_background_statement: str | None = Field(
-        default=None,
-        description="Any explicit diversity commitment or statement by founders"
-    )
-    disclosure_completeness: str | None = Field(
-        default=None,
-        description="Assessment of how complete the founder demographic disclosure is"
-    )
+    founder_count: int | None = None
+    gender_diversity: str | None = None
+    women_founder_pct: float | None = None
+    underrepresented_minority_pct: float | None = None
+    race_ethnicity_data: str | None = None
+    educational_background: list[str] = Field(default_factory=list)
+    prior_startup_experience: bool | None = None
+    industry_expertise: str | None = None
+    diverse_background_statement: str | None = None
+    disclosure_completeness: str | None = None
 
 
 class DeckExtraction(BaseModel):
     company: CompanyIdentity
-    claims: list[ExtractedClaim] = Field(
-        description=(
-            "Only specific, falsifiable claims. Skip vague marketing language. "
-            "Prioritize numbers, timelines, market sizes, capabilities, and regulatory statements."
-        )
-    )
-    fiscal_year_end: str | None = Field(
-        default=None,
-        description="E.g., 'December 31' — only if stated or clearly implied by dated figures.",
-    )
-    currency: str | None = Field(
-        default=None,
-        description="Primary currency for financial figures (e.g., 'USD') if inferable from the deck.",
-    )
+    claims: list[ExtractedClaim] = Field(default_factory=list)
+    fiscal_year_end: str | None = None
+    currency: str | None = None
     # --- Stage Inference ---
-    stage_assessment: StageAssessment | None = Field(default=None, description="Inferred stage based on the deck.")
-
+    stage_assessment: StageAssessment | None = None
     # --- Stage-Specific Extracted Fields ---
-    key_metrics: list[ExtractedMetric] = Field(
-        default_factory=list,
-        description="Extract key startup metrics based on the inferred stage (e.g. ARR, CAC, LTV, NRR, Gross Margin, EBITDA, Rule of 40, Exit Strategy, Early Validation Signals)."
-    )
-
+    key_metrics: list[ExtractedMetric] = Field(default_factory=list)
     # --- ESG Metrics (populated when EU SFDR/CSRD module is active) ---
-    esg_metrics: EsgMetrics | None = Field(
-        default=None,
-        description="ESG metrics extracted when EU SFDR/CSRD module is active; null otherwise"
-    )
-
+    esg_metrics: EsgMetrics | None = None
     # --- Founder Demographics (populated when CA SB 54 module is active) ---
-    founder_demographics: FounderDemographics | None = Field(
-        default=None,
-        description="Founder demographic metrics extracted when CA SB 54 module is active; null otherwise"
-    )
-
-    extraction_notes: str = Field(
-        description=(
-            "Honest commentary on what was and was NOT found. Call out ambiguity, "
-            "missing fields (e.g., 'no ticker stated — company appears to be private'), "
-            "and any areas where the deck is vague. This is read by the compliance agent."
-        )
-    )
+    founder_demographics: FounderDemographics | None = None
+    extraction_notes: str
 
 
 SYSTEM_PROMPT = """You extract structured information from startup pitch decks for a venture capital compliance pipeline.
@@ -293,7 +174,7 @@ and extract specific metrics if present (e.g. LTV, CAC, NRR, EBITDA, exit strate
 Make sure you include the `stage_assessment` based on raise amounts, ARR, and traction metrics."""
 class BasicExtraction(BaseModel):
     company: CompanyIdentity
-    stage_assessment: StageAssessment | None = Field(default=None, description="Inferred stage based on the deck.")
+    stage_assessment: StageAssessment | None = None
 
 
 def extract_basics_and_infer_stage(

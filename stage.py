@@ -13,9 +13,9 @@ class FundingStage(str, Enum):
 
 class StageAssessment(BaseModel):
     stage: FundingStage
-    confidence: float = Field(description="Confidence from 0.0 to 1.0")
-    signals: list[str] = Field(description="Key indicators found in the text, e.g. 'ARR $2M mentioned', 'Raising $8M Series A'")
-    user_should_confirm: bool = Field(description="True if confidence < 0.7")
+    confidence: float
+    signals: list[str] = Field(default_factory=list)
+    user_should_confirm: bool
 
 SYSTEM_PROMPT = """You are an expert venture capital analyst. Your task is to determine the funding stage of a startup based on the raw text of their pitch deck.
 Look for these signals:
