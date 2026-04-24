@@ -297,6 +297,26 @@ async def health():
     return JSONResponse({"status": "ok"})
 
 
+@app.get("/debug/whitelist-check")
+async def debug_whitelist_check(email: str, db: Session = Depends(get_db)):
+    """Temporary debug: test if an email passes the whitelist check."""
+    from models import Whitelist as W
+    email_lower = email.lower()
+    domain = email_lower.split("@")[-1]
+    db_email = db.query(W).filter_by(value=email_lower, type="email").first()
+    db_domain = db.query(W).filter_by(value=domain, type="domain").first()
+    all_entries = db.query(W).all()
+    result = is_email_allowed(email_lower, db)
+    return JSONResponse({
+        "email": email_lower,
+        "allowed": result,
+        "db_email_hit": db_email.value if db_email else None,
+        "db_domain_hit": db_domain.value if db_domain else None,
+        "total_whitelist_entries": len(all_entries),
+        "all_values": [e.value for e in all_entries],
+    })
+
+
 @app.get("/auth/login", response_class=HTMLResponse)
 async def login_page(request: Request):
     return templates.TemplateResponse(request=request, name="login.html", context={
