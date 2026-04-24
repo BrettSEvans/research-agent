@@ -179,16 +179,14 @@
     {% if google_enabled %}
 
     <!-- Google Identity Services — One Tap + Sign In With Google button.
-         data-allowed_parent_origin lets One Tap run inside a cross-origin
-         iframe hosted on saasless.ai.  The credential comes back via the
-         handleCredentialResponse JS callback — no redirect needed. -->
+         The credential comes back via the handleCredentialResponse JS
+         callback — no redirect needed. -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 
     <div id="g_id_onload"
          data-client_id="{{ google_client_id }}"
          data-callback="handleCredentialResponse"
          data-auto_prompt="true"
-         data-allowed_parent_origin="https://saasless.ai"
          data-itp_support="true">
     </div>
 
