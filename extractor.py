@@ -52,6 +52,39 @@ def _thinking_kwargs(model: str, budget_tokens: int = 3000) -> dict:
     return {"thinking": {"type": "enabled", "budget_tokens": budget_tokens}}
 
 
+def _parse_deck_extraction(client: anthropic.Anthropic, model: str, system: str, messages: list, max_tokens: int = 16000, **extra_kwargs) -> DeckExtraction:
+    """Call messages.create and parse the JSON response into DeckExtraction.
+
+    Replaces messages.parse (strict grammar/structured output) which fails with
+    "compiled grammar is too large" for complex nested schemas. Using
+    messages.create + manual JSON parse avoids grammar compilation entirely.
+    """
+    import json as _json
+    schema = _json.dumps(DeckExtraction.model_json_schema())
+    augmented_system = (
+        system
+        + "\n\nIMPORTANT: Respond with ONLY a valid JSON object matching this schema. "
+        "No markdown, no explanation, no code fences. Raw JSON only.\n\nSchema:\n"
+        + schema
+    )
+    response = _call_anthropic_with_retry(
+        client.messages.create,
+        model=model,
+        max_tokens=max_tokens,
+        system=augmented_system,
+        messages=messages,
+        **extra_kwargs,
+    )
+    text = response.content[-1].text.strip()
+    # Strip accidental code fences if the model adds them despite instructions
+    if text.startswith("```"):
+        text = text.split("```")[1]
+        if text.startswith("json"):
+            text = text[4:]
+    data = _json.loads(text)
+    return DeckExtraction.model_validate(data)
+
+
 def _call_anthropic_with_retry(fn, *args, **kwargs):
     """Call Anthropic API with Tenacity retry on rate limits (429).
 
@@ -242,12 +275,19 @@ def extract_basics_and_infer_stage(
         "- Do NOT extract detailed claims — that happens in the deep extraction pass."
     )
 
+    import json as _json
+    basic_schema = _json.dumps(BasicExtraction.model_json_schema())
+    augmented_basic_system = (
+        basic_system
+        + "\n\nIMPORTANT: Respond with ONLY a valid JSON object matching this schema. "
+        "No markdown, no explanation, no code fences. Raw JSON only.\n\nSchema:\n"
+        + basic_schema
+    )
     response = _call_anthropic_with_retry(
-        client.messages.parse,
+        client.messages.create,
         model=model,
         max_tokens=4000,
-        system=basic_system,
-        **_thinking_kwargs(model),
+        system=augmented_basic_system,
         messages=[
             {
                 "role": "user",
@@ -267,9 +307,14 @@ def extract_basics_and_infer_stage(
                 ],
             }
         ],
-        output_format=BasicExtraction,
+        **_thinking_kwargs(model),
     )
-    return response.parsed_output
+    text = response.content[-1].text.strip()
+    if text.startswith("```"):
+        text = text.split("```")[1]
+        if text.startswith("json"):
+            text = text[4:]
+    return BasicExtraction.model_validate(_json.loads(text))
 
 
 def _vision_call_with_retry(
@@ -520,12 +565,11 @@ def extract_from_pdf(
     pdf_bytes = Path(pdf_path).read_bytes()
     b64 = base64.standard_b64encode(pdf_bytes).decode("utf-8")
 
-    response = _call_anthropic_with_retry(
-        client.messages.parse,
+    result = _parse_deck_extraction(
+        client=client,
         model=model,
-        max_tokens=16000,
         system=_build_system_prompt(requested_metrics),
-        **_thinking_kwargs(model),
+        max_tokens=16000,
         messages=[
             {
                 "role": "user",
@@ -549,9 +593,9 @@ def extract_from_pdf(
                 ],
             }
         ],
-        output_format=DeckExtraction,
+        **_thinking_kwargs(model),
     )
-    return response.parsed_output, []
+    return result, []
 
 
 def extract_failed_pages_with_claude(
@@ -590,12 +634,11 @@ def extract_failed_pages_with_claude(
 
     pages_str = ", ".join(str(p) for p in sorted(page_indices))
 
-    response = _call_anthropic_with_retry(
-        client.messages.parse,
+    return _parse_deck_extraction(
+        client=client,
         model=model,
-        max_tokens=8000,
         system=_build_system_prompt(requested_metrics),
-        **_thinking_kwargs(model),
+        max_tokens=8000,
         messages=[
             {
                 "role": "user",
@@ -621,6 +664,5 @@ def extract_failed_pages_with_claude(
                 ],
             }
         ],
-        output_format=DeckExtraction,
+        **_thinking_kwargs(model),
     )
-    return response.parsed_output
