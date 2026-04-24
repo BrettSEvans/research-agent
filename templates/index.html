@@ -851,7 +851,7 @@
     <div id="dashboard-view">
       <div class="row" style="justify-content: space-between; align-items: center; margin-bottom: 24px;">
         <h2 class="md-headline" style="margin: 0;">Compliance Reports Dashboard</h2>
-        <button class="btn btn-filled" onclick="showAnalysisView()">
+        <button class="btn btn-filled" onclick="showAnalysisView(true)">
           <span class="material-symbols-rounded">add</span> New Analysis
         </button>
       </div>
@@ -1349,10 +1349,27 @@
       loadSavedReports();
       loadSavedExtractionsList();
     }
-    function showAnalysisView() {
+    function showAnalysisView(reset) {
       document.getElementById('dashboard-view').classList.add('hidden');
       document.getElementById('analysis-view').classList.remove('hidden');
       document.getElementById('drilldown-view').classList.add('hidden');
+      if (reset) resetAnalysisState();
+    }
+    function resetAnalysisState() {
+      // Clear extraction
+      currentContextId = null;
+      const ep = document.getElementById('extraction-panel');
+      if (ep) { ep.classList.add('hidden'); document.getElementById('extraction-body').innerHTML = ''; }
+      // Clear report
+      const rp = document.getElementById('report-panel');
+      if (rp) { rp.classList.add('hidden'); rp.innerHTML = ''; }
+      // Reset upload dropzone
+      const fileInput = document.getElementById('file');
+      if (fileInput) fileInput.value = '';
+      const dzText = document.getElementById('dz-text');
+      if (dzText) dzText.innerHTML = `<span class="material-symbols-rounded icon">upload_file</span><div><strong>Click or drop a file here</strong></div><div class="hint">PDF, PowerPoint, Word, or Excel • Null fields indicate the deck did not state that value.</div>`;
+      const dropzone = document.getElementById('dropzone');
+      if (dropzone) dropzone.classList.remove('uploading');
     }
     function showDrilldownView() {
       document.getElementById('dashboard-view').classList.add('hidden');
@@ -1664,7 +1681,7 @@
           <div class="meta">
             <span class="chip"><span class="material-symbols-rounded">photo_library</span>slide ${cl.slide}</span>
             <span class="chip" style="border-color:${cc};color:${cc};">${escape(cl.category)}</span>
-            ${cl.likely_forward_looking ? '<span class="chip chip-primary"><span class="material-symbols-rounded">trending_up</span>FLS</span>' : ''}
+            ${cl.likely_forward_looking ? '<span class="chip chip-primary" title="Forward-Looking Statement — this claim is a projection, target, or expectation rather than a stated historical fact."><span class="material-symbols-rounded">trending_up</span>FLS</span>' : ''}
           </div>
         </div>`;
       }
@@ -2282,10 +2299,21 @@
       if (isContradicts) cls += ' open'; // expand flagged findings by default
 
       // ── Always-visible summary row ─────────────────────────────────────
-      let chips = `<span class="chip ${verdictChipClass(verdict)}"><span class="material-symbols-rounded">${verdictIcon(verdict)}</span>${escape(verdict)}</span>`;
-      if (r.forward_looking) chips += `<span class="chip chip-primary" style="height:20px;font-size:0.7rem;"><span class="material-symbols-rounded">trending_up</span>FLS</span>`;
-      if (r.severity && r.severity !== 'NONE') chips += `<span class="chip" style="height:20px;font-size:0.7rem;">${escape(r.severity)}</span>`;
-      if (r.analysis_method === 'web_search') chips += `<span class="chip" style="height:20px;font-size:0.7rem;"><span class="material-symbols-rounded">travel_explore</span>web</span>`;
+      const VERDICT_TIPS = {
+        CONTRADICTS: 'The deck claim conflicts with evidence found in SEC filings or web sources.',
+        CONSISTENT: 'The deck claim is supported by or consistent with available evidence.',
+        UNSUPPORTED: 'No corroborating evidence found, but no direct contradiction either.',
+        INSUFFICIENT_EVIDENCE: 'Not enough public information available to verify this claim.',
+      };
+      const SEVERITY_TIPS = {
+        HIGH: 'High severity — material discrepancy that may warrant further investigation.',
+        MEDIUM: 'Medium severity — notable inconsistency worth flagging to the deal team.',
+        LOW: 'Low severity — minor or likely immaterial difference.',
+      };
+      let chips = `<span class="chip ${verdictChipClass(verdict)}" title="${VERDICT_TIPS[verdict] || verdict}"><span class="material-symbols-rounded">${verdictIcon(verdict)}</span>${escape(verdict)}</span>`;
+      if (r.forward_looking) chips += `<span class="chip chip-primary" style="height:20px;font-size:0.7rem;" title="Forward-Looking Statement — this claim is a projection, target, or expectation rather than a stated historical fact."><span class="material-symbols-rounded">trending_up</span>FLS</span>`;
+      if (r.severity && r.severity !== 'NONE') chips += `<span class="chip" style="height:20px;font-size:0.7rem;" title="${SEVERITY_TIPS[r.severity] || r.severity}">${escape(r.severity)}</span>`;
+      if (r.analysis_method === 'web_search') chips += `<span class="chip" style="height:20px;font-size:0.7rem;" title="Verified via web search — no SEC filing found for this company, so the claim was cross-referenced against public web sources."><span class="material-symbols-rounded">travel_explore</span>web</span>`;
 
       let html = `<div class="${cls}" onclick="if(!event.target.closest('a'))toggleResult(this)">`;
       html += `<div style="display:flex;align-items:flex-start;gap:8px;">`;
